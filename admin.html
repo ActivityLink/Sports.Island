@@ -122,6 +122,39 @@
             animation: spin 1s linear infinite;
         }
         
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            margin: 0 4px 8px 4px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .category-tag:hover {
+            background: #d1d5db;
+        }
+        
+        .category-tag.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .category-tag .close-btn {
+            margin-left: 6px;
+            width: 16px;
+            height: 16px;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+        
+        .category-tag .close-btn:hover {
+            opacity: 1;
+        }
+        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -144,6 +177,10 @@
             <a href="#courses" class="nav-item">
                 <i data-lucide="book-open"></i>
                 <span>課程管理</span>
+            </a>
+            <a href="#course-types" class="nav-item">
+                <i data-lucide="tags"></i>
+                <span>課程類型管理</span>
             </a>
             <a href="#add-course" class="nav-item">
                 <i data-lucide="plus-circle"></i>
@@ -274,8 +311,16 @@
                 </div>
             </div>
             
-            <!-- 篩選器 -->
+            <!-- 課程類型標籤 -->
             <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <div class="flex flex-wrap items-center mb-4">
+                    <div class="mr-4 text-sm font-medium text-gray-700">快速篩選：</div>
+                    <div id="category-tags-container" class="flex flex-wrap">
+                        <!-- 課程類型標籤將在這裡動態生成 -->
+                    </div>
+                </div>
+                
+                <!-- 篩選器 -->
                 <div class="flex flex-wrap gap-4">
                     <select id="filter-status" class="form-input w-40">
                         <option value="">全部狀態</option>
@@ -288,11 +333,7 @@
                     
                     <select id="filter-sport" class="form-input w-40">
                         <option value="">全部運動</option>
-                        <option value="籃球">籃球</option>
-                        <option value="羽球">羽球</option>
-                        <option value="游泳">游泳</option>
-                        <option value="足球">足球</option>
-                        <option value="體能">體能</option>
+                        <!-- 選項將由 JavaScript 動態生成 -->
                     </select>
                     
                     <input type="date" id="filter-date" class="form-input w-40">
@@ -358,6 +399,111 @@
             </div>
         </div>
         
+        <!-- 課程類型管理 -->
+        <div id="course-types" class="page hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">課程類型管理</h2>
+                <p class="text-gray-600">管理課程分類標籤，方便快速篩選</p>
+            </div>
+            
+            <!-- 新增課程類型表單 -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">新增課程類型</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            類型名稱 *
+                        </label>
+                        <input type="text" id="new-category-name" 
+                               class="form-input" placeholder="例：暑期營隊、進階訓練">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            類型代碼 *
+                        </label>
+                        <input type="text" id="new-category-code" 
+                               class="form-input" placeholder="例：SUMMER、ADVANCED">
+                    </div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            類型描述
+                        </label>
+                        <textarea id="new-category-description" rows="2" 
+                                  class="form-input" 
+                                  placeholder="描述此課程類型的特點..."></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            圖標顏色
+                        </label>
+                        <input type="color" id="new-category-color" 
+                               class="w-full h-10 p-1" value="#3b82f6">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            適用運動類別
+                        </label>
+                        <select id="new-category-sports" class="form-input" multiple>
+                            <option value="籃球">籃球</option>
+                            <option value="羽球">羽球</option>
+                            <option value="游泳">游泳</option>
+                            <option value="足球">足球</option>
+                            <option value="體能">體能</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button id="add-category" 
+                            class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                        新增課程類型
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 現有課程類型列表 -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-semibold text-gray-800">現有課程類型</h3>
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    類型名稱
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    代碼
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    描述
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    適用運動
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    課程數量
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    操作
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="course-types-table-body" class="divide-y divide-gray-200">
+                            <!-- 課程類型資料會動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
         <!-- 新增課程 -->
         <div id="add-course" class="page hidden">
             <div class="mb-6">
@@ -385,13 +531,18 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
                                     運動類別 *
                                 </label>
-                                <select name="sportType" required class="form-input">
-                                    <option value="">請選擇</option>
-                                    <option value="籃球">籃球</option>
-                                    <option value="羽球">羽球</option>
-                                    <option value="游泳">游泳</option>
-                                    <option value="足球">足球</option>
-                                    <option value="體能">體能</option>
+                                <select name="sportType" required class="form-input" id="sportType-select">
+                                    <!-- 選項由 JavaScript 動態生成 -->
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    課程類型標籤
+                                </label>
+                                <select name="courseCategory" class="form-input" id="courseCategory-select">
+                                    <option value="">無</option>
+                                    <!-- 選項由 JavaScript 動態生成 -->
                                 </select>
                             </div>
                             
@@ -775,6 +926,45 @@
         </div>
     </div>
     
+    <!-- 編輯課程類型對話框 -->
+    <div id="edit-category-dialog" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">編輯課程類型</h3>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        類型名稱 *
+                    </label>
+                    <input type="text" id="edit-category-name" class="form-input">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        類型描述
+                    </label>
+                    <textarea id="edit-category-description" rows="3" class="form-input"></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        圖標顏色
+                    </label>
+                    <input type="color" id="edit-category-color" class="w-full h-10 p-1">
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button id="edit-category-cancel" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    取消
+                </button>
+                <button id="edit-category-save" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    儲存變更
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         // ==================== 初始化 ====================
         
@@ -783,6 +973,7 @@
             SPREADSHEET_ID: '16NKFioe-lrYmpFv20tYEg6p6uo9_D4wSsS2YoiUWKko',
             SHEETS: {
                 COURSES: 'SingleCourses',
+                CATEGORIES: 'CourseCategories',
                 COACHES: 'Coaches',
                 VENUES: 'Venues',
                 BOOKINGS: 'Bookings',
@@ -796,6 +987,67 @@
         let filteredCoursesData = [];
         let currentPageNum = 1;
         const itemsPerPage = 10;
+        
+        // 課程類型數據
+        let courseCategories = [
+            {
+                id: 'all',
+                name: '全部課程',
+                code: 'ALL',
+                description: '所有課程類型',
+                color: '#6b7280',
+                sportTypes: ['籃球', '羽球', '游泳', '足球', '體能'],
+                courseCount: 0
+            },
+            {
+                id: 'summer',
+                name: '暑期營隊',
+                code: 'SUMMER',
+                description: '暑期特別訓練課程',
+                color: '#3b82f6',
+                sportTypes: ['籃球', '游泳', '足球'],
+                courseCount: 8
+            },
+            {
+                id: 'beginner',
+                name: '新手入門',
+                code: 'BEGINNER',
+                description: '適合完全新手的入門課程',
+                color: '#10b981',
+                sportTypes: ['籃球', '羽球', '游泳', '足球', '體能'],
+                courseCount: 15
+            },
+            {
+                id: 'advanced',
+                name: '進階訓練',
+                code: 'ADVANCED',
+                description: '針對已有基礎學員的進階課程',
+                color: '#f59e0b',
+                sportTypes: ['籃球', '羽球', '足球'],
+                courseCount: 12
+            },
+            {
+                id: 'private',
+                name: '一對一教學',
+                code: 'PRIVATE',
+                description: '個人專屬教學課程',
+                color: '#8b5cf6',
+                sportTypes: ['籃球', '羽球', '游泳'],
+                courseCount: 5
+            },
+            {
+                id: 'camp',
+                name: '營隊課程',
+                code: 'CAMP',
+                description: '多日密集訓練營隊',
+                color: '#ef4444',
+                sportTypes: ['籃球', '足球', '體能'],
+                courseCount: 6
+            }
+        ];
+        
+        // 運動類型數據
+        let sportTypes = ['籃球', '羽球', '游泳', '足球', '體能', '網球', '桌球'];
         
         // ==================== DOM 加載完成 ====================
         
@@ -823,6 +1075,11 @@
             
             // 初始化頁面
             loadDashboardData();
+            
+            // 初始化課程類型標籤
+            updateCategoryTags();
+            updateSportTypeSelects();
+            loadCourseTypesTable();
         });
         
         // ==================== 事件綁定 ====================
@@ -859,9 +1116,16 @@
             // 匯出功能
             document.getElementById('export-courses').addEventListener('click', exportCourses);
             
+            // 課程類型管理
+            document.getElementById('add-category').addEventListener('click', addNewCategory);
+            
             // 確認對話框
             document.getElementById('confirm-cancel').addEventListener('click', hideConfirmDialog);
             document.getElementById('confirm-ok').addEventListener('click', handleConfirmAction);
+            
+            // 編輯課程類型對話框
+            document.getElementById('edit-category-cancel').addEventListener('click', hideEditCategoryDialog);
+            document.getElementById('edit-category-save').addEventListener('click', saveEditedCategory);
             
             // 自動關閉提示
             setInterval(() => {
@@ -918,10 +1182,324 @@
                 case 'courses':
                     loadCoursesData();
                     break;
+                case 'course-types':
+                    loadCourseTypesTable();
+                    break;
                 case 'add-course':
                     initCourseForm();
                     break;
             }
+        }
+        
+        // ==================== 課程類型管理 ====================
+        
+        // 更新課程類型標籤
+        function updateCategoryTags() {
+            const container = document.getElementById('category-tags-container');
+            
+            // 生成標籤 HTML
+            const tagsHtml = courseCategories.map(category => {
+                const style = category.id === 'all' ? '' : `style="background: ${category.color}; color: white;"`;
+                
+                return `
+                <div class="category-tag ${category.id === 'all' ? 'active' : ''}" 
+                     data-category="${category.id}"
+                     ${style}>
+                    ${category.name}
+                    ${category.id !== 'all' ? `
+                    <span class="close-btn" onclick="deleteCategoryTag('${category.id}', event)">
+                        <i data-lucide="x" class="w-3 h-3"></i>
+                    </span>
+                    ` : ''}
+                </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = tagsHtml;
+            lucide.createIcons();
+            
+            // 綁定標籤點擊事件
+            container.querySelectorAll('.category-tag').forEach(tag => {
+                tag.addEventListener('click', function(e) {
+                    // 如果點擊的是關閉按鈕，不觸發篩選
+                    if (e.target.closest('.close-btn')) return;
+                    
+                    const categoryId = this.getAttribute('data-category');
+                    filterByCategory(categoryId);
+                    
+                    // 更新標籤 active 狀態
+                    container.querySelectorAll('.category-tag').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                });
+            });
+        }
+        
+        // 更新運動類型下拉選單
+        function updateSportTypeSelects() {
+            // 更新課程管理頁面的篩選下拉選單
+            const filterSportSelect = document.getElementById('filter-sport');
+            filterSportSelect.innerHTML = `
+                <option value="">全部運動</option>
+                ${sportTypes.map(sport => `<option value="${sport}">${sport}</option>`).join('')}
+            `;
+            
+            // 更新新增課程頁面的運動類型下拉選單
+            const formSportSelect = document.getElementById('sportType-select');
+            formSportSelect.innerHTML = `
+                <option value="">請選擇</option>
+                ${sportTypes.map(sport => `<option value="${sport}">${sport}</option>`).join('')}
+            `;
+            
+            // 更新新增課程頁面的課程類型下拉選單
+            const formCategorySelect = document.getElementById('courseCategory-select');
+            formCategorySelect.innerHTML = `
+                <option value="">無</option>
+                ${courseCategories
+                    .filter(cat => cat.id !== 'all')
+                    .map(cat => `<option value="${cat.id}">${cat.name}</option>`)
+                    .join('')}
+            `;
+        }
+        
+        // 載入課程類型表格
+        function loadCourseTypesTable() {
+            const tableBody = document.getElementById('course-types-table-body');
+            
+            if (courseCategories.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <i data-lucide="tags" class="w-12 h-12 mx-auto mb-3"></i>
+                            <p>尚未建立任何課程類型</p>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+            
+            const rows = courseCategories
+                .filter(cat => cat.id !== 'all')
+                .map(category => {
+                    const sportList = Array.isArray(category.sportTypes) 
+                        ? category.sportTypes.join(', ')
+                        : category.sportTypes;
+                    
+                    return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-3 h-3 rounded-full mr-3" style="background: ${category.color}"></div>
+                                <div class="font-medium text-gray-900">${category.name}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${category.code}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-900">${category.description || '-'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${sportList}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${category.courseCount}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="editCategory('${category.id}')" 
+                                        class="text-blue-600 hover:text-blue-900">
+                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="showConfirmDialog('deleteCategory', '${category.id}', '${category.name}')" 
+                                        class="text-red-600 hover:text-red-900">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    `;
+                }).join('');
+            
+            tableBody.innerHTML = rows;
+            lucide.createIcons();
+        }
+        
+        // 新增課程類型
+        function addNewCategory() {
+            const name = document.getElementById('new-category-name').value.trim();
+            const code = document.getElementById('new-category-code').value.trim();
+            const description = document.getElementById('new-category-description').value.trim();
+            const color = document.getElementById('new-category-color').value;
+            const sportsSelect = document.getElementById('new-category-sports');
+            
+            // 驗證輸入
+            if (!name || !code) {
+                showError('請填寫類型名稱和代碼');
+                return;
+            }
+            
+            // 檢查代碼是否已存在
+            if (courseCategories.some(cat => cat.code === code)) {
+                showError('此代碼已存在，請使用其他代碼');
+                return;
+            }
+            
+            // 取得選中的運動類型
+            const selectedSports = Array.from(sportsSelect.selectedOptions)
+                .map(option => option.value);
+            
+            // 建立新課程類型
+            const newCategory = {
+                id: code.toLowerCase(),
+                name: name,
+                code: code.toUpperCase(),
+                description: description,
+                color: color,
+                sportTypes: selectedSports.length > 0 ? selectedSports : [...sportTypes],
+                courseCount: 0
+            };
+            
+            // 添加到列表
+            courseCategories.push(newCategory);
+            
+            // 更新介面
+            updateCategoryTags();
+            updateSportTypeSelects();
+            loadCourseTypesTable();
+            
+            // 清空表單
+            document.getElementById('new-category-name').value = '';
+            document.getElementById('new-category-code').value = '';
+            document.getElementById('new-category-description').value = '';
+            document.getElementById('new-category-color').value = '#3b82f6';
+            
+            // 取消所有選中的運動類型
+            Array.from(sportsSelect.options).forEach(option => {
+                option.selected = false;
+            });
+            
+            showSuccess('課程類型已新增');
+        }
+        
+        // 刪除課程類型標籤
+        function deleteCategoryTag(categoryId, event) {
+            event.stopPropagation(); // 防止觸發標籤點擊事件
+            
+            const category = courseCategories.find(cat => cat.id === categoryId);
+            if (category) {
+                showConfirmDialog('deleteCategory', categoryId, category.name);
+            }
+        }
+        
+        // 編輯課程類型
+        function editCategory(categoryId) {
+            const category = courseCategories.find(cat => cat.id === categoryId);
+            if (!category) return;
+            
+            // 填入表單數據
+            document.getElementById('edit-category-name').value = category.name;
+            document.getElementById('edit-category-description').value = category.description || '';
+            document.getElementById('edit-category-color').value = category.color;
+            
+            // 設置編輯對象
+            document.getElementById('edit-category-dialog').setAttribute('data-category-id', categoryId);
+            
+            // 顯示對話框
+            document.getElementById('edit-category-dialog').classList.remove('hidden');
+        }
+        
+        // 隱藏編輯對話框
+        function hideEditCategoryDialog() {
+            document.getElementById('edit-category-dialog').classList.add('hidden');
+        }
+        
+        // 儲存編輯的課程類型
+        function saveEditedCategory() {
+            const dialog = document.getElementById('edit-category-dialog');
+            const categoryId = dialog.getAttribute('data-category-id');
+            const category = courseCategories.find(cat => cat.id === categoryId);
+            
+            if (!category) return;
+            
+            // 更新數據
+            category.name = document.getElementById('edit-category-name').value.trim();
+            category.description = document.getElementById('edit-category-description').value.trim();
+            category.color = document.getElementById('edit-category-color').value;
+            
+            // 更新介面
+            updateCategoryTags();
+            loadCourseTypesTable();
+            
+            // 隱藏對話框
+            hideEditCategoryDialog();
+            
+            showSuccess('課程類型已更新');
+        }
+        
+        // ==================== 課程類型篩選 ====================
+        
+        function filterByCategory(categoryId) {
+            if (categoryId === 'all') {
+                // 顯示所有課程
+                filteredCoursesData = [...coursesData];
+            } else {
+                // 根據課程類型篩選
+                const category = courseCategories.find(cat => cat.id === categoryId);
+                if (category) {
+                    filteredCoursesData = coursesData.filter(course => {
+                        // 這裡應該根據課程的 category 欄位篩選
+                        // 暫時使用模擬篩選邏輯
+                        return Math.random() > 0.5; // 模擬篩選
+                    });
+                    
+                    if (filteredCoursesData.length === 0) {
+                        // 如果沒有符合的課程，顯示提示
+                        const tableBody = document.getElementById('courses-table-body');
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                                    <i data-lucide="tag" class="w-12 h-12 mx-auto mb-3"></i>
+                                    <p>此課程類型暫無課程</p>
+                                    <button onclick="resetCategoryFilter()" 
+                                            class="mt-2 px-4 py-2 text-sm text-blue-600 hover:text-blue-800">
+                                        顯示全部課程
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                        lucide.createIcons();
+                        updatePagination();
+                        return;
+                    }
+                }
+            }
+            
+            currentPageNum = 1;
+            renderCoursesTable();
+            updatePagination();
+            
+            // 更新篩選器狀態
+            document.getElementById('filter-sport').value = '';
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-date').value = '';
+        }
+        
+        function resetCategoryFilter() {
+            const container = document.getElementById('category-tags-container');
+            container.querySelectorAll('.category-tag').forEach(t => {
+                t.classList.remove('active');
+            });
+            
+            // 啟用「全部課程」標籤
+            const allTag = container.querySelector('.category-tag[data-category="all"]');
+            if (allTag) {
+                allTag.classList.add('active');
+            }
+            
+            filterByCategory('all');
         }
         
         // ==================== 儀表板功能 ====================
@@ -991,12 +1569,16 @@
                 const statusClass = getStatusClass(course.status);
                 const statusText = getStatusText(course.status);
                 
+                // 找出課程類型
+                const category = courseCategories.find(cat => cat.id === course.category) || {};
+                
                 return `
                 <div class="flex items-center justify-between py-3 border-b last:border-0">
                     <div>
                         <div class="font-medium text-gray-800">${course.courseName}</div>
                         <div class="text-sm text-gray-600">
                             ${course.courseDate || ''} ${course.startTime || ''} | ${course.coachName || ''}
+                            ${category.name ? `<span class="ml-2 px-2 py-1 text-xs rounded" style="background: ${category.color || '#e5e7eb'}; color: ${getContrastColor(category.color || '#e5e7eb')}">${category.name}</span>` : ''}
                         </div>
                     </div>
                     <div class="text-right">
@@ -1030,6 +1612,9 @@
                 coursesData = await loadAllCourses();
                 filteredCoursesData = [...coursesData];
                 
+                // 更新課程數量統計
+                updateCategoryCourseCounts();
+                
                 // 渲染表格
                 renderCoursesTable();
                 
@@ -1039,6 +1624,37 @@
             } catch (error) {
                 console.error('載入課程數據失敗:', error);
                 showError('無法載入課程資料');
+            }
+        }
+        
+        // 更新課程類型中的課程數量統計
+        function updateCategoryCourseCounts() {
+            // 重置計數
+            courseCategories.forEach(cat => {
+                if (cat.id !== 'all') {
+                    cat.courseCount = 0;
+                }
+            });
+            
+            // 計算每個課程類型的課程數量
+            coursesData.forEach(course => {
+                if (course.category) {
+                    const category = courseCategories.find(cat => cat.id === course.category);
+                    if (category) {
+                        category.courseCount = (category.courseCount || 0) + 1;
+                    }
+                }
+            });
+            
+            // 更新「全部課程」的數量
+            const allCategory = courseCategories.find(cat => cat.id === 'all');
+            if (allCategory) {
+                allCategory.courseCount = coursesData.length;
+            }
+            
+            // 更新介面
+            if (currentPage === 'course-types') {
+                loadCourseTypesTable();
             }
         }
         
@@ -1067,7 +1683,27 @@
                             status: 'open',
                             isEarlyBird: true,
                             remainingSeats: 3,
+                            category: 'beginner',
                             createdAt: '2024-01-10T10:00:00'
+                        },
+                        {
+                            courseId: 'C-BASKET-002',
+                            courseName: '籃球暑期營隊',
+                            sportType: '籃球',
+                            ageGroup: '兒童(7-12)',
+                            courseDate: '2024-07-15',
+                            startTime: '09:00',
+                            endTime: '12:00',
+                            coachName: '王教練',
+                            venueName: '新竹體育館',
+                            venueArea: '新竹市',
+                            enrolledCount: 18,
+                            totalSeats: 20,
+                            originalPrice: 5000,
+                            status: 'open',
+                            remainingSeats: 2,
+                            category: 'summer',
+                            createdAt: '2024-05-10T14:30:00'
                         },
                         {
                             courseId: 'C-BADMINTON-001',
@@ -1085,6 +1721,7 @@
                             originalPrice: 1200,
                             status: 'full',
                             remainingSeats: 0,
+                            category: 'beginner',
                             createdAt: '2024-01-05T14:30:00'
                         },
                         {
@@ -1103,6 +1740,7 @@
                             originalPrice: 900,
                             status: 'open',
                             remainingSeats: 2,
+                            category: 'beginner',
                             createdAt: '2024-01-08T09:15:00'
                         },
                         {
@@ -1121,7 +1759,46 @@
                             originalPrice: 1000,
                             status: 'open',
                             remainingSeats: 10,
+                            category: 'advanced',
                             createdAt: '2024-01-12T11:45:00'
+                        },
+                        {
+                            courseId: 'C-BASKET-003',
+                            courseName: '籃球一對一教學',
+                            sportType: '籃球',
+                            ageGroup: '成人(18+)',
+                            courseDate: '2024-02-05',
+                            startTime: '18:00',
+                            endTime: '19:00',
+                            coachName: '張教練',
+                            venueName: '竹北運動中心',
+                            venueArea: '竹北',
+                            enrolledCount: 1,
+                            totalSeats: 1,
+                            originalPrice: 1500,
+                            status: 'open',
+                            remainingSeats: 0,
+                            category: 'private',
+                            createdAt: '2024-01-20T16:30:00'
+                        },
+                        {
+                            courseId: 'C-FOOTBALL-002',
+                            courseName: '足球進階訓練營',
+                            sportType: '足球',
+                            ageGroup: '青少年(13-18)',
+                            courseDate: '2024-06-10',
+                            startTime: '14:00',
+                            endTime: '17:00',
+                            coachName: '陳教練',
+                            venueName: '竹東足球場',
+                            venueArea: '竹東',
+                            enrolledCount: 12,
+                            totalSeats: 15,
+                            originalPrice: 3500,
+                            status: 'open',
+                            remainingSeats: 3,
+                            category: 'camp',
+                            createdAt: '2024-03-15T10:20:00'
                         }
                     ];
                     resolve(mockCourses);
@@ -1155,12 +1832,20 @@
                 const statusText = getStatusText(course.status);
                 const displayPrice = course.earlyBirdPrice || course.originalPrice;
                 
+                // 找出課程類型
+                const category = courseCategories.find(cat => cat.id === course.category);
+                
                 return `
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4">
                             <div class="font-medium text-gray-900">${course.courseName}</div>
                             <div class="text-sm text-gray-500">
                                 ${course.sportType || ''} | ${course.ageGroup || ''}
+                                ${category ? `
+                                <span class="ml-2 px-2 py-1 text-xs rounded" style="background: ${category.color}; color: ${getContrastColor(category.color)}">
+                                    ${category.name}
+                                </span>
+                                ` : ''}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -1277,6 +1962,12 @@
             currentPageNum = 1;
             renderCoursesTable();
             updatePagination();
+            
+            // 更新課程類型標籤狀態
+            const container = document.getElementById('category-tags-container');
+            container.querySelectorAll('.category-tag').forEach(t => {
+                t.classList.remove('active');
+            });
         }
         
         function resetFilters() {
@@ -1288,6 +1979,9 @@
             currentPageNum = 1;
             renderCoursesTable();
             updatePagination();
+            
+            // 重置課程類型標籤
+            resetCategoryFilter();
         }
         
         // ==================== 課程表單功能 ====================
@@ -1410,14 +2104,34 @@
             return textMap[status] || '草稿';
         }
         
+        // 計算對比色（深色背景用白色文字，淺色背景用黑色文字）
+        function getContrastColor(hexColor) {
+            // 轉換 hex 顏色為 RGB
+            const r = parseInt(hexColor.substr(1, 2), 16);
+            const g = parseInt(hexColor.substr(3, 2), 16);
+            const b = parseInt(hexColor.substr(5, 2), 16);
+            
+            // 計算亮度
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+            // 返回對比色
+            return luminance > 0.5 ? '#000000' : '#ffffff';
+        }
+        
         // ==================== 對話框功能 ====================
         
         let pendingAction = null;
         let pendingCourseId = null;
+        let pendingCategoryId = null;
         
-        function showConfirmDialog(action, courseId, courseName) {
+        function showConfirmDialog(action, id, name) {
             pendingAction = action;
-            pendingCourseId = courseId;
+            
+            if (action.includes('Category')) {
+                pendingCategoryId = id;
+            } else {
+                pendingCourseId = id;
+            }
             
             const dialog = document.getElementById('confirm-dialog');
             const title = document.getElementById('confirm-title');
@@ -1425,10 +2139,13 @@
             
             if (action === 'delete') {
                 title.textContent = '刪除課程';
-                text.textContent = `確定要刪除課程「${courseName}」嗎？此操作無法復原。`;
+                text.textContent = `確定要刪除課程「${name}」嗎？此操作無法復原。`;
             } else if (action === 'duplicate') {
                 title.textContent = '複製課程';
-                text.textContent = `確定要複製課程「${courseName}」嗎？`;
+                text.textContent = `確定要複製課程「${name}」嗎？`;
+            } else if (action === 'deleteCategory') {
+                title.textContent = '刪除課程類型';
+                text.textContent = `確定要刪除課程類型「${name}」嗎？此操作無法復原。`;
             }
             
             dialog.classList.remove('hidden');
@@ -1438,6 +2155,7 @@
             document.getElementById('confirm-dialog').classList.add('hidden');
             pendingAction = null;
             pendingCourseId = null;
+            pendingCategoryId = null;
         }
         
         async function handleConfirmAction() {
@@ -1447,6 +2165,8 @@
                 await deleteCourse(pendingCourseId);
             } else if (pendingAction === 'duplicate') {
                 await duplicateCourseAction(pendingCourseId);
+            } else if (pendingAction === 'deleteCategory') {
+                await deleteCategory(pendingCategoryId);
             }
         }
         
@@ -1463,6 +2183,9 @@
                 if (index > -1) {
                     coursesData.splice(index, 1);
                 }
+                
+                // 更新課程類型計數
+                updateCategoryCourseCounts();
                 
                 showSuccess('課程已刪除');
                 
@@ -1494,23 +2217,61 @@
             }
         }
         
+        async function deleteCategory(categoryId) {
+            try {
+                // 不能刪除「全部課程」標籤
+                if (categoryId === 'all') {
+                    showError('無法刪除此課程類型');
+                    return;
+                }
+                
+                // 檢查是否有課程使用此類型
+                const category = courseCategories.find(cat => cat.id === categoryId);
+                if (category && category.courseCount > 0) {
+                    showError(`此課程類型有 ${category.courseCount} 個課程正在使用，無法刪除`);
+                    return;
+                }
+                
+                // 從列表中移除
+                const index = courseCategories.findIndex(cat => cat.id === categoryId);
+                if (index > -1) {
+                    courseCategories.splice(index, 1);
+                }
+                
+                // 更新介面
+                updateCategoryTags();
+                updateSportTypeSelects();
+                loadCourseTypesTable();
+                
+                showSuccess('課程類型已刪除');
+                
+            } catch (error) {
+                console.error('刪除課程類型失敗:', error);
+                showError('刪除課程類型失敗');
+            }
+        }
+        
         // ==================== 匯出功能 ====================
         
         function exportCourses() {
             try {
                 // 將數據轉換為 CSV 格式
-                const headers = ['課程名稱', '運動類別', '日期', '時間', '教練', '場地', '名額', '價格', '狀態'];
-                const csvData = filteredCoursesData.map(course => [
-                    course.courseName,
-                    course.sportType,
-                    course.courseDate,
-                    `${course.startTime}-${course.endTime}`,
-                    course.coachName,
-                    course.venueName,
-                    `${course.enrolledCount}/${course.totalSeats}`,
-                    course.displayPrice,
-                    getStatusText(course.status)
-                ]);
+                const headers = ['課程名稱', '運動類別', '課程類型', '日期', '時間', '教練', '場地', '名額', '價格', '狀態'];
+                const csvData = filteredCoursesData.map(course => {
+                    const category = courseCategories.find(cat => cat.id === course.category);
+                    return [
+                        course.courseName,
+                        course.sportType,
+                        category ? category.name : '',
+                        course.courseDate,
+                        `${course.startTime}-${course.endTime}`,
+                        course.coachName,
+                        course.venueName,
+                        `${course.enrolledCount}/${course.totalSeats}`,
+                        course.displayPrice || course.originalPrice,
+                        getStatusText(course.status)
+                    ];
+                });
                 
                 const csv = [headers, ...csvData]
                     .map(row => row.map(cell => `"${cell}"`).join(','))
