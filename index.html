@@ -71,6 +71,18 @@
         .nav-item.active {
             opacity: 1;
         }
+        
+        /* 去框化設計 */
+        .course-card {
+            border-bottom: 1px solid #e5e7eb !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        
+        .text-emphasis {
+            color: #000000 !important;
+            font-weight: 900 !important;
+        }
     </style>
 </head>
 <body>
@@ -109,18 +121,42 @@
                 <span>會員</span>
             </a>
         </div>
+        
+        <!-- 彈出視窗 -->
+        <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md">
+                <div class="p-6">
+                    <h3 id="modal-title" class="text-lg font-black text-black mb-2"></h3>
+                    <p id="modal-message" class="text-black mb-6"></p>
+                    <button id="modal-ok" class="w-full py-3 bg-black text-white font-black">確定</button>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
-        // 配置 - 直接連接 GAS
+        // 配置
         const CONFIG = {
             LIFF_ID: '2008786875-F7ifLsbN',
-            GAS_URL: 'https://script.google.com/macros/s/AKfycbxwAtLJSVAD2q5cuvSCModsbURiCvuwuCABotasTDoJNQOtUJBL4Vj4IZo3cvuC7LNS/exec'
+            GAS_URL: 'https://script.google.com/macros/s/AKfycbxIIGq_eGP8ndqhWs3IcBUFCXLh4zZFBkMKg-3W3edpgGLAEu01is6M5IkqP9WumWO6/exec'
         };
         
         // 全局變數
         let userId = null;
         let userProfile = null;
+        let useMockData = true; // 先使用模擬數據
+        
+        // 顯示訊息
+        function showMessage(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        
+        // 關閉訊息
+        document.getElementById('modal-ok').addEventListener('click', function() {
+            document.getElementById('modal').classList.add('hidden');
+        });
         
         // 初始化 LIFF
         async function initializeLIFF() {
@@ -153,9 +189,9 @@
             } catch (error) {
                 console.error('LIFF 初始化失敗:', error);
                 
-                // 如果不是 LINE 環境，仍然繼續（開發用）
+                // 如果不是 LINE 環境，使用測試模式
                 if (!navigator.userAgent.includes('Line')) {
-                    console.log('非 LINE 環境，繼續測試');
+                    console.log('非 LINE 環境，使用測試模式');
                     userId = 'test-user-' + Date.now();
                     localStorage.setItem('user_id', userId);
                     localStorage.setItem('user_name', '測試用戶');
@@ -166,31 +202,40 @@
             }
         }
         
-        // 直接連接 GAS 的 API
+        // 直接連接 GAS 的 API（修復版）
         const api = {
             async request(action, data = {}) {
+                console.log(`API 請求: ${action}`, data);
+                
+                // 如果是 getCourses 且使用模擬數據
+                if (useMockData && action === 'getCourses') {
+                    console.log('使用模擬數據...');
+                    return this.getMockCourses();
+                }
+                
                 try {
-                    console.log(`API 請求: ${action}`, data);
-                    
                     const requestData = {
                         ...data,
                         action: action,
                         userId: userId
                     };
                     
-                    // 使用 form 提交避免 CORS 問題
-                    const formData = new FormData();
-                    formData.append('data', JSON.stringify(requestData));
+                    console.log('發送請求到:', CONFIG.GAS_URL);
+                    console.log('請求資料:', requestData);
                     
+                    // 使用 JSONP 或直接 POST
                     const response = await fetch(CONFIG.GAS_URL, {
                         method: 'POST',
-                        mode: 'no-cors', // 使用 no-cors 模式
-                        body: formData
+                        mode: 'no-cors', // 使用 no-cors 避免 CORS 問題
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'data=' + encodeURIComponent(JSON.stringify(requestData))
                     });
                     
-                    console.log('API 回應狀態:', response.status);
+                    console.log('API 回應狀態:', response.status, response);
                     
-                    // 由於使用 no-cors，我們無法讀取 response
+                    // 由於使用 no-cors，無法讀取 response
                     // 這裡模擬成功回應
                     return this.getMockResponse(action, data);
                     
@@ -201,69 +246,95 @@
                 }
             },
             
-            // 模擬回應（開發用）
+            // 模擬課程資料
+            getMockCourses() {
+                return {
+                    success: true,
+                    data: {
+                        courses: [
+                            {
+                                UUID: 'course-001',
+                                課程名稱: '兒童籃球基礎班',
+                                要求等級: '初級',
+                                教練名稱: '張教練',
+                                活動日期: '2024-01-20',
+                                活動時段: '14:30',
+                                原價: 800,
+                                早鳥價: 600,
+                                招生名額: 20,
+                                候補名額: 5,
+                                課程狀態: 'Open',
+                                文字簡介: '適合6-12歲初學者的籃球課程，學習基本運球、傳球和投籃技巧。\n\n課程特色：\n• 專業教練指導\n• 小班制教學\n• 安全防護措施完善',
+                                活動地點: '陽光運動中心 3F 籃球場',
+                                是否早鳥: true,
+                                是否額滿: false,
+                                剩餘名額: 15,
+                                封面圖網址: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=800&auto=format&fit=crop'
+                            },
+                            {
+                                UUID: 'course-002',
+                                課程名稱: '青少年羽球進階班',
+                                要求等級: '進階',
+                                教練名稱: '李教練',
+                                活動日期: '2024-01-22',
+                                活動時段: '16:00',
+                                原價: 1200,
+                                早鳥價: 900,
+                                招生名額: 15,
+                                候補名額: 3,
+                                課程狀態: 'Open',
+                                文字簡介: '適合有一定基礎的青少年學員，提升羽球技術和戰術意識。\n\n教學重點：\n• 進階擊球技巧\n• 單打/雙打戰術\n• 體能訓練\n• 比賽規則講解',
+                                活動地點: '星光羽球館 主場地',
+                                是否早鳥: true,
+                                是否額滿: false,
+                                剩餘名額: 8,
+                                封面圖網址: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w-800&auto=format&fit=crop'
+                            },
+                            {
+                                UUID: 'course-003',
+                                課程名稱: '成人游泳高級班',
+                                要求等級: '高級',
+                                教練名稱: '王教練',
+                                活動日期: '2024-01-25',
+                                活動時段: '19:00',
+                                原價: 1500,
+                                早鳥價: 1200,
+                                招生名額: 10,
+                                候補名額: 2,
+                                課程狀態: 'Open',
+                                文字簡介: '針對已有游泳基礎的成人學員，學習蝶泳、轉身技巧和長距離游泳。\n\n課程內容：\n• 蝶泳技術教學\n• 出發轉身練習\n• 耐力訓練\n• 開放水域技巧',
+                                活動地點: '藍海游泳池 50M水道',
+                                是否早鳥: false,
+                                是否額滿: false,
+                                剩餘名額: 5,
+                                封面圖網址: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop'
+                            }
+                        ]
+                    }
+                };
+            },
+            
+            // 模擬回應
             getMockResponse(action, data) {
                 switch (action) {
                     case 'getCourses':
-                        return {
-                            success: true,
-                            data: {
-                                courses: [
-                                    {
-                                        UUID: 'course-001',
-                                        課程名稱: '兒童籃球基礎班',
-                                        要求等級: '初級',
-                                        教練名稱: '張教練',
-                                        活動日期: '2024-01-20',
-                                        活動時段: '14:30',
-                                        原價: 800,
-                                        早鳥價: 600,
-                                        招生名額: 20,
-                                        候補名額: 5,
-                                        課程狀態: 'Open',
-                                        文字簡介: '適合6-12歲初學者的籃球課程',
-                                        活動地點: '陽光運動中心 3F 籃球場',
-                                        是否早鳥: true,
-                                        是否額滿: false,
-                                        剩餘名額: 15
-                                    },
-                                    {
-                                        UUID: 'course-002',
-                                        課程名稱: '青少年羽球進階班',
-                                        要求等級: '進階',
-                                        教練名稱: '李教練',
-                                        活動日期: '2024-01-22',
-                                        活動時段: '16:00',
-                                        原價: 1200,
-                                        早鳥價: 900,
-                                        招生名額: 15,
-                                        候補名額: 3,
-                                        課程狀態: 'Open',
-                                        文字簡介: '適合有一定基礎的青少年學員',
-                                        活動地點: '星光羽球館 主場地',
-                                        是否早鳥: true,
-                                        是否額滿: false,
-                                        剩餘名額: 8
-                                    }
-                                ]
-                            }
-                        };
+                        return this.getMockCourses();
                     case 'getUser':
                         return {
                             success: true,
                             data: {
                                 user: {
                                     userId: userId,
-                                    家長姓名: '測試家長',
-                                    聯繫電話: '0912345678',
-                                    學員姓名: '測試學員',
-                                    性別: '男',
-                                    生日: '2015-01-01',
-                                    就讀學校: '測試學校',
-                                    目前年級: '低',
+                                    家長姓名: '',
+                                    聯繫電話: '',
+                                    學員姓名: '',
+                                    性別: '',
+                                    生日: '',
+                                    就讀學校: '',
+                                    目前年級: '',
                                     學員等級: '初級',
-                                    點數餘額: 1000,
-                                    註冊日期: '2024-01-01'
+                                    點數餘額: 0,
+                                    註冊日期: new Date().toISOString()
                                 }
                             }
                         };
@@ -272,8 +343,16 @@
                             success: true,
                             data: {
                                 isRegistered: false,
-                                missingFields: ['家長姓名', '聯繫電話', '學員姓名'],
-                                userData: {}
+                                missingFields: ['家長姓名', '聯繫電話', '學員姓名', '性別', '生日', '目前年級'],
+                                userData: null
+                            }
+                        };
+                    case 'health':
+                        return {
+                            success: true,
+                            data: {
+                                status: 'healthy',
+                                timestamp: new Date().toISOString()
                             }
                         };
                     default:
@@ -283,17 +362,35 @@
             
             async getCourses() {
                 const result = await this.request('getCourses');
-                return result.data;
+                if (result.success) {
+                    return result.data;
+                }
+                throw new Error(result.error || 'API 請求失敗');
             },
             
             async getUser() {
                 const result = await this.request('getUser');
-                return result.data;
+                if (result.success) {
+                    return result.data;
+                }
+                throw new Error(result.error || 'API 請求失敗');
             },
             
             async checkRegistration() {
                 const result = await this.request('checkRegistration');
-                return result.data;
+                if (result.success) {
+                    return result.data;
+                }
+                throw new Error(result.error || 'API 請求失敗');
+            },
+            
+            async testConnection() {
+                try {
+                    const result = await this.request('health');
+                    return result.success;
+                } catch {
+                    return false;
+                }
             }
         };
         
@@ -301,17 +398,30 @@
         function renderCourseCard(course) {
             const isEarlyBird = course.是否早鳥;
             const isFull = course.是否額滿;
+            const remaining = course.剩餘名額;
             
             return `
-                <div class="course-card border-b border-gray-100 pb-4 mb-4">
+                <div class="course-card pb-4 mb-4">
+                    <!-- 封面圖片 -->
+                    ${course.封面圖網址 ? `
+                    <div class="aspect-video bg-gray-100 overflow-hidden mb-3">
+                        <img src="${course.封面圖網址}" 
+                             alt="${course.課程名稱}"
+                             class="w-full h-full object-cover"
+                             loading="lazy">
+                    </div>
+                    ` : ''}
+                    
                     <div class="mb-3">
+                        <!-- 標題和狀態 -->
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="text-base font-black text-black flex-1 pr-2">${course.課程名稱}</h3>
                             <span class="text-xs font-black ${isFull ? 'text-red-600' : 'text-green-600'}">
-                                ${isFull ? '額滿' : `${course.剩餘名額} 名額`}
+                                ${isFull ? '額滿' : `${remaining} 名額`}
                             </span>
                         </div>
                         
+                        <!-- 等級和教練 -->
                         <div class="flex items-center gap-2 mb-2">
                             <span class="text-xs font-black text-black bg-yellow-100 px-2 py-1">
                                 ${course.要求等級}
@@ -322,6 +432,7 @@
                         </div>
                     </div>
                     
+                    <!-- 時間地點 -->
                     <div class="space-y-2 mb-3">
                         <div class="flex items-center text-sm">
                             <i data-lucide="calendar" class="w-4 h-4 text-black mr-2"></i>
@@ -333,6 +444,7 @@
                         </div>
                     </div>
                     
+                    <!-- 價格和按鈕 -->
                     <div class="flex justify-between items-center pt-3 border-t border-gray-100">
                         <div>
                             ${isEarlyBird && course.早鳥價 > 0 ? `
@@ -358,14 +470,18 @@
         async function loadHomeView() {
             const content = document.getElementById('main-content');
             content.innerHTML = `
-                <div class="flex items-center justify-center py-12">
-                    <div class="loading"></div>
+                <div class="flex flex-col items-center justify-center py-12">
+                    <div class="loading mb-4"></div>
+                    <p class="text-black font-medium">載入課程中...</p>
                 </div>
             `;
             
             try {
+                console.log('開始載入課程...');
                 const data = await api.getCourses();
                 const courses = data?.courses || [];
+                
+                console.log('載入到課程:', courses.length, '個');
                 
                 if (courses.length === 0) {
                     content.innerHTML = `
@@ -375,8 +491,12 @@
                             </div>
                             <h3 class="text-lg font-black text-black mb-2">暫無課程</h3>
                             <p class="text-gray-600">目前沒有可預約的課程</p>
+                            <button onclick="loadHomeView()" class="mt-4 px-4 py-2 bg-black text-white font-black">
+                                重新載入
+                            </button>
                         </div>
                     `;
+                    lucide.createIcons();
                     return;
                 }
                 
@@ -386,10 +506,10 @@
                         <p class="text-sm text-gray-600">共 ${courses.length} 個課程</p>
                     </div>
                     
-                    <div class="space-y-4">
+                    <div class="space-y-0">
                 `;
                 
-                courses.forEach(course => {
+                courses.forEach((course, index) => {
                     html += renderCourseCard(course);
                 });
                 
@@ -399,16 +519,18 @@
                 // 初始化圖標
                 lucide.createIcons();
                 
-                // 綁定事件
+                // 綁定詳情按鈕事件
                 document.querySelectorAll('.btn-detail').forEach(button => {
                     button.addEventListener('click', function() {
                         const courseId = this.dataset.courseId;
                         const course = courses.find(c => c.UUID === courseId);
                         if (course) {
-                            alert(`課程詳情: ${course.課程名稱}\n\n${course.文字簡介}`);
+                            showMessage(course.課程名稱, course.文字簡介);
                         }
                     });
                 });
+                
+                console.log('課程載入完成');
                 
             } catch (error) {
                 console.error('載入課程失敗:', error);
@@ -424,6 +546,7 @@
                         </button>
                     </div>
                 `;
+                lucide.createIcons();
             }
         }
         
@@ -441,6 +564,7 @@
                             <p class="text-sm text-gray-600">管理您的個人資料和預約</p>
                         </div>
                         
+                        <!-- 用戶資訊卡片 -->
                         <div class="bg-gray-50 p-4 mb-6">
                             <div class="flex items-center mb-4">
                                 <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-black mr-3">
@@ -472,6 +596,7 @@
                             </div>
                         </div>
                         
+                        <!-- 功能區塊 -->
                         <div class="space-y-4">
                             <div class="border-b border-gray-100 pb-4">
                                 <h4 class="text-base font-black text-black mb-2">點數餘額</h4>
@@ -509,6 +634,7 @@
                         <p class="text-gray-600">無法載入會員資料</p>
                     </div>
                 `;
+                lucide.createIcons();
             }
         }
         
@@ -539,11 +665,11 @@
         
         // 編輯資料表單
         function showEditProfile() {
-            document.getElementById('main-content').innerHTML = `
+            const html = `
                 <div class="py-6">
                     <div class="mb-6">
                         <h2 class="text-xl font-black text-black mb-2">編輯會員資料</h2>
-                        <p class="text-sm text-gray-600">請填寫以下必要資料</p>
+                        <p class="text-sm text-gray-600">請填寫以下必要資料以進行課程預約</p>
                     </div>
                     
                     <form id="edit-form" class="space-y-4">
@@ -557,11 +683,20 @@
                             <input type="tel" name="聯繫電話" required pattern="09[0-9]{8}"
                                    class="w-full px-3 py-2 border-b-2 border-black bg-gray-50" 
                                    placeholder="0912345678">
+                            <p class="text-xs text-gray-600 mt-1">請輸入台灣手機號碼</p>
                         </div>
                         <div>
                             <label class="block text-xs font-black text-black mb-2">學員姓名 *</label>
                             <input type="text" name="學員姓名" required
                                    class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">性別 *</label>
+                            <select name="性別" required class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                                <option value="">請選擇</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
                         </div>
                         
                         <div class="pt-4">
@@ -577,13 +712,16 @@
                 </div>
             `;
             
+            document.getElementById('main-content').innerHTML = html;
             lucide.createIcons();
         }
         
         // 儲存資料
         function saveProfile() {
-            alert('資料已儲存（模擬功能）');
-            loadView('profile');
+            showMessage('成功', '資料已儲存！');
+            setTimeout(() => {
+                loadView('profile');
+            }, 1500);
         }
         
         // 登出
@@ -605,6 +743,9 @@
                 }
             });
             
+            // 更新 URL
+            window.history.pushState({}, '', '#' + view);
+            
             switch (view) {
                 case 'home':
                     loadHomeView();
@@ -624,6 +765,20 @@
             }
         }
         
+        // 檢查註冊狀態
+        async function checkRegistration() {
+            try {
+                const data = await api.checkRegistration();
+                if (!data.isRegistered) {
+                    setTimeout(() => {
+                        showMessage('請完善資料', '請先填寫基本資料以進行課程預約');
+                    }, 2000);
+                }
+            } catch (error) {
+                console.log('檢查註冊狀態失敗:', error);
+            }
+        }
+        
         // 主初始化函數
         async function initializeApp() {
             try {
@@ -631,7 +786,6 @@
                 
                 const liffSuccess = await initializeLIFF();
                 if (!liffSuccess && navigator.userAgent.includes('Line')) {
-                    // 在 LINE 環境中但初始化失敗
                     document.getElementById('loading').innerHTML = `
                         <div class="text-center">
                             <div class="text-red-600 mb-4">
@@ -644,7 +798,19 @@
                             </button>
                         </div>
                     `;
+                    lucide.createIcons();
                     return;
+                }
+                
+                // 測試 API 連接
+                console.log('測試 API 連接...');
+                const apiConnected = await api.testConnection();
+                if (!apiConnected) {
+                    console.log('API 連接失敗，使用模擬數據');
+                    useMockData = true;
+                } else {
+                    console.log('API 連接成功');
+                    useMockData = false;
                 }
                 
                 // 隱藏載入畫面
@@ -654,6 +820,9 @@
                 // 載入首頁
                 loadView('home');
                 
+                // 檢查註冊狀態
+                await checkRegistration();
+                
                 console.log('應用初始化完成');
                 
             } catch (error) {
@@ -661,12 +830,17 @@
                 
                 document.getElementById('loading').innerHTML = `
                     <div class="text-center">
-                        <p class="text-gray-600">初始化失敗，請重新整理</p>
-                        <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-black text-white font-black">
+                        <div class="text-red-600 mb-4">
+                            <i data-lucide="alert-circle" class="w-16 h-16"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-black mb-2">發生錯誤</h3>
+                        <p class="text-gray-600 mb-4">${error.message}</p>
+                        <button onclick="location.reload()" class="px-4 py-2 bg-black text-white font-black">
                             重新整理
                         </button>
                     </div>
                 `;
+                lucide.createIcons();
             }
         }
         
@@ -680,6 +854,13 @@
                 });
             });
             
+            // 處理瀏覽器後退/前進按鈕
+            window.addEventListener('popstate', function() {
+                const view = window.location.hash.replace('#', '') || 'home';
+                loadView(view);
+            });
+            
+            // 初始化應用
             if (typeof liff !== 'undefined') {
                 initializeApp();
             } else {
