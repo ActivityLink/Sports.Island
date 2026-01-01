@@ -1,0 +1,138 @@
+<!-- 側邊欄導航 -->
+<aside class="w-64 bg-gray-900 text-white h-screen flex flex-col">
+    <!-- Logo 區域 -->
+    <div class="p-6 border-b border-gray-800">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="activity" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold">Sports Island</h1>
+                <p class="text-gray-400 text-sm">課程管理系統</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 導航選單 -->
+    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+        <!-- 儀表板 -->
+        <a href="#" data-route="dashboard" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            <span>儀表板</span>
+        </a>
+
+        <!-- 課程模組標題 -->
+        <div class="mt-6 mb-2">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">課程管理模組</p>
+        </div>
+
+        <!-- 單次課模組 -->
+        <div class="nav-group">
+            <a href="#" data-route="single-courses" class="nav-item flex items-center justify-between p-3 rounded-lg hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="font-medium">單次課程</span>
+                        <p class="text-xs text-gray-400">單堂體驗課</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 梯次課模組 -->
+        <div class="nav-group">
+            <a href="#" data-route="session-courses" class="nav-item flex items-center justify-between p-3 rounded-lg hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="layers" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="font-medium">梯次課程</span>
+                        <p class="text-xs text-gray-400">多堂系列課</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 營隊課模組 -->
+        <div class="nav-group">
+            <a href="#" data-route="camp-courses" class="nav-item flex items-center justify-between p-3 rounded-lg hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="tent" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="font-medium">營隊課程</span>
+                        <p class="text-xs text-gray-400">多日營隊</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 常態課模組 -->
+        <div class="nav-group">
+            <a href="#" data-route="regular-courses" class="nav-item flex items-center justify-between p-3 rounded-lg hover:bg-gray-800 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                        <i data-lucide="repeat" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="font-medium">常態課程</span>
+                        <p class="text-xs text-gray-400">課後班/週期課</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- 共用功能標題 -->
+        <div class="mt-8 mb-2">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider px-3">共用管理</p>
+        </div>
+
+        <!-- 共用功能 -->
+        <a href="#" data-route="coaches" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span>教練管理</span>
+        </a>
+
+        <a href="#" data-route="venues" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors">
+            <i data-lucide="map-pin" class="w-5 h-5"></i>
+            <span>場地管理</span>
+        </a>
+
+        <a href="#" data-route="reports" class="nav-item flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-800 transition-colors">
+            <i data-lucide="bar-chart" class="w-5 h-5"></i>
+            <span>報表分析</span>
+        </a>
+    </nav>
+
+    <!-- 使用者資訊 -->
+    <div class="p-4 border-t border-gray-800">
+        <div class="flex items-center space-x-3 p-3 rounded-lg bg-gray-800">
+            <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center font-bold">
+                A
+            </div>
+            <div class="flex-1">
+                <p class="font-medium">管理員</p>
+                <p class="text-sm text-gray-400">admin@sportsisland.com</p>
+            </div>
+            <button class="p-2 hover:bg-gray-700 rounded" data-action="logout" title="登出">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+</aside>
+
+<!-- 側邊欄樣式 -->
+<style>
+.nav-item.active {
+    background-color: #1f2937;
+    border-left: 4px solid #3b82f6;
+}
+
+.nav-item.active:hover {
+    background-color: #1f2937;
+}
+</style>
