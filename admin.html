@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程管理後台 | Sports Island</title>
+    
+    <!-- Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Sheets API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f3f4f6;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #1f2937;
+            color: white;
+            height: 100vh;
+            position: fixed;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #d1d5db;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-item:hover {
+            background: #374151;
+            color: white;
+        }
+        
+        .nav-item.active {
+            background: #111827;
+            color: white;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .nav-item i {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+        }
+        
+        .form-input {
+            border: 1px solid #d1d5db;
+            padding: 8px 12px;
+            border-radius: 4px;
+            width: 100%;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-draft { background: #f3f4f6; color: #6b7280; }
+        .status-open { background: #dcfce7; color: #166534; }
+        .status-full { background: #fee2e2; color: #991b1b; }
+        .status-closed { background: #e5e7eb; color: #374151; }
+        .status-cancelled { background: #fef3c7; color: #92400e; }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 側邊欄 -->
+    <div class="sidebar">
+        <div class="p-6">
+            <h1 class="text-xl font-bold">Sports Island</h1>
+            <p class="text-gray-400 text-sm mt-1">課程管理後台</p>
+        </div>
+        
+        <nav class="mt-6">
+            <a href="#dashboard" class="nav-item active">
+                <i data-lucide="layout-dashboard"></i>
+                <span>儀表板</span>
+            </a>
+            <a href="#courses" class="nav-item">
+                <i data-lucide="book-open"></i>
+                <span>課程管理</span>
+            </a>
+            <a href="#add-course" class="nav-item">
+                <i data-lucide="plus-circle"></i>
+                <span>新增課程</span>
+            </a>
+            <a href="#coaches" class="nav-item">
+                <i data-lucide="users"></i>
+                <span>教練管理</span>
+            </a>
+            <a href="#venues" class="nav-item">
+                <i data-lucide="map-pin"></i>
+                <span>場地管理</span>
+            </a>
+            <a href="#bookings" class="nav-item">
+                <i data-lucide="calendar"></i>
+                <span>預約管理</span>
+            </a>
+            <a href="#reports" class="nav-item">
+                <i data-lucide="bar-chart"></i>
+                <span>報表分析</span>
+            </a>
+        </nav>
+        
+        <div class="absolute bottom-0 left-0 right-0 p-6">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                    A
+                </div>
+                <div>
+                    <div class="text-sm font-medium">管理員</div>
+                    <div class="text-xs text-gray-400">admin@sportsisland.com</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 主要內容 -->
+    <div class="main-content">
+        <!-- 儀表板 -->
+        <div id="dashboard" class="page active">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">儀表板</h2>
+                <div class="text-sm text-gray-600">
+                    <span id="current-date"></span>
+                </div>
+            </div>
+            
+            <!-- 統計卡片 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-100 rounded-lg mr-4">
+                            <i data-lucide="book-open" class="w-6 h-6 text-blue-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">總課程數</div>
+                            <div class="text-2xl font-bold" id="total-courses">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-green-100 rounded-lg mr-4">
+                            <i data-lucide="users" class="w-6 h-6 text-green-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">今日預約</div>
+                            <div class="text-2xl font-bold" id="today-bookings">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-yellow-100 rounded-lg mr-4">
+                            <i data-lucide="dollar-sign" class="w-6 h-6 text-yellow-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">本月營收</div>
+                            <div class="text-2xl font-bold" id="monthly-revenue">0 PT</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-purple-100 rounded-lg mr-4">
+                            <i data-lucide="user-check" class="w-6 h-6 text-purple-600"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm text-gray-600">總會員數</div>
+                            <div class="text-2xl font-bold" id="total-members">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 近期課程 -->
+            <div class="bg-white rounded-lg shadow mb-8">
+                <div class="p-6 border-b">
+                    <h3 class="text-lg font-semibold text-gray-800">近期課程</h3>
+                </div>
+                <div class="p-6">
+                    <div id="recent-courses">
+                        <div class="text-center py-8 text-gray-500">
+                            <div class="loading mx-auto mb-3"></div>
+                            <p>載入中...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 課程管理 -->
+        <div id="courses" class="page hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">課程管理</h2>
+                <div class="flex space-x-3">
+                    <button id="export-courses" class="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+                        <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                        匯出
+                    </button>
+                    <button onclick="showPage('add-course')" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                        <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                        新增課程
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 篩選器 -->
+            <div class="bg-white p-4 rounded-lg shadow mb-6">
+                <div class="flex flex-wrap gap-4">
+                    <select id="filter-status" class="form-input w-40">
+                        <option value="">全部狀態</option>
+                        <option value="draft">草稿</option>
+                        <option value="open">報名中</option>
+                        <option value="full">額滿</option>
+                        <option value="closed">已結束</option>
+                        <option value="cancelled">已取消</option>
+                    </select>
+                    
+                    <select id="filter-sport" class="form-input w-40">
+                        <option value="">全部運動</option>
+                        <option value="籃球">籃球</option>
+                        <option value="羽球">羽球</option>
+                        <option value="游泳">游泳</option>
+                        <option value="足球">足球</option>
+                        <option value="體能">體能</option>
+                    </select>
+                    
+                    <input type="date" id="filter-date" class="form-input w-40">
+                    
+                    <button id="apply-filter" class="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900">
+                        篩選
+                    </button>
+                    <button id="reset-filter" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        重置
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 課程表格 -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    課程名稱
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    日期/時間
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    教練/場地
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    名額
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    價格
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    狀態
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    操作
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody id="courses-table-body" class="divide-y divide-gray-200">
+                            <!-- 課程資料會動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 分頁 -->
+            <div class="mt-6 flex justify-between items-center">
+                <div class="text-sm text-gray-700">
+                    顯示 <span id="pagination-from">1</span> - <span id="pagination-to">10</span> 筆，共 <span id="pagination-total">0</span> 筆
+                </div>
+                <div class="flex space-x-2">
+                    <button id="prev-page" class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50" disabled>
+                        上一頁
+                    </button>
+                    <button id="next-page" class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50" disabled>
+                        下一頁
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 新增課程 -->
+        <div id="add-course" class="page hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">新增課程</h2>
+                <p class="text-gray-600">請填寫以下資訊來建立新課程</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow p-6">
+                <form id="course-form">
+                    <!-- 基本資訊 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                            基本資訊
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    課程名稱 *
+                                </label>
+                                <input type="text" name="courseName" required 
+                                       class="form-input" placeholder="例：兒童籃球體驗課">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    運動類別 *
+                                </label>
+                                <select name="sportType" required class="form-input">
+                                    <option value="">請選擇</option>
+                                    <option value="籃球">籃球</option>
+                                    <option value="羽球">羽球</option>
+                                    <option value="游泳">游泳</option>
+                                    <option value="足球">足球</option>
+                                    <option value="體能">體能</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    年齡分級 *
+                                </label>
+                                <select name="ageGroup" required class="form-input">
+                                    <option value="">請選擇</option>
+                                    <option value="幼兒(3-6)">幼兒 (3-6歲)</option>
+                                    <option value="兒童(7-12)">兒童 (7-12歲)</option>
+                                    <option value="青少年(13-18)">青少年 (13-18歲)</option>
+                                    <option value="成人(18+)">成人 (18歲以上)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    難度等級 *
+                                </label>
+                                <select name="difficulty" required class="form-input">
+                                    <option value="">請選擇</option>
+                                    <option value="體驗級">體驗級</option>
+                                    <option value="初級">初級</option>
+                                    <option value="中級">中級</option>
+                                    <option value="高級">高級</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 時間安排 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                            時間安排
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    課程日期 *
+                                </label>
+                                <input type="date" name="courseDate" required 
+                                       class="form-input" id="course-date-input">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    開始時間 *
+                                </label>
+                                <input type="time" name="startTime" required 
+                                       class="form-input" value="14:30">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    結束時間 *
+                                </label>
+                                <input type="time" name="endTime" required 
+                                       class="form-input" value="16:00">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    課程時長 (分鐘) *
+                                </label>
+                                <input type="number" name="duration" required 
+                                       class="form-input" value="90" min="30" max="240">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    開放報名日
+                                </label>
+                                <input type="date" name="openDate" 
+                                       class="form-input" id="open-date-input">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    截止報名日
+                                </label>
+                                <input type="datetime-local" name="closeDate" 
+                                       class="form-input">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 師資場地 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                            師資場地
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    教練姓名 *
+                                </label>
+                                <input type="text" name="coachName" required 
+                                       class="form-input" placeholder="例：張教練">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    教練 ID
+                                </label>
+                                <input type="text" name="coachId" 
+                                       class="form-input" placeholder="例：COACH-001">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    場地名稱 *
+                                </label>
+                                <input type="text" name="venueName" required 
+                                       class="form-input" placeholder="例：竹北運動中心籃球場">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    場地區域 *
+                                </label>
+                                <select name="venueArea" required class="form-input">
+                                    <option value="">請選擇</option>
+                                    <option value="竹北">竹北</option>
+                                    <option value="新竹市">新竹市</option>
+                                    <option value="竹東">竹東</option>
+                                    <option value="湖口">湖口</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 價格設定 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                            價格設定
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    原價 (PT) *
+                                </label>
+                                <input type="number" name="originalPrice" required 
+                                       class="form-input" value="800" min="0">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    早鳥價 (PT)
+                                </label>
+                                <input type="number" name="earlyBirdPrice" 
+                                       class="form-input" value="600" min="0">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    早鳥截止時間
+                                </label>
+                                <input type="datetime-local" name="earlyBirdDeadline" 
+                                       class="form-input">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    會員價 (PT)
+                                </label>
+                                <input type="number" name="memberPrice" 
+                                       class="form-input" value="700" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 名額限制 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                            名額限制
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    總名額 *
+                                </label>
+                                <input type="number" name="totalSeats" required 
+                                       class="form-input" value="15" min="1">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    最少開班人數 *
+                                </label>
+                                <input type="number" name="minSeats" required 
+                                       class="form-input" value="3" min="1">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    候補名額
+                                </label>
+                                <input type="number" name="waitlistCapacity" 
+                                       class="form-input" value="5" min="0">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    性別限制
+                                </label>
+                                <select name="genderLimit" class="form-input">
+                                    <option value="不限">不限</option>
+                                    <option value="男生專班">男生專班</option>
+                                    <option value="女生專班">女生專班</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 課程內容 -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
+                            課程內容
+                        </h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    課程亮點 (用逗號分隔)
+                                </label>
+                                <input type="text" name="highlights" 
+                                       class="form-input" 
+                                       placeholder="例：小班教學,專業教練,安全環境">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    課程描述 *
+                                </label>
+                                <textarea name="description" required rows="4" 
+                                          class="form-input" 
+                                          placeholder="詳細描述課程內容..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    注意事項
+                                </label>
+                                <textarea name="notes" rows="3" 
+                                          class="form-input" 
+                                          placeholder="請提前10分鐘報到，穿著運動服裝..."></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    適合對象
+                                </label>
+                                <textarea name="suitableFor" rows="2" 
+                                          class="form-input" 
+                                          placeholder="適合7-12歲對籃球有興趣的兒童"></textarea>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    封面圖片 URL
+                                </label>
+                                <input type="url" name="coverImage" 
+                                       class="form-input" 
+                                       placeholder="https://example.com/image.jpg">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 表單按鈕 -->
+                    <div class="flex justify-end space-x-4 pt-6 border-t">
+                        <button type="button" onclick="showPage('courses')" 
+                                class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            取消
+                        </button>
+                        <button type="button" id="save-draft" 
+                                class="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                            儲存草稿
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            立即上架
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- 教練管理 -->
+        <div id="coaches" class="page hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">教練管理</h2>
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                    新增教練
+                </button>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+                <i data-lucide="users" class="w-16 h-16 mx-auto mb-4"></i>
+                <p>教練管理功能開發中</p>
+            </div>
+        </div>
+        
+        <!-- 場地管理 -->
+        <div id="venues" class="page hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">場地管理</h2>
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                    新增場地
+                </button>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+                <i data-lucide="map-pin" class="w-16 h-16 mx-auto mb-4"></i>
+                <p>場地管理功能開發中</p>
+            </div>
+        </div>
+        
+        <!-- 預約管理 -->
+        <div id="bookings" class="page hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">預約管理</h2>
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+                    <i data-lucide="download" class="w-4 h-4 inline mr-1"></i>
+                    匯出預約
+                </button>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+                <i data-lucide="calendar" class="w-16 h-16 mx-auto mb-4"></i>
+                <p>預約管理功能開發中</p>
+            </div>
+        </div>
+        
+        <!-- 報表分析 -->
+        <div id="reports" class="page hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">報表分析</h2>
+                <div class="flex space-x-3">
+                    <select class="form-input w-40">
+                        <option>本月份</option>
+                        <option>上月份</option>
+                        <option>本季度</option>
+                    </select>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center text-gray-500">
+                <i data-lucide="bar-chart" class="w-16 h-16 mx-auto mb-4"></i>
+                <p>報表分析功能開發中</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 成功提示 -->
+    <div id="success-toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+        <div class="flex items-center">
+            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+            <span id="success-message"></span>
+        </div>
+    </div>
+    
+    <!-- 錯誤提示 -->
+    <div id="error-toast" class="fixed top-4 right-4 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+        <div class="flex items-center">
+            <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
+            <span id="error-message"></span>
+        </div>
+    </div>
+    
+    <!-- 確認對話框 -->
+    <div id="confirm-dialog" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 id="confirm-title" class="text-lg font-semibold text-gray-800 mb-2"></h3>
+            <p id="confirm-text" class="text-gray-600 mb-6"></p>
+            <div class="flex justify-end space-x-3">
+                <button id="confirm-cancel" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    取消
+                </button>
+                <button id="confirm-ok" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    確認
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ==================== 初始化 ====================
+        
+        // 配置
+        const CONFIG = {
+            SPREADSHEET_ID: '16NKFioe-lrYmpFv20tYEg6p6uo9_D4wSsS2YoiUWKko',
+            SHEETS: {
+                COURSES: 'SingleCourses',
+                COACHES: 'Coaches',
+                VENUES: 'Venues',
+                BOOKINGS: 'Bookings',
+                USERS: 'Users'
+            }
+        };
+        
+        // 全局變數
+        let currentPage = 'dashboard';
+        let coursesData = [];
+        let filteredCoursesData = [];
+        let currentPageNum = 1;
+        const itemsPerPage = 10;
+        
+        // ==================== DOM 加載完成 ====================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化圖標
+            lucide.createIcons();
+            
+            // 設置當前日期
+            const now = new Date();
+            document.getElementById('current-date').textContent = 
+                now.toLocaleDateString('zh-TW', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+            
+            // 設置表單日期預設值
+            const today = now.toISOString().split('T')[0];
+            document.getElementById('course-date-input').value = today;
+            document.getElementById('open-date-input').value = today;
+            
+            // 綁定事件監聽器
+            bindEventListeners();
+            
+            // 初始化頁面
+            loadDashboardData();
+        });
+        
+        // ==================== 事件綁定 ====================
+        
+        function bindEventListeners() {
+            // 導航點擊
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const pageId = this.getAttribute('href').substring(1);
+                    showPage(pageId);
+                });
+            });
+            
+            // 表單提交
+            document.getElementById('course-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                saveCourse('open');
+            });
+            
+            // 儲存草稿
+            document.getElementById('save-draft').addEventListener('click', function() {
+                saveCourse('draft');
+            });
+            
+            // 篩選功能
+            document.getElementById('apply-filter').addEventListener('click', applyFilters);
+            document.getElementById('reset-filter').addEventListener('click', resetFilters);
+            
+            // 分頁功能
+            document.getElementById('prev-page').addEventListener('click', goToPrevPage);
+            document.getElementById('next-page').addEventListener('click', goToNextPage);
+            
+            // 匯出功能
+            document.getElementById('export-courses').addEventListener('click', exportCourses);
+            
+            // 確認對話框
+            document.getElementById('confirm-cancel').addEventListener('click', hideConfirmDialog);
+            document.getElementById('confirm-ok').addEventListener('click', handleConfirmAction);
+            
+            // 自動關閉提示
+            setInterval(() => {
+                const successToast = document.getElementById('success-toast');
+                const errorToast = document.getElementById('error-toast');
+                
+                if (!successToast.classList.contains('hidden')) {
+                    successToast.classList.add('hidden');
+                }
+                if (!errorToast.classList.contains('hidden')) {
+                    errorToast.classList.add('hidden');
+                }
+            }, 5000);
+        }
+        
+        // ==================== 頁面導航 ====================
+        
+        function showPage(pageId) {
+            // 隱藏所有頁面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+                page.classList.remove('active');
+            });
+            
+            // 更新導航項目
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 顯示目標頁面
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.remove('hidden');
+                targetPage.classList.add('active');
+                
+                // 更新導航項目的 active 狀態
+                const navItem = document.querySelector(`.nav-item[href="#${pageId}"]`);
+                if (navItem) {
+                    navItem.classList.add('active');
+                }
+                
+                currentPage = pageId;
+                
+                // 載入頁面數據
+                loadPageData(pageId);
+            }
+        }
+        
+        function loadPageData(pageId) {
+            switch(pageId) {
+                case 'dashboard':
+                    loadDashboardData();
+                    break;
+                case 'courses':
+                    loadCoursesData();
+                    break;
+                case 'add-course':
+                    initCourseForm();
+                    break;
+            }
+        }
+        
+        // ==================== 儀表板功能 ====================
+        
+        async function loadDashboardData() {
+            try {
+                // 載入課程數據
+                const courses = await loadAllCourses();
+                
+                // 更新統計數字
+                document.getElementById('total-courses').textContent = courses.length;
+                
+                // 計算今日預約
+                const today = new Date().toISOString().split('T')[0];
+                const todayCourses = courses.filter(course => 
+                    course.courseDate === today && (course.status === 'open' || course.status === 'full')
+                );
+                const todayBookings = todayCourses.reduce((sum, course) => sum + (course.enrolledCount || 0), 0);
+                document.getElementById('today-bookings').textContent = todayBookings;
+                
+                // 計算本月營收
+                const currentMonth = new Date().getMonth() + 1;
+                const currentYear = new Date().getFullYear();
+                const monthlyCourses = courses.filter(course => {
+                    if (!course.courseDate) return false;
+                    const courseDate = new Date(course.courseDate);
+                    return courseDate.getMonth() + 1 === currentMonth && 
+                           courseDate.getFullYear() === currentYear &&
+                           course.status !== 'draft';
+                });
+                const monthlyRevenue = monthlyCourses.reduce((sum, course) => 
+                    sum + (course.originalPrice || 0) * (course.enrolledCount || 0), 0
+                );
+                document.getElementById('monthly-revenue').textContent = 
+                    monthlyRevenue.toLocaleString() + ' PT';
+                
+                // 顯示近期課程
+                displayRecentCourses(courses);
+                
+            } catch (error) {
+                console.error('載入儀表板數據失敗:', error);
+                showError('無法載入數據');
+            }
+        }
+        
+        // 顯示近期課程
+        function displayRecentCourses(courses) {
+            const container = document.getElementById('recent-courses');
+            
+            if (courses.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-500">
+                        <i data-lucide="calendar" class="w-12 h-12 mx-auto mb-3"></i>
+                        <p>暫無課程資料</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+            
+            // 取最近5個課程
+            const recent = courses
+                .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+                .slice(0, 5);
+            
+            const html = recent.map(course => {
+                const statusClass = getStatusClass(course.status);
+                const statusText = getStatusText(course.status);
+                
+                return `
+                <div class="flex items-center justify-between py-3 border-b last:border-0">
+                    <div>
+                        <div class="font-medium text-gray-800">${course.courseName}</div>
+                        <div class="text-sm text-gray-600">
+                            ${course.courseDate || ''} ${course.startTime || ''} | ${course.coachName || ''}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-medium text-gray-800">${course.enrolledCount || 0}/${course.totalSeats || 0}</div>
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+        
+        // ==================== 課程管理功能 ====================
+        
+        async function loadCoursesData() {
+            try {
+                // 顯示載入中
+                const tableBody = document.getElementById('courses-table-body');
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center">
+                            <div class="loading mx-auto"></div>
+                            <p class="mt-2 text-gray-500">載入中...</p>
+                        </td>
+                    </tr>
+                `;
+                
+                // 載入課程數據
+                coursesData = await loadAllCourses();
+                filteredCoursesData = [...coursesData];
+                
+                // 渲染表格
+                renderCoursesTable();
+                
+                // 更新分頁
+                updatePagination();
+                
+            } catch (error) {
+                console.error('載入課程數據失敗:', error);
+                showError('無法載入課程資料');
+            }
+        }
+        
+        async function loadAllCourses() {
+            // 這裡應該從 Google Sheets 或後端 API 載入數據
+            // 暫時使用模擬數據
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const mockCourses = [
+                        {
+                            courseId: 'C-BASKET-001',
+                            courseName: '兒童籃球體驗課',
+                            sportType: '籃球',
+                            ageGroup: '兒童(7-12)',
+                            courseDate: '2024-01-20',
+                            startTime: '14:30',
+                            endTime: '16:00',
+                            coachName: '張教練',
+                            venueName: '竹北運動中心籃球場',
+                            venueArea: '竹北',
+                            enrolledCount: 12,
+                            totalSeats: 15,
+                            originalPrice: 800,
+                            earlyBirdPrice: 600,
+                            memberPrice: 700,
+                            status: 'open',
+                            isEarlyBird: true,
+                            remainingSeats: 3,
+                            createdAt: '2024-01-10T10:00:00'
+                        },
+                        {
+                            courseId: 'C-BADMINTON-001',
+                            courseName: '羽球基礎訓練',
+                            sportType: '羽球',
+                            ageGroup: '成人(18+)',
+                            courseDate: '2024-01-22',
+                            startTime: '19:00',
+                            endTime: '21:00',
+                            coachName: '李教練',
+                            venueName: '新竹體育館',
+                            venueArea: '新竹市',
+                            enrolledCount: 20,
+                            totalSeats: 20,
+                            originalPrice: 1200,
+                            status: 'full',
+                            remainingSeats: 0,
+                            createdAt: '2024-01-05T14:30:00'
+                        },
+                        {
+                            courseId: 'C-SWIMMING-001',
+                            courseName: '幼兒游泳啟蒙',
+                            sportType: '游泳',
+                            ageGroup: '幼兒(3-6)',
+                            courseDate: '2024-01-25',
+                            startTime: '10:00',
+                            endTime: '11:00',
+                            coachName: '王教練',
+                            venueName: '湖口溫水游泳池',
+                            venueArea: '湖口',
+                            enrolledCount: 8,
+                            totalSeats: 10,
+                            originalPrice: 900,
+                            status: 'open',
+                            remainingSeats: 2,
+                            createdAt: '2024-01-08T09:15:00'
+                        },
+                        {
+                            courseId: 'C-FOOTBALL-001',
+                            courseName: '足球技巧訓練',
+                            sportType: '足球',
+                            ageGroup: '青少年(13-18)',
+                            courseDate: '2024-01-28',
+                            startTime: '15:00',
+                            endTime: '17:00',
+                            coachName: '陳教練',
+                            venueName: '竹東足球場',
+                            venueArea: '竹東',
+                            enrolledCount: 5,
+                            totalSeats: 15,
+                            originalPrice: 1000,
+                            status: 'open',
+                            remainingSeats: 10,
+                            createdAt: '2024-01-12T11:45:00'
+                        }
+                    ];
+                    resolve(mockCourses);
+                }, 500);
+            });
+        }
+        
+        function renderCoursesTable() {
+            const tableBody = document.getElementById('courses-table-body');
+            
+            if (filteredCoursesData.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <i data-lucide="search" class="w-12 h-12 mx-auto mb-3"></i>
+                            <p>找不到符合條件的課程</p>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+            
+            // 計算顯示範圍
+            const startIndex = (currentPageNum - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const displayData = filteredCoursesData.slice(startIndex, endIndex);
+            
+            const rows = displayData.map(course => {
+                const statusClass = getStatusClass(course.status);
+                const statusText = getStatusText(course.status);
+                const displayPrice = course.earlyBirdPrice || course.originalPrice;
+                
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">${course.courseName}</div>
+                            <div class="text-sm text-gray-500">
+                                ${course.sportType || ''} | ${course.ageGroup || ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${course.courseDate || ''}</div>
+                            <div class="text-sm text-gray-500">
+                                ${course.startTime || ''} - ${course.endTime || ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${course.coachName || ''}</div>
+                            <div class="text-sm text-gray-500">${course.venueName || ''}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                ${course.enrolledCount || 0} / ${course.totalSeats || 0}
+                            </div>
+                            <div class="text-xs ${(course.enrolledCount || 0) >= (course.totalSeats || 1) ? 'text-red-600' : 'text-green-600'}">
+                                ${(course.remainingSeats || course.totalSeats || 0)} 名額
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">${displayPrice || 0} PT</div>
+                            ${course.isEarlyBird ? `
+                            <div class="text-xs text-green-600">早鳥優惠中</div>
+                            ` : ''}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <button onclick="editCourse('${course.courseId}')" 
+                                        class="text-blue-600 hover:text-blue-900">
+                                    <i data-lucide="edit" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="duplicateCourse('${course.courseId}')" 
+                                        class="text-green-600 hover:text-green-900">
+                                    <i data-lucide="copy" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="showConfirmDialog('delete', '${course.courseId}', '${course.courseName}')" 
+                                        class="text-red-600 hover:text-red-900">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tableBody.innerHTML = rows;
+            lucide.createIcons();
+        }
+        
+        function updatePagination() {
+            const totalItems = filteredCoursesData.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            
+            const startIndex = (currentPageNum - 1) * itemsPerPage + 1;
+            const endIndex = Math.min(currentPageNum * itemsPerPage, totalItems);
+            
+            document.getElementById('pagination-from').textContent = startIndex;
+            document.getElementById('pagination-to').textContent = endIndex;
+            document.getElementById('pagination-total').textContent = totalItems;
+            
+            const prevBtn = document.getElementById('prev-page');
+            const nextBtn = document.getElementById('next-page');
+            
+            prevBtn.disabled = currentPageNum <= 1;
+            nextBtn.disabled = currentPageNum >= totalPages;
+        }
+        
+        function goToPrevPage() {
+            if (currentPageNum > 1) {
+                currentPageNum--;
+                renderCoursesTable();
+                updatePagination();
+            }
+        }
+        
+        function goToNextPage() {
+            const totalPages = Math.ceil(filteredCoursesData.length / itemsPerPage);
+            if (currentPageNum < totalPages) {
+                currentPageNum++;
+                renderCoursesTable();
+                updatePagination();
+            }
+        }
+        
+        // ==================== 篩選功能 ====================
+        
+        function applyFilters() {
+            const statusFilter = document.getElementById('filter-status').value;
+            const sportFilter = document.getElementById('filter-sport').value;
+            const dateFilter = document.getElementById('filter-date').value;
+            
+            filteredCoursesData = coursesData.filter(course => {
+                let match = true;
+                
+                if (statusFilter && course.status !== statusFilter) {
+                    match = false;
+                }
+                
+                if (sportFilter && course.sportType !== sportFilter) {
+                    match = false;
+                }
+                
+                if (dateFilter && course.courseDate !== dateFilter) {
+                    match = false;
+                }
+                
+                return match;
+            });
+            
+            currentPageNum = 1;
+            renderCoursesTable();
+            updatePagination();
+        }
+        
+        function resetFilters() {
+            document.getElementById('filter-status').value = '';
+            document.getElementById('filter-sport').value = '';
+            document.getElementById('filter-date').value = '';
+            
+            filteredCoursesData = [...coursesData];
+            currentPageNum = 1;
+            renderCoursesTable();
+            updatePagination();
+        }
+        
+        // ==================== 課程表單功能 ====================
+        
+        function initCourseForm() {
+            const form = document.getElementById('course-form');
+            form.reset();
+            
+            // 設置預設日期
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('course-date-input').value = today;
+            document.getElementById('open-date-input').value = today;
+            
+            // 設置早鳥截止時間預設值（明天）
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().slice(0, 16);
+            document.querySelector('input[name="earlyBirdDeadline"]').value = tomorrowStr;
+            
+            // 設置截止報名時間預設值（課程前一天）
+            const dayBeforeCourse = new Date(today);
+            dayBeforeCourse.setDate(dayBeforeCourse.getDate() - 1);
+            const dayBeforeStr = dayBeforeCourse.toISOString().slice(0, 16);
+            document.querySelector('input[name="closeDate"]').value = dayBeforeStr;
+        }
+        
+        async function saveCourse(status) {
+            try {
+                const form = document.getElementById('course-form');
+                const formData = new FormData(form);
+                const courseData = Object.fromEntries(formData.entries());
+                
+                // 添加系統欄位
+                courseData.courseId = generateCourseId(courseData.sportType);
+                courseData.status = status;
+                courseData.createdAt = new Date().toISOString();
+                courseData.enrolledCount = 0;
+                courseData.remainingSeats = parseInt(courseData.totalSeats);
+                
+                // 計算顯示價格
+                const now = new Date();
+                const earlyBirdDeadline = courseData.earlyBirdDeadline ? new Date(courseData.earlyBirdDeadline) : null;
+                courseData.isEarlyBird = earlyBirdDeadline && now < earlyBirdDeadline;
+                courseData.displayPrice = courseData.isEarlyBird ? courseData.earlyBirdPrice : courseData.originalPrice;
+                
+                // 這裡應該將數據保存到 Google Sheets 或後端 API
+                console.log('儲存課程資料:', courseData);
+                
+                // 模擬保存成功
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showSuccess(status === 'draft' ? '課程已儲存為草稿' : '課程已成功上架');
+                
+                // 跳轉到課程管理頁面
+                setTimeout(() => {
+                    showPage('courses');
+                    loadCoursesData();
+                }, 1500);
+                
+            } catch (error) {
+                console.error('儲存課程失敗:', error);
+                showError('儲存課程失敗，請稍後再試');
+            }
+        }
+        
+        function generateCourseId(sportType) {
+            const prefixMap = {
+                '籃球': 'BASKET',
+                '羽球': 'BADMINTON',
+                '游泳': 'SWIMMING',
+                '足球': 'FOOTBALL',
+                '體能': 'FITNESS'
+            };
+            
+            const prefix = prefixMap[sportType] || 'COURSE';
+            const timestamp = Date.now().toString().slice(-6);
+            return `C-${prefix}-${timestamp}`;
+        }
+        
+        function editCourse(courseId) {
+            // 這裡應該從數據源加載課程資料並填入表單
+            const course = coursesData.find(c => c.courseId === courseId);
+            if (course) {
+                showPage('add-course');
+                // 實際應用中應該填入表單數據
+                console.log('編輯課程:', course);
+                showSuccess('準備編輯課程：' + course.courseName);
+            }
+        }
+        
+        function duplicateCourse(courseId) {
+            // 複製課程邏輯
+            const course = coursesData.find(c => c.courseId === courseId);
+            if (course) {
+                showConfirmDialog('duplicate', courseId, course.courseName);
+            }
+        }
+        
+        // ==================== 工具函數 ====================
+        
+        function getStatusClass(status) {
+            const classMap = {
+                'draft': 'status-draft',
+                'open': 'status-open',
+                'full': 'status-full',
+                'closed': 'status-closed',
+                'cancelled': 'status-cancelled'
+            };
+            return classMap[status] || 'status-draft';
+        }
+        
+        function getStatusText(status) {
+            const textMap = {
+                'draft': '草稿',
+                'open': '報名中',
+                'full': '額滿',
+                'closed': '已結束',
+                'cancelled': '已取消'
+            };
+            return textMap[status] || '草稿';
+        }
+        
+        // ==================== 對話框功能 ====================
+        
+        let pendingAction = null;
+        let pendingCourseId = null;
+        
+        function showConfirmDialog(action, courseId, courseName) {
+            pendingAction = action;
+            pendingCourseId = courseId;
+            
+            const dialog = document.getElementById('confirm-dialog');
+            const title = document.getElementById('confirm-title');
+            const text = document.getElementById('confirm-text');
+            
+            if (action === 'delete') {
+                title.textContent = '刪除課程';
+                text.textContent = `確定要刪除課程「${courseName}」嗎？此操作無法復原。`;
+            } else if (action === 'duplicate') {
+                title.textContent = '複製課程';
+                text.textContent = `確定要複製課程「${courseName}」嗎？`;
+            }
+            
+            dialog.classList.remove('hidden');
+        }
+        
+        function hideConfirmDialog() {
+            document.getElementById('confirm-dialog').classList.add('hidden');
+            pendingAction = null;
+            pendingCourseId = null;
+        }
+        
+        async function handleConfirmAction() {
+            hideConfirmDialog();
+            
+            if (pendingAction === 'delete') {
+                await deleteCourse(pendingCourseId);
+            } else if (pendingAction === 'duplicate') {
+                await duplicateCourseAction(pendingCourseId);
+            }
+        }
+        
+        async function deleteCourse(courseId) {
+            try {
+                // 這裡應該調用 API 刪除課程
+                console.log('刪除課程:', courseId);
+                
+                // 模擬刪除成功
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                // 從本地數據中移除
+                const index = coursesData.findIndex(c => c.courseId === courseId);
+                if (index > -1) {
+                    coursesData.splice(index, 1);
+                }
+                
+                showSuccess('課程已刪除');
+                
+                // 重新載入課程列表
+                loadCoursesData();
+                
+            } catch (error) {
+                console.error('刪除課程失敗:', error);
+                showError('刪除課程失敗');
+            }
+        }
+        
+        async function duplicateCourseAction(courseId) {
+            try {
+                // 這裡應該調用 API 複製課程
+                console.log('複製課程:', courseId);
+                
+                // 模擬複製成功
+                await new Promise(resolve => setTimeout(resolve, 800));
+                
+                showSuccess('課程已複製');
+                
+                // 重新載入課程列表
+                loadCoursesData();
+                
+            } catch (error) {
+                console.error('複製課程失敗:', error);
+                showError('複製課程失敗');
+            }
+        }
+        
+        // ==================== 匯出功能 ====================
+        
+        function exportCourses() {
+            try {
+                // 將數據轉換為 CSV 格式
+                const headers = ['課程名稱', '運動類別', '日期', '時間', '教練', '場地', '名額', '價格', '狀態'];
+                const csvData = filteredCoursesData.map(course => [
+                    course.courseName,
+                    course.sportType,
+                    course.courseDate,
+                    `${course.startTime}-${course.endTime}`,
+                    course.coachName,
+                    course.venueName,
+                    `${course.enrolledCount}/${course.totalSeats}`,
+                    course.displayPrice,
+                    getStatusText(course.status)
+                ]);
+                
+                const csv = [headers, ...csvData]
+                    .map(row => row.map(cell => `"${cell}"`).join(','))
+                    .join('\n');
+                
+                // 創建下載連結
+                const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `courses_${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showSuccess('課程資料已匯出');
+                
+            } catch (error) {
+                console.error('匯出失敗:', error);
+                showError('匯出失敗，請稍後再試');
+            }
+        }
+        
+        // ==================== 提示訊息 ====================
+        
+        function showSuccess(message) {
+            const toast = document.getElementById('success-toast');
+            const messageEl = document.getElementById('success-message');
+            
+            messageEl.textContent = message;
+            toast.classList.remove('hidden');
+            
+            // 自動關閉
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+        
+        function showError(message) {
+            const toast = document.getElementById('error-toast');
+            const messageEl = document.getElementById('error-message');
+            
+            messageEl.textContent = message;
+            toast.classList.remove('hidden');
+            
+            // 自動關閉
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
