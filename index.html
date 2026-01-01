@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sports Island | 運動課程預約</title>
+    <meta name="description" content="LINE 官方帳號運動課程預約系統">
+    
+    <!-- LINE LIFF SDK -->
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
+    <!-- Tailwind CSS CDN（本地備份） -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- 或使用本地檔案：<link href="css/tailwind.min.css" rel="stylesheet"> -->
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- 自定義樣式 -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- PWA 相關 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    
+    <style>
+        /* 核心去框化樣式 */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: #ffffff;
+            color: #000000;
+            overflow-x: hidden;
+        }
+        
+        /* 高對比度文字類 */
+        .text-emphasis {
+            color: #000000 !important;
+            font-weight: 900 !important;
+        }
+        
+        /* 底部導航修復 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid #e5e7eb;
+            z-index: 1000;
+        }
+        
+        .bottom-nav a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            height: 100%;
+            color: #000000;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            text-decoration: none;
+        }
+        
+        .bottom-nav a.active {
+            opacity: 1;
+        }
+        
+        .bottom-nav a i {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .bottom-nav a span {
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+        
+        /* 移除所有預設圓角和陰影 */
+        button, input, select, .card, .modal {
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            outline: none !important;
+        }
+        
+        /* 優化行動端體驗 */
+        @media (max-width: 640px) {
+            .container {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+            
+            .hide-on-mobile {
+                display: none !important;
+            }
+        }
+        
+        /* 彈出抽屜動畫 */
+        .drawer-enter {
+            transform: translateY(100%);
+        }
+        
+        .drawer-enter-active {
+            transform: translateY(0);
+            transition: transform 300ms ease-out;
+        }
+        
+        .drawer-exit {
+            transform: translateY(0);
+        }
+        
+        .drawer-exit-active {
+            transform: translateY(100%);
+            transition: transform 300ms ease-in;
+        }
+        
+        /* 載入動畫 */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #000000;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 應用容器 -->
+    <div id="app" class="relative min-h-screen bg-white">
+        <!-- 頂部導航 -->
+        <header class="sticky top-0 z-50 bg-white border-b border-gray-100">
+            <div class="px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center">
+                    <h1 class="text-lg font-black text-black tracking-tight">SPORTS ISLAND</h1>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button id="notifications-btn" class="p-2 text-black" aria-label="通知">
+                        <i data-lucide="bell"></i>
+                    </button>
+                    <button id="profile-btn" class="p-2 text-black" aria-label="會員專區">
+                        <i data-lucide="user"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- 主要內容區域 -->
+        <main id="main-content" class="relative">
+            <!-- 初始載入畫面 -->
+            <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
+                <div class="mb-6">
+                    <div class="loading-spinner w-12 h-12 border-t-2 border-b-2 border-black"></div>
+                </div>
+                <p class="text-black font-medium">正在載入 Sports Island...</p>
+                <p class="text-sm text-gray-600 mt-2">請稍候</p>
+            </div>
+            
+            <!-- 視圖容器 -->
+            <div id="view-container" class="hidden">
+                <!-- 各視圖將動態渲染在這裡 -->
+            </div>
+            
+            <!-- 錯誤顯示 -->
+            <div id="error-container" class="hidden p-4">
+                <div class="bg-red-50 border border-red-200 rounded-none p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i data-lucide="alert-circle" class="w-5 h-5 text-red-600"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-black text-red-800" id="error-title">系統錯誤</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p id="error-message">發生未知錯誤，請重新整理頁面</p>
+                            </div>
+                            <div class="mt-4">
+                                <button id="error-retry-btn" class="text-sm font-black text-red-800 hover:text-red-900">
+                                    重新整理
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        
+        <!-- 底部導航 -->
+        <nav class="bottom-nav">
+            <div class="flex h-full">
+                <a href="#home" class="nav-home" data-view="home">
+                    <i data-lucide="home"></i>
+                    <span>課程</span>
+                </a>
+                <a href="#history" class="nav-history" data-view="history">
+                    <i data-lucide="history"></i>
+                    <span>紀錄</span>
+                </a>
+                <a href="#profile" class="nav-profile" data-view="profile">
+                    <i data-lucide="user"></i>
+                    <span>會員</span>
+                </a>
+            </div>
+        </nav>
+        
+        <!-- 彈出抽屜（課程詳情） -->
+        <div id="drawer" class="fixed inset-x-0 bottom-0 bg-white z-40 transform translate-y-full transition-transform duration-300 ease-out">
+            <div class="h-1 w-12 bg-gray-300 rounded-full mx-auto mt-3 mb-4"></div>
+            <div id="drawer-content" class="px-4 pb-24 max-h-[70vh] overflow-y-auto">
+                <!-- 內容動態載入 -->
+            </div>
+        </div>
+        <div id="drawer-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+        
+        <!-- 確認對話框 -->
+        <div id="confirm-dialog" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm">
+                <div class="p-6">
+                    <h3 class="text-lg font-black text-black mb-2" id="confirm-title"></h3>
+                    <p class="text-black mb-6" id="confirm-message"></p>
+                    <div class="flex space-x-3">
+                        <button id="confirm-cancel" class="flex-1 py-3 border border-gray-300 text-black font-black">
+                            取消
+                        </button>
+                        <button id="confirm-ok" class="flex-1 py-3 bg-black text-white font-black">
+                            確定
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="dialog-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+        
+        <!-- 通知提示 -->
+        <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-3 font-black z-50 hidden">
+            <div class="flex items-center">
+                <span id="toast-message"></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- JavaScript 檔案 -->
+    <script src="js/utils.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- 初始化腳本 -->
+    <script>
+        // 全局配置
+        window.CONFIG = {
+            APP_NAME: 'Sports Island',
+            VERSION: '7.4',
+            API_BASE_URL: 'https://your-cloudflare-worker.workers.dev', // 替換為你的 Cloudflare Worker URL
+            LIFF_ID: '2000000000-XXXXXXXX' // 替換為你的 LIFF ID
+        };
+        
+        // 初始化應用
+        document.addEventListener('DOMContentLoaded', function() {
+            // 檢查是否在 LINE 環境中
+            if (navigator.userAgent.includes('Line')) {
+                // 在 LINE 中，等待 LIFF 初始化
+                setTimeout(() => {
+                    if (typeof initializeApp === 'function') {
+                        initializeApp();
+                    }
+                }, 100);
+            } else {
+                // 非 LINE 環境，顯示提示
+                document.getElementById('loading-screen').innerHTML = `
+                    <div class="p-6 text-center">
+                        <div class="mb-4 text-red-600">
+                            <i data-lucide="alert-circle" class="w-16 h-16 mx-auto"></i>
+                        </div>
+                        <h2 class="text-xl font-black text-black mb-2">請在 LINE 中開啟</h2>
+                        <p class="text-gray-600 mb-6">
+                            此應用需要在 LINE 官方帳號中開啟，請在 LINE 中點擊連結或掃描 QR Code。
+                        </p>
+                        <div class="space-y-3">
+                            <button onclick="location.reload()" class="w-full py-3 bg-black text-white font-black">
+                                重新載入
+                            </button>
+                            <button onclick="window.close()" class="w-full py-3 border border-gray-300 text-black font-black">
+                                關閉
+                            </button>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        });
+        
+        // 全局錯誤處理
+        window.addEventListener('error', function(event) {
+            console.error('全局錯誤:', event.error);
+            // 可以在此處發送錯誤報告到後端
+        });
+        
+        // 防止離開提示（如果表單有修改）
+        window.addEventListener('beforeunload', function(event) {
+            // 如果有未儲存的變更，可以提示用戶
+            // event.preventDefault();
+            // event.returnValue = '';
+        });
+    </script>
+</body>
+</html>
