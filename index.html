@@ -71,6 +71,18 @@
         .nav-item.active {
             opacity: 1;
         }
+        
+        /* 去框化樣式 */
+        .card {
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+        }
+        
+        .text-emphasis {
+            color: #000000 !important;
+            font-weight: 900 !important;
+        }
     </style>
 </head>
 <body>
@@ -86,7 +98,7 @@
         <main id="content" class="p-4">
             <div id="loading" class="flex flex-col items-center justify-center min-h-[60vh]">
                 <div class="loading mb-4"></div>
-                <p class="text-black font-medium">正在初始化...</p>
+                <p class="text-black font-medium">正在初始化系統...</p>
             </div>
             
             <div id="main-content" class="hidden">
@@ -109,95 +121,42 @@
                 <span>會員</span>
             </a>
         </div>
+        
+        <!-- 彈出視窗 -->
+        <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md">
+                <div class="p-6">
+                    <h3 id="modal-title" class="text-lg font-black text-black mb-2"></h3>
+                    <p id="modal-message" class="text-black mb-6"></p>
+                    <button id="modal-ok" class="w-full py-3 bg-black text-white font-black">確定</button>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script>
         // 配置
         const CONFIG = {
             LIFF_ID: '2008786875-F7ifLsbN',
-            USE_MOCK_DATA: true // 使用模擬數據，先跳過 API
+            API_BASE_URL: 'https://aged-rice-2438.wetw-net3.workers.dev' // 您的 Cloudflare Worker
         };
         
-        // 模擬數據
-        const MOCK_DATA = {
-            courses: [
-                {
-                    UUID: 'test-001',
-                    課程名稱: '兒童籃球基礎班',
-                    要求等級: '初級',
-                    教練名稱: '張教練',
-                    活動日期: '2024-01-20',
-                    活動時段: '14:30',
-                    原價: 800,
-                    早鳥價: 600,
-                    招生名額: 20,
-                    候補名額: 5,
-                    課程狀態: 'Open',
-                    封面圖網址: '',
-                    說明圖網址: '',
-                    文字簡介: '適合6-12歲初學者的籃球課程，學習基本運球、傳球和投籃技巧。',
-                    活動地點: '陽光運動中心 3F 籃球場',
-                    是否早鳥: true,
-                    是否額滿: false,
-                    剩餘名額: 15
-                },
-                {
-                    UUID: 'test-002',
-                    課程名稱: '青少年羽球進階班',
-                    要求等級: '進階',
-                    教練名稱: '李教練',
-                    活動日期: '2024-01-22',
-                    活動時段: '16:00',
-                    原價: 1200,
-                    早鳥價: 900,
-                    招生名額: 15,
-                    候補名額: 3,
-                    課程狀態: 'Open',
-                    封面圖網址: '',
-                    說明圖網址: '',
-                    文字簡介: '適合有一定基礎的青少年學員，提升羽球技術和戰術意識。',
-                    活動地點: '星光羽球館 主場地',
-                    是否早鳥: true,
-                    是否額滿: false,
-                    剩餘名額: 8
-                },
-                {
-                    UUID: 'test-003',
-                    課程名稱: '成人游泳高級班',
-                    要求等級: '高級',
-                    教練名稱: '王教練',
-                    活動日期: '2024-01-25',
-                    活動時段: '19:00',
-                    原價: 1500,
-                    早鳥價: 1200,
-                    招生名額: 10,
-                    候補名額: 2,
-                    課程狀態: 'Open',
-                    封面圖網址: '',
-                    說明圖網址: '',
-                    文字簡介: '針對已有游泳基礎的成人學員，學習蝶泳、轉身技巧和長距離游泳。',
-                    活動地點: '藍海游泳池 50M水道',
-                    是否早鳥: false,
-                    是否額滿: false,
-                    剩餘名額: 5
-                }
-            ]
-        };
+        // 全局變數
+        let userId = null;
+        let userProfile = null;
+        let currentView = 'home';
         
-        // 模擬 API
-        const mockApi = {
-            async getCourses() {
-                return new Promise(resolve => {
-                    setTimeout(() => {
-                        resolve({ courses: MOCK_DATA.courses });
-                    }, 500);
-                });
-            },
-            
-            async healthCheck() {
-                return true;
-            }
-        };
+        // 顯示訊息
+        function showMessage(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        
+        // 關閉訊息
+        document.getElementById('modal-ok').addEventListener('click', function() {
+            document.getElementById('modal').classList.add('hidden');
+        });
         
         // 初始化 LIFF
         async function initializeLIFF() {
@@ -217,27 +176,102 @@
                     return false;
                 }
                 
-                const profile = await liff.getProfile();
-                console.log('用戶資料:', profile);
+                userProfile = await liff.getProfile();
+                userId = userProfile.userId;
                 
-                // 儲存用戶資料
-                localStorage.setItem('user_id', profile.userId);
-                localStorage.setItem('user_name', profile.displayName);
+                console.log('用戶資料:', userProfile);
+                console.log('用戶ID:', userId);
+                
+                localStorage.setItem('sportflow_user_id', userId);
+                localStorage.setItem('user_name', userProfile.displayName);
                 
                 return true;
                 
             } catch (error) {
                 console.error('LIFF 初始化失敗:', error);
-                
-                // 如果不是在 LINE 環境，仍然顯示內容（開發測試用）
-                if (!navigator.userAgent.includes('Line')) {
-                    console.log('非 LINE 環境，使用測試模式');
-                    return true;
-                }
-                
+                showMessage('初始化失敗', '請重新整理頁面');
                 return false;
             }
         }
+        
+        // API 服務
+        class ApiService {
+            constructor() {
+                this.baseUrl = CONFIG.API_BASE_URL;
+            }
+            
+            setUserId(id) {
+                userId = id;
+            }
+            
+            async request(endpoint, data = {}) {
+                try {
+                    console.log(`API 請求: ${endpoint}`, data);
+                    
+                    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'User-Id': userId || ''
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    console.log(`API 回應狀態: ${response.status}`);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('API 錯誤回應:', errorText);
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('API 回應:', result);
+                    
+                    if (!result.success) {
+                        throw new Error(result.error?.message || result.error || 'API 請求失敗');
+                    }
+                    
+                    return result.data;
+                    
+                } catch (error) {
+                    console.error('API 請求失敗:', error);
+                    throw error;
+                }
+            }
+            
+            async healthCheck() {
+                try {
+                    const response = await fetch(`${this.baseUrl}/health`);
+                    return response.ok;
+                } catch {
+                    return false;
+                }
+            }
+            
+            async getCourses() {
+                return this.request('', { action: 'getCourses' });
+            }
+            
+            async getCourse(courseId) {
+                return this.request('', { action: 'getCourse', courseId });
+            }
+            
+            async getUser() {
+                return this.request('', { action: 'getUser' });
+            }
+            
+            async checkRegistration() {
+                return this.request('', { action: 'checkRegistration' });
+            }
+            
+            async updateUser(userData) {
+                return this.request('', { action: 'updateUser', userData });
+            }
+        }
+        
+        // 創建 API 實例
+        const api = new ApiService();
         
         // 渲染課程卡片
         function renderCourseCard(course) {
@@ -250,7 +284,7 @@
                         <div class="flex justify-between items-start mb-2">
                             <h3 class="text-base font-black text-black flex-1 pr-2">${course.課程名稱}</h3>
                             <span class="text-xs font-black ${isFull ? 'text-red-600' : 'text-green-600'}">
-                                ${isFull ? '額滿' : `${course.剩餘名額} 名額`}
+                                ${isFull ? '額滿' : `${course.剩餘名額 || course.招生名額} 名額`}
                             </span>
                         </div>
                         
@@ -277,10 +311,10 @@
                     
                     <div class="flex justify-between items-center pt-3 border-t border-gray-100">
                         <div>
-                            ${isEarlyBird && course.早鳥價 > 0 ? `
+                            ${isEarlyBird && course.早鳥价 ? `
                             <div class="flex items-center gap-2">
                                 <span class="text-sm text-gray-500 line-through">${course.原價} PT</span>
-                                <span class="text-lg font-black text-red-600">${course.早鳥價} PT</span>
+                                <span class="text-lg font-black text-red-600">${course.早鳥价} PT</span>
                             </div>
                             ` : `
                             <span class="text-lg font-black text-black">${course.原價} PT</span>
@@ -299,7 +333,6 @@
         // 渲染首頁
         async function renderHomeView() {
             try {
-                const api = CONFIG.USE_MOCK_DATA ? mockApi : window.api;
                 const data = await api.getCourses();
                 const courses = data?.courses || [];
                 
@@ -318,7 +351,7 @@
                 let html = `
                     <div class="mb-6">
                         <h2 class="text-xl font-black text-black mb-2">可預約課程</h2>
-                        <p class="text-sm text-gray-600">選擇您感興趣的課程</p>
+                        <p class="text-sm text-gray-600">共 ${courses.length} 個課程</p>
                     </div>
                     
                     <div class="space-y-4">
@@ -349,72 +382,6 @@
             }
         }
         
-        // 渲染課程詳情
-        function renderCourseDetail(course) {
-            const isEarlyBird = course.是否早鳥;
-            const isFull = course.是否額滿;
-            
-            return `
-                <div class="course-detail">
-                    <div class="mb-6">
-                        <h2 class="text-xl font-black text-black mb-3">${course.課程名稱}</h2>
-                        
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <div class="text-xs font-black text-gray-600 mb-1">教練</div>
-                                <div class="text-base font-black text-black">${course.教練名稱}</div>
-                            </div>
-                            <div>
-                                <div class="text-xs font-black text-gray-600 mb-1">等級</div>
-                                <div class="text-base font-black text-black">${course.要求等級}</div>
-                            </div>
-                            <div class="col-span-2">
-                                <div class="text-xs font-black text-gray-600 mb-1">時間</div>
-                                <div class="text-base font-black text-black">${course.活動日期} ${course.活動時段}</div>
-                            </div>
-                            <div class="col-span-2">
-                                <div class="text-xs font-black text-gray-600 mb-1">地點</div>
-                                <div class="text-base font-black text-black">${course.活動地點}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-gray-50 p-4 mb-4">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-xs font-black text-gray-600 mb-1">費用</div>
-                                    ${isEarlyBird && course.早鳥價 > 0 ? `
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm text-gray-500 line-through">${course.原價} PT</span>
-                                        <span class="text-xl font-black text-red-600">${course.早鳥價} PT</span>
-                                    </div>
-                                    ` : `
-                                    <div class="text-xl font-black text-black">${course.原價} PT</div>
-                                    `}
-                                </div>
-                                <div>
-                                    <div class="text-xs font-black text-gray-600 mb-1">名額</div>
-                                    <div class="text-base font-black text-black">
-                                        ${course.招生名額} / ${course.候補名額}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-6">
-                            <div class="text-xs font-black text-gray-600 mb-2">課程說明</div>
-                            <div class="text-black leading-relaxed">
-                                ${course.文字簡介}
-                            </div>
-                        </div>
-                        
-                        <button class="w-full py-3 bg-black text-white text-lg font-black">
-                            ${isFull ? '已額滿' : '立即預約'}
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-        
         // 載入首頁
         async function loadHomeView() {
             const content = document.getElementById('main-content');
@@ -427,77 +394,128 @@
             const html = await renderHomeView();
             content.innerHTML = html;
             
-            // 初始化圖標
             lucide.createIcons();
             
-            // 綁定課程詳情按鈕事件
+            // 綁定事件
             document.querySelectorAll('.btn-detail').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', async function() {
                     const courseId = this.dataset.courseId;
-                    const course = MOCK_DATA.courses.find(c => c.UUID === courseId);
-                    
-                    if (course) {
-                        alert(`課程詳情: ${course.課程名稱}\n\n${course.文字簡介}`);
+                    try {
+                        const data = await api.getCourse(courseId);
+                        const course = data?.course;
+                        if (course) {
+                            showMessage(course.課程名稱, course.文字簡介);
+                        }
+                    } catch (error) {
+                        showMessage('錯誤', '無法載入課程詳情');
                     }
                 });
             });
         }
         
         // 載入會員頁面
-        function loadProfileView() {
-            const userName = localStorage.getItem('user_name') || '使用者';
-            
-            return `
-                <div class="py-6">
-                    <div class="mb-6">
-                        <h2 class="text-xl font-black text-black mb-2">會員專區</h2>
-                        <p class="text-sm text-gray-600">管理您的個人資料和預約</p>
-                    </div>
-                    
-                    <div class="bg-gray-50 p-4 mb-6">
-                        <div class="flex items-center mb-4">
-                            <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-black mr-3">
-                                ${userName.charAt(0)}
-                            </div>
-                            <div>
-                                <h3 class="text-base font-black text-black">${userName}</h3>
-                                <p class="text-sm text-gray-600">歡迎回來！</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="border-b border-gray-100 pb-4">
-                            <h4 class="text-base font-black text-black mb-2">基本資料</h4>
-                            <p class="text-sm text-gray-600 mb-3">請完善您的個人資料以進行課程預約</p>
-                            <button class="w-full py-3 border border-gray-300 text-black font-black">
-                                填寫基本資料
-                            </button>
+        async function loadProfileView() {
+            try {
+                const data = await api.getUser();
+                const user = data?.user || {};
+                const userName = localStorage.getItem('user_name') || user.學員姓名 || '使用者';
+                
+                // 檢查必填欄位
+                const requiredFields = ['家長姓名', '聯繫電話', '學員姓名', '性別', '生日', '目前年級'];
+                const missingFields = requiredFields.filter(field => !user[field]);
+                
+                return `
+                    <div class="py-6">
+                        <div class="mb-6">
+                            <h2 class="text-xl font-black text-black mb-2">會員專區</h2>
+                            <p class="text-sm text-gray-600">管理您的個人資料和預約</p>
                         </div>
                         
-                        <div class="border-b border-gray-100 pb-4">
-                            <h4 class="text-base font-black text-black mb-2">點數餘額</h4>
-                            <div class="flex items-center justify-between">
-                                <span class="text-2xl font-black text-black">0 PT</span>
-                                <button class="px-4 py-2 bg-black text-white text-sm font-black">
-                                    購買點數
+                        ${missingFields.length > 0 ? `
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-yellow-500"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-800">
+                                        請完善以下資料以進行預約：${missingFields.join(', ')}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="bg-gray-50 p-4 mb-6">
+                            <div class="flex items-center mb-4">
+                                <div class="w-12 h-12 bg-black rounded-full flex items-center justify-center text-white font-black mr-3">
+                                    ${userName.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 class="text-base font-black text-black">${userName}</h3>
+                                    <p class="text-sm text-gray-600">LINE: ${userProfile?.displayName || ''}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div class="text-xs font-black text-gray-600 mb-1">家長姓名</div>
+                                    <div class="text-sm font-black text-black">${user.家長姓名 || '未填寫'}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-black text-gray-600 mb-1">聯繫電話</div>
+                                    <div class="text-sm font-black text-black">${user.聯繫電話 || '未填寫'}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-black text-gray-600 mb-1">學員姓名</div>
+                                    <div class="text-sm font-black text-black">${user.學員姓名 || '未填寫'}</div>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-black text-gray-600 mb-1">性別</div>
+                                    <div class="text-sm font-black text-black">${user.性別 || '未填寫'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="border-b border-gray-100 pb-4">
+                                <h4 class="text-base font-black text-black mb-2">點數餘額</h4>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl font-black text-black">${user.點數餘額 || 0} PT</span>
+                                    <button class="px-4 py-2 bg-black text-white text-sm font-black">
+                                        購買點數
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <button onclick="showEditProfile()" class="w-full py-3 border border-gray-300 text-black font-black mb-3">
+                                    編輯資料
+                                </button>
+                                <button onclick="localStorage.clear(); liff.logout();" 
+                                        class="w-full py-3 border border-gray-300 text-black font-black">
+                                    登出
                                 </button>
                             </div>
                         </div>
-                        
-                        <div>
-                            <button onclick="localStorage.clear(); location.reload();" 
-                                    class="w-full py-3 border border-gray-300 text-black font-black">
-                                登出
-                            </button>
-                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } catch (error) {
+                console.error('載入會員資料失敗:', error);
+                return `
+                    <div class="text-center py-12">
+                        <div class="text-red-600 mb-4">
+                            <i data-lucide="alert-circle" class="w-16 h-16 mx-auto"></i>
+                        </div>
+                        <h3 class="text-lg font-black text-black mb-2">載入失敗</h3>
+                        <p class="text-gray-600">無法載入會員資料</p>
+                    </div>
+                `;
+            }
         }
         
         // 載入紀錄頁面
-        function loadHistoryView() {
+        async function loadHistoryView() {
             return `
                 <div class="py-6">
                     <div class="mb-6">
@@ -519,8 +537,101 @@
             `;
         }
         
+        // 編輯資料表單
+        function showEditProfile() {
+            const form = `
+                <div class="py-6">
+                    <div class="mb-6">
+                        <h2 class="text-xl font-black text-black mb-2">編輯會員資料</h2>
+                        <p class="text-sm text-gray-600">請填寫以下必要資料</p>
+                    </div>
+                    
+                    <form id="edit-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">家長姓名 *</label>
+                            <input type="text" name="家長姓名" required 
+                                   class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">聯繫電話 *</label>
+                            <input type="tel" name="聯繫電話" required pattern="09[0-9]{8}"
+                                   class="w-full px-3 py-2 border-b-2 border-black bg-gray-50" 
+                                   placeholder="0912345678">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">學員姓名 *</label>
+                            <input type="text" name="學員姓名" required
+                                   class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">性別 *</label>
+                            <select name="性別" required class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                                <option value="">請選擇</option>
+                                <option value="男">男</option>
+                                <option value="女">女</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">生日 *</label>
+                            <input type="date" name="生日" required
+                                   class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">就讀學校</label>
+                            <input type="text" name="就讀學校"
+                                   class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-black text-black mb-2">目前年級 *</label>
+                            <select name="目前年級" required class="w-full px-3 py-2 border-b-2 border-black bg-gray-50">
+                                <option value="">請選擇</option>
+                                <option value="幼兒">幼兒</option>
+                                <option value="低">低年級</option>
+                                <option value="中">中年級</option>
+                                <option value="高">高年級</option>
+                                <option value="國高中">國高中</option>
+                                <option value="成人">成人</option>
+                            </select>
+                        </div>
+                        
+                        <div class="pt-4">
+                            <button type="submit" class="w-full py-3 bg-black text-white font-black">
+                                儲存資料
+                            </button>
+                            <button type="button" onclick="loadView('profile')" 
+                                    class="w-full py-3 border border-gray-300 text-black font-black mt-3">
+                                取消
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.getElementById('main-content').innerHTML = form;
+            
+            // 綁定表單提交事件
+            document.getElementById('edit-form').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const userData = {};
+                formData.forEach((value, key) => {
+                    userData[key] = value;
+                });
+                
+                try {
+                    await api.updateUser(userData);
+                    showMessage('成功', '資料已更新');
+                    setTimeout(() => loadView('profile'), 1500);
+                } catch (error) {
+                    showMessage('錯誤', '更新失敗，請稍後再試');
+                }
+            });
+        }
+        
         // 載入視圖
-        function loadView(view) {
+        async function loadView(view) {
+            currentView = view;
             const content = document.getElementById('main-content');
             
             // 更新導航狀態
@@ -531,17 +642,23 @@
                 }
             });
             
+            content.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="loading"></div>
+                </div>
+            `;
+            
             let html = '';
             
             switch (view) {
                 case 'home':
-                    loadHomeView();
-                    return;
+                    html = await renderHomeView();
+                    break;
                 case 'profile':
-                    html = loadProfileView();
+                    html = await loadProfileView();
                     break;
                 case 'history':
-                    html = loadHistoryView();
+                    html = await loadHistoryView();
                     break;
                 default:
                     html = '<div class="p-8 text-center"><p class="text-black">找不到頁面</p></div>';
@@ -558,22 +675,21 @@
                 
                 // 初始化 LIFF
                 const liffSuccess = await initializeLIFF();
+                if (!liffSuccess) return;
                 
-                if (!liffSuccess && navigator.userAgent.includes('Line')) {
-                    // 在 LINE 環境中但初始化失敗
-                    document.getElementById('loading').innerHTML = `
-                        <div class="text-center">
-                            <div class="text-red-600 mb-4">
-                                <i data-lucide="alert-circle" class="w-16 h-16"></i>
-                            </div>
-                            <h3 class="text-lg font-black text-black mb-2">初始化失敗</h3>
-                            <p class="text-gray-600 mb-4">請重新整理頁面或稍後再試</p>
-                            <button onclick="location.reload()" class="px-4 py-2 bg-black text-white font-black">
-                                重新整理
-                            </button>
-                        </div>
-                    `;
-                    return;
+                // 設置 API 用戶 ID
+                api.setUserId(userId);
+                
+                // 檢查註冊狀態
+                try {
+                    const regData = await api.checkRegistration();
+                    if (!regData?.isRegistered) {
+                        setTimeout(() => {
+                            showMessage('請完善資料', '請先填寫基本資料以進行課程預約');
+                        }, 1000);
+                    }
+                } catch (regError) {
+                    console.log('檢查註冊狀態失敗，繼續載入');
                 }
                 
                 // 隱藏載入畫面
@@ -581,7 +697,7 @@
                 document.getElementById('main-content').classList.remove('hidden');
                 
                 // 載入首頁
-                loadView('home');
+                await loadView('home');
                 
                 console.log('應用初始化完成');
                 
@@ -605,7 +721,6 @@
         
         // 綁定導航事件
         document.addEventListener('DOMContentLoaded', function() {
-            // 綁定底部導航點擊事件
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -614,25 +729,20 @@
                 });
             });
             
-            // 初始化應用
             if (typeof liff !== 'undefined') {
                 initializeApp();
             } else {
-                // 如果 LIFF SDK 載入失敗，直接顯示內容（開發測試用）
                 setTimeout(() => {
                     if (typeof liff === 'undefined') {
-                        console.log('LIFF SDK 載入失敗，使用測試模式');
-                        document.getElementById('loading').classList.add('hidden');
-                        document.getElementById('main-content').classList.remove('hidden');
-                        loadView('home');
+                        showMessage('錯誤', 'LINE SDK 載入失敗');
                     }
-                }, 2000);
+                }, 3000);
             }
         });
         
-        // 導出函數供全局使用
+        // 導出函數
         window.loadView = loadView;
-        window.loadHomeView = loadHomeView;
+        window.showEditProfile = showEditProfile;
     </script>
 </body>
 </html>
