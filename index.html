@@ -4,133 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sports Island | 運動課程預約</title>
-    <meta name="description" content="LINE 官方帳號運動課程預約系統">
     
     <!-- LINE LIFF SDK -->
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     
-    <!-- Tailwind CSS CDN（本地備份） -->
+    <!-- Tailwind CSS -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <!-- 或使用本地檔案：<link href="css/tailwind.min.css" rel="stylesheet"> -->
     
-    <!-- Lucide Icons CDN -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
-    <!-- 自定義樣式 -->
-    <link rel="stylesheet" href="css/styles.css">
-    
-    <!-- PWA 相關 -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    
     <style>
-        /* 核心去框化樣式 */
+        /* 基礎樣式 */
         * {
             -webkit-tap-highlight-color: transparent;
             box-sizing: border-box;
         }
         
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #ffffff;
             color: #000000;
+            margin: 0;
+            padding: 0;
             overflow-x: hidden;
         }
         
-        /* 高對比度文字類 */
-        .text-emphasis {
+        /* 高對比度文字 */
+        .text-high-contrast {
             color: #000000 !important;
-            font-weight: 900 !important;
         }
         
-        /* 底部導航修復 */
+        /* 底部導航 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             height: 56px;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
             border-top: 1px solid #e5e7eb;
-            z-index: 1000;
+            display: flex;
+            z-index: 100;
         }
         
-        .bottom-nav a {
+        .nav-item {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex: 1;
-            height: 100%;
             color: #000000;
             opacity: 0.5;
-            transition: opacity 0.2s;
             text-decoration: none;
+            transition: opacity 0.2s;
         }
         
-        .bottom-nav a.active {
+        .nav-item.active {
             opacity: 1;
         }
         
-        .bottom-nav a i {
+        .nav-item i {
             width: 20px;
             height: 20px;
             margin-bottom: 4px;
         }
         
-        .bottom-nav a span {
+        .nav-item span {
             font-size: 11px;
             font-weight: 900;
-            letter-spacing: 0.5px;
-        }
-        
-        /* 移除所有預設圓角和陰影 */
-        button, input, select, .card, .modal {
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            outline: none !important;
-        }
-        
-        /* 優化行動端體驗 */
-        @media (max-width: 640px) {
-            .container {
-                padding-left: 0 !important;
-                padding-right: 0 !important;
-            }
-            
-            .hide-on-mobile {
-                display: none !important;
-            }
-        }
-        
-        /* 彈出抽屜動畫 */
-        .drawer-enter {
-            transform: translateY(100%);
-        }
-        
-        .drawer-enter-active {
-            transform: translateY(0);
-            transition: transform 300ms ease-out;
-        }
-        
-        .drawer-exit {
-            transform: translateY(0);
-        }
-        
-        .drawer-exit-active {
-            transform: translateY(100%);
-            transition: transform 300ms ease-in;
         }
         
         /* 載入動畫 */
-        .loading-spinner {
+        .loading {
             display: inline-block;
             width: 20px;
             height: 20px;
@@ -147,181 +93,375 @@
     </style>
 </head>
 <body>
-    <!-- 應用容器 -->
-    <div id="app" class="relative min-h-screen bg-white">
-        <!-- 頂部導航 -->
-        <header class="sticky top-0 z-50 bg-white border-b border-gray-100">
-            <div class="px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center">
-                    <h1 class="text-lg font-black text-black tracking-tight">SPORTS ISLAND</h1>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <button id="notifications-btn" class="p-2 text-black" aria-label="通知">
-                        <i data-lucide="bell"></i>
-                    </button>
-                    <button id="profile-btn" class="p-2 text-black" aria-label="會員專區">
-                        <i data-lucide="user"></i>
-                    </button>
-                </div>
+    <div id="app" class="min-h-screen pb-16">
+        <!-- 導航欄 -->
+        <header class="sticky top-0 bg-white border-b border-gray-100 z-10">
+            <div class="px-4 py-3">
+                <h1 class="text-lg font-black text-black">SPORTS ISLAND</h1>
             </div>
         </header>
         
-        <!-- 主要內容區域 -->
-        <main id="main-content" class="relative">
-            <!-- 初始載入畫面 -->
-            <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex flex-col items-center justify-center">
-                <div class="mb-6">
-                    <div class="loading-spinner w-12 h-12 border-t-2 border-b-2 border-black"></div>
-                </div>
-                <p class="text-black font-medium">正在載入 Sports Island...</p>
-                <p class="text-sm text-gray-600 mt-2">請稍候</p>
+        <!-- 主要內容 -->
+        <main id="content" class="p-4">
+            <div id="loading" class="flex flex-col items-center justify-center min-h-[60vh]">
+                <div class="loading mb-4"></div>
+                <p class="text-black font-medium">正在初始化系統...</p>
             </div>
             
-            <!-- 視圖容器 -->
-            <div id="view-container" class="hidden">
-                <!-- 各視圖將動態渲染在這裡 -->
-            </div>
-            
-            <!-- 錯誤顯示 -->
-            <div id="error-container" class="hidden p-4">
-                <div class="bg-red-50 border border-red-200 rounded-none p-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            <i data-lucide="alert-circle" class="w-5 h-5 text-red-600"></i>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-black text-red-800" id="error-title">系統錯誤</h3>
-                            <div class="mt-2 text-sm text-red-700">
-                                <p id="error-message">發生未知錯誤，請重新整理頁面</p>
-                            </div>
-                            <div class="mt-4">
-                                <button id="error-retry-btn" class="text-sm font-black text-red-800 hover:text-red-900">
-                                    重新整理
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div id="main-content" class="hidden">
+                <!-- 內容會動態載入到這裡 -->
             </div>
         </main>
         
         <!-- 底部導航 -->
-        <nav class="bottom-nav">
-            <div class="flex h-full">
-                <a href="#home" class="nav-home" data-view="home">
-                    <i data-lucide="home"></i>
-                    <span>課程</span>
-                </a>
-                <a href="#history" class="nav-history" data-view="history">
-                    <i data-lucide="history"></i>
-                    <span>紀錄</span>
-                </a>
-                <a href="#profile" class="nav-profile" data-view="profile">
-                    <i data-lucide="user"></i>
-                    <span>會員</span>
-                </a>
-            </div>
-        </nav>
-        
-        <!-- 彈出抽屜（課程詳情） -->
-        <div id="drawer" class="fixed inset-x-0 bottom-0 bg-white z-40 transform translate-y-full transition-transform duration-300 ease-out">
-            <div class="h-1 w-12 bg-gray-300 rounded-full mx-auto mt-3 mb-4"></div>
-            <div id="drawer-content" class="px-4 pb-24 max-h-[70vh] overflow-y-auto">
-                <!-- 內容動態載入 -->
-            </div>
+        <div class="bottom-nav">
+            <a href="#home" class="nav-item" data-view="home">
+                <i data-lucide="home"></i>
+                <span>課程</span>
+            </a>
+            <a href="#history" class="nav-item" data-view="history">
+                <i data-lucide="history"></i>
+                <span>紀錄</span>
+            </a>
+            <a href="#profile" class="nav-item" data-view="profile">
+                <i data-lucide="user"></i>
+                <span>會員</span>
+            </a>
         </div>
-        <div id="drawer-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
         
-        <!-- 確認對話框 -->
-        <div id="confirm-dialog" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-            <div class="bg-white w-full max-w-sm">
+        <!-- 彈出視窗 -->
+        <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-md">
                 <div class="p-6">
-                    <h3 class="text-lg font-black text-black mb-2" id="confirm-title"></h3>
-                    <p class="text-black mb-6" id="confirm-message"></p>
-                    <div class="flex space-x-3">
-                        <button id="confirm-cancel" class="flex-1 py-3 border border-gray-300 text-black font-black">
-                            取消
-                        </button>
-                        <button id="confirm-ok" class="flex-1 py-3 bg-black text-white font-black">
-                            確定
-                        </button>
-                    </div>
+                    <h3 id="modal-title" class="text-lg font-black text-black mb-2"></h3>
+                    <p id="modal-message" class="text-black mb-6"></p>
+                    <button id="modal-ok" class="w-full py-3 bg-black text-white font-black">確定</button>
                 </div>
-            </div>
-        </div>
-        <div id="dialog-backdrop" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
-        
-        <!-- 通知提示 -->
-        <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-black text-white px-4 py-3 font-black z-50 hidden">
-            <div class="flex items-center">
-                <span id="toast-message"></span>
             </div>
         </div>
     </div>
     
-    <!-- JavaScript 檔案 -->
-    <script src="js/utils.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/components.js"></script>
-    <script src="js/app.js"></script>
-    
-    <!-- 初始化腳本 -->
     <script>
-        // 全局配置
-        window.CONFIG = {
-            APP_NAME: 'Sports Island',
-            VERSION: '7.4',
-            API_BASE_URL: 'https://your-cloudflare-worker.workers.dev', // 替換為你的 Cloudflare Worker URL
-            LIFF_ID: '2000000000-XXXXXXXX' // 替換為你的 LIFF ID
+        // 配置 - 請更新這些值！
+        const CONFIG = {
+            LIFF_ID: '2000000000-XXXXXXXX', // 您的 LIFF ID
+            API_BASE_URL: 'https://sportflow-api.your-username.workers.dev' // Cloudflare Worker URL
         };
         
-        // 初始化應用
-        document.addEventListener('DOMContentLoaded', function() {
-            // 檢查是否在 LINE 環境中
-            if (navigator.userAgent.includes('Line')) {
-                // 在 LINE 中，等待 LIFF 初始化
-                setTimeout(() => {
-                    if (typeof initializeApp === 'function') {
-                        initializeApp();
+        // 全局變數
+        let userId = null;
+        let userProfile = null;
+        
+        // 顯示訊息
+        function showMessage(title, message) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal').classList.remove('hidden');
+        }
+        
+        // 關閉訊息
+        document.getElementById('modal-ok').addEventListener('click', function() {
+            document.getElementById('modal').classList.add('hidden');
+        });
+        
+        // 初始化 LIFF
+        async function initializeLIFF() {
+            try {
+                console.log('正在初始化 LIFF...');
+                
+                // 初始化 LIFF
+                await liff.init({
+                    liffId: CONFIG.LIFF_ID,
+                    withLoginOnExternalBrowser: true
+                });
+                
+                console.log('LIFF 初始化成功');
+                
+                // 檢查是否已登入
+                if (!liff.isLoggedIn()) {
+                    console.log('用戶未登入，執行登入...');
+                    // 在 LINE 內自動登入
+                    liff.login({
+                        redirectUri: window.location.href
+                    });
+                    return false;
+                }
+                
+                // 獲取用戶資料
+                userProfile = await liff.getProfile();
+                userId = userProfile.userId;
+                
+                console.log('用戶資料:', userProfile);
+                console.log('用戶ID:', userId);
+                
+                // 儲存用戶 ID
+                localStorage.setItem('sportflow_user_id', userId);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('LIFF 初始化失敗:', error);
+                
+                // 檢查是否在 LINE 環境中
+                if (navigator.userAgent.includes('Line')) {
+                    showMessage('初始化失敗', '請重新整理頁面或稍後再試');
+                } else {
+                    showMessage('請在 LINE 中開啟', '此應用需要在 LINE 官方帳號中開啟，請在 LINE 中點擊連結或掃描 QR Code。');
+                }
+                
+                return false;
+            }
+        }
+        
+        // API 服務
+        const api = {
+            async request(endpoint, data = {}) {
+                try {
+                    const response = await fetch(CONFIG.API_BASE_URL + endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'User-Id': userId || ''
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
                     }
-                }, 100);
-            } else {
-                // 非 LINE 環境，顯示提示
-                document.getElementById('loading-screen').innerHTML = `
-                    <div class="p-6 text-center">
-                        <div class="mb-4 text-red-600">
-                            <i data-lucide="alert-circle" class="w-16 h-16 mx-auto"></i>
-                        </div>
-                        <h2 class="text-xl font-black text-black mb-2">請在 LINE 中開啟</h2>
-                        <p class="text-gray-600 mb-6">
-                            此應用需要在 LINE 官方帳號中開啟，請在 LINE 中點擊連結或掃描 QR Code。
-                        </p>
-                        <div class="space-y-3">
-                            <button onclick="location.reload()" class="w-full py-3 bg-black text-white font-black">
-                                重新載入
-                            </button>
-                            <button onclick="window.close()" class="w-full py-3 border border-gray-300 text-black font-black">
-                                關閉
-                            </button>
-                        </div>
+                    
+                    const result = await response.json();
+                    
+                    if (!result.success) {
+                        throw new Error(result.error || 'API 請求失敗');
+                    }
+                    
+                    return result.data;
+                    
+                } catch (error) {
+                    console.error('API 請求失敗:', error);
+                    throw error;
+                }
+            },
+            
+            async getCourses() {
+                return this.request('/api/courses', { action: 'getCourses' });
+            },
+            
+            async getUser() {
+                return this.request('/api/user', { action: 'getUser' });
+            },
+            
+            async checkRegistration() {
+                return this.request('/api/user', { action: 'checkRegistration' });
+            },
+            
+            async healthCheck() {
+                try {
+                    const response = await fetch(CONFIG.API_BASE_URL + '/api/health');
+                    return response.ok;
+                } catch {
+                    return false;
+                }
+            }
+        };
+        
+        // 渲染首頁
+        async function renderHomeView() {
+            try {
+                const data = await api.getCourses();
+                const courses = data?.courses || [];
+                
+                let html = `
+                    <div class="mb-6">
+                        <h2 class="text-xl font-black text-black mb-2">可預約課程</h2>
+                        <p class="text-sm text-gray-600">選擇您感興趣的課程</p>
                     </div>
                 `;
-                lucide.createIcons();
+                
+                if (courses.length === 0) {
+                    html += `
+                        <div class="text-center py-12">
+                            <div class="text-gray-300 mb-4">
+                                <i data-lucide="calendar" class="w-16 h-16 mx-auto"></i>
+                            </div>
+                            <p class="text-gray-600">目前沒有可預約的課程</p>
+                        </div>
+                    `;
+                } else {
+                    html += '<div class="space-y-4">';
+                    
+                    courses.forEach(course => {
+                        html += `
+                            <div class="border-b border-gray-100 pb-4 last:border-b-0">
+                                <h3 class="text-base font-black text-black mb-2">${course.課程名稱}</h3>
+                                <div class="space-y-1 mb-3">
+                                    <div class="flex items-center text-sm">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-black mr-2"></i>
+                                        <span>${course.活動日期} ${course.活動時段}</span>
+                                    </div>
+                                    <div class="flex items-center text-sm">
+                                        <i data-lucide="map-pin" class="w-4 h-4 text-black mr-2"></i>
+                                        <span>${course.活動地點}</span>
+                                    </div>
+                                    <div class="flex items-center text-sm">
+                                        <i data-lucide="user" class="w-4 h-4 text-black mr-2"></i>
+                                        <span>${course.教練名稱} • ${course.要求等級}</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-lg font-black text-black">${course.原價} PT</span>
+                                    <button class="px-4 py-2 bg-black text-white text-sm font-black">詳細說明</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+                
+                return html;
+                
+            } catch (error) {
+                console.error('載入課程失敗:', error);
+                return `
+                    <div class="text-center py-12">
+                        <div class="text-red-600 mb-4">
+                            <i data-lucide="alert-circle" class="w-16 h-16 mx-auto"></i>
+                        </div>
+                        <p class="text-gray-600 mb-4">載入課程失敗</p>
+                        <button onclick="loadHomeView()" class="px-4 py-2 bg-black text-white font-black">
+                            重新載入
+                        </button>
+                    </div>
+                `;
+            }
+        }
+        
+        // 載入首頁
+        async function loadHomeView() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+                <div class="flex items-center justify-center py-12">
+                    <div class="loading"></div>
+                </div>
+            `;
+            
+            const html = await renderHomeView();
+            content.innerHTML = html;
+            
+            // 初始化圖標
+            lucide.createIcons();
+        }
+        
+        // 檢查註冊狀態
+        async function checkRegistration() {
+            try {
+                const data = await api.checkRegistration();
+                
+                if (!data?.isRegistered) {
+                    // 顯示註冊提示
+                    setTimeout(() => {
+                        showMessage('請完善資料', '請先填寫基本資料以進行課程預約');
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('檢查註冊狀態失敗:', error);
+            }
+        }
+        
+        // 主初始化函數
+        async function initializeApp() {
+            try {
+                console.log('開始初始化應用...');
+                
+                // 初始化 LIFF
+                const liffSuccess = await initializeLIFF();
+                
+                if (!liffSuccess) {
+                    return;
+                }
+                
+                // 檢查 API 連線
+                const apiHealthy = await api.healthCheck();
+                
+                if (!apiHealthy) {
+                    showMessage('連線失敗', '無法連線到伺服器，請稍後再試');
+                    return;
+                }
+                
+                console.log('API 連線正常');
+                
+                // 隱藏載入畫面
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                
+                // 載入首頁
+                await loadHomeView();
+                
+                // 檢查註冊狀態
+                await checkRegistration();
+                
+                console.log('應用初始化完成');
+                
+            } catch (error) {
+                console.error('應用初始化失敗:', error);
+                showMessage('初始化失敗', '請重新整理頁面或稍後再試');
+            }
+        }
+        
+        // 底部導航事件
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // 移除所有 active 類
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                });
+                
+                // 添加 active 類到當前項目
+                this.classList.add('active');
+                
+                // 根據點擊的視圖加載內容
+                const view = this.getAttribute('data-view');
+                
+                if (view === 'home') {
+                    loadHomeView();
+                } else if (view === 'profile') {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="py-8 text-center">
+                            <p class="text-gray-600">會員專區功能開發中</p>
+                        </div>
+                    `;
+                } else if (view === 'history') {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="py-8 text-center">
+                            <p class="text-gray-600">預約紀錄功能開發中</p>
+                        </div>
+                    `;
+                }
+            });
+        });
+        
+        // 頁面載入時初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 等待 LIFF SDK 載入
+            if (typeof liff !== 'undefined') {
+                initializeApp();
+            } else {
+                // LIFF SDK 載入失敗
+                setTimeout(() => {
+                    if (typeof liff === 'undefined') {
+                        showMessage('SDK 載入失敗', '請檢查網路連線並重新整理頁面');
+                    }
+                }, 3000);
             }
         });
         
         // 全局錯誤處理
         window.addEventListener('error', function(event) {
             console.error('全局錯誤:', event.error);
-            // 可以在此處發送錯誤報告到後端
-        });
-        
-        // 防止離開提示（如果表單有修改）
-        window.addEventListener('beforeunload', function(event) {
-            // 如果有未儲存的變更，可以提示用戶
-            // event.preventDefault();
-            // event.returnValue = '';
         });
     </script>
 </body>
