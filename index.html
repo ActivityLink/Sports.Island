@@ -5,89 +5,81 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans">
-  <!-- Banner 區塊 -->
-  <div class="w-full h-48 md:h-64 overflow-hidden relative shadow-md">
-    <img 
-      src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
-      alt="運動島 Banner" 
-      class="w-full h-full object-cover"
-    >
-    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-      <div>
-        <h1 class="text-2xl font-black text-white tracking-wide">運動島 Sports Island</h1>
-        <p id="welcomeMsg" class="text-slate-200 text-sm font-medium mt-1">身分確認中...</p>
+<body class="bg-slate-50 min-h-screen pb-24 font-sans text-slate-900">
+
+  <!-- Banner 區域 (純淨版，無文字) -->
+  <div class="w-full h-56 md:h-72 overflow-hidden shadow-sm">
+    <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
+         class="w-full h-full object-cover" alt="運動島橫幅">
+  </div>
+
+  <!-- 內容區 -->
+  <div class="px-5 -mt-6 relative z-10">
+    <div class="bg-white rounded-t-3xl p-6 shadow-sm border-x border-t border-slate-100">
+      <h2 class="text-xl font-black text-slate-800 flex items-center">
+        <span class="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
+        2026 課程專區
+      </h2>
+      <p class="text-slate-400 text-xs mt-1">探索適合您的運動成長計畫</p>
+    </div>
+
+    <!-- 課程列表 Grid -->
+    <div class="grid grid-cols-1 gap-4 mt-4">
+      <!-- 足球 -->
+      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
+        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl">⚽</div>
+        <div class="flex-grow">
+          <h3 class="font-bold text-slate-700">週末足球體驗課</h3>
+          <p class="text-xs text-slate-400">單日課程 | $600</p>
+        </div>
+        <a href="?p=Member" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">查看</a>
+      </div>
+
+      <!-- 籃球 -->
+      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
+        <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl">🏀</div>
+        <div class="flex-grow">
+          <h3 class="font-bold text-slate-700">籃球基礎訓練營</h3>
+          <p class="text-xs text-slate-400">梯次課程 | $2500</p>
+        </div>
+        <a href="?p=Member" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">查看</a>
+      </div>
+
+      <!-- 夏令營 -->
+      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
+        <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl">⛺</div>
+        <div class="flex-grow">
+          <h3 class="font-bold text-slate-700">全能運動五日營</h3>
+          <p class="text-xs text-slate-400">營隊專區 | $8500</p>
+        </div>
+        <a href="?p=Member" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">查看</a>
       </div>
     </div>
   </div>
 
-  <!-- 選單按鈕區塊 -->
-  <div class="max-w-md mx-auto p-6 space-y-4 -mt-4 relative z-10">
-    <!-- 家長報名 -->
-    <a href="?p=Register" class="block w-full bg-white p-6 rounded-3xl shadow-lg border border-white hover:border-indigo-500 transition-all group">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-2xl">📝</div>
-          <div>
-            <span class="block text-lg font-bold text-slate-800">2026 課程報名</span>
-            <span class="text-xs text-slate-400">填寫報名表單與選課</span>
-          </div>
-        </div>
-        <span class="text-slate-300 group-hover:translate-x-1 transition-transform">❯</span>
-      </div>
+  <!-- 底部導覽列 (Bottom Nav) -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-100 px-8 py-3 flex justify-around items-center z-50">
+    <a href="?p=index" class="flex flex-col items-center text-indigo-600">
+      <span class="text-xl">🏠</span>
+      <span class="text-[10px] font-bold mt-1">課程專區</span>
     </a>
-
-    <!-- 教練點名 -->
-    <a href="?p=coach" class="block w-full bg-white p-6 rounded-3xl shadow-lg border border-white hover:border-emerald-500 transition-all group">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-2xl">⚽</div>
-          <div>
-            <span class="block text-lg font-bold text-slate-800">教練專區</span>
-            <span class="text-xs text-slate-400">課堂點名與出席紀錄</span>
-          </div>
-        </div>
-        <span class="text-slate-300 group-hover:translate-x-1 transition-transform">❯</span>
-      </div>
+    <a href="?p=Member" class="flex flex-col items-center text-slate-400 hover:text-indigo-600">
+      <span class="text-xl">👤</span>
+      <span class="text-[10px] font-bold mt-1">會員中心</span>
     </a>
-
-    <!-- 管理後台 -->
-    <a href="?p=admin" class="block w-full bg-white p-6 rounded-3xl shadow-lg border border-white hover:border-orange-500 transition-all group">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-2xl">📊</div>
-          <div>
-            <span class="block text-lg font-bold text-slate-800">數據統計</span>
-            <span class="text-xs text-slate-400">年度營運與人數概況</span>
-          </div>
-        </div>
-        <span class="text-slate-300 group-hover:translate-x-1 transition-transform">❯</span>
-      </div>
-    </a>
-
-    <div class="text-center pt-8">
-      <p class="text-[10px] text-slate-300 uppercase tracking-widest font-black">Powered by Sports Island Tech</p>
-    </div>
-  </div>
+  </nav>
 
   <script>
-    async function initLiff() {
-      try {
-        // 請確保這裡的 liffId 是正確的
-        await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        } else {
-          const profile = await liff.getProfile();
-          document.getElementById('welcomeMsg').innerText = "您好，" + profile.displayName + "！歡迎回來";
-        }
-      } catch (err) {
-        document.getElementById('welcomeMsg').innerText = "訪客模式";
-        console.error(err);
-      }
+    async function init() {
+      await liff.init({ liffId: "2008792551-CzPJtVB1" });
+      if (!liff.isLoggedIn()) { liff.login(); }
     }
-    window.onload = initLiff;
+    window.onload = init;
   </script>
 </body>
 </html>
