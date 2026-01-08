@@ -4,48 +4,90 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
-<body class="bg-slate-100 min-h-screen flex items-center justify-center p-6">
-  <div class="max-w-sm w-full space-y-4">
-    <div class="text-center mb-8">
-      <h1 class="text-3xl font-black text-slate-800 tracking-tight">運動島 2026</h1>
-      <p class="text-slate-500 font-medium">系統管理入口網</p>
+<body class="bg-slate-50 min-h-screen font-sans">
+  <!-- Banner 區塊 -->
+  <div class="w-full h-48 md:h-64 overflow-hidden relative shadow-md">
+    <img 
+      src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
+      alt="運動島 Banner" 
+      class="w-full h-full object-cover"
+    >
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+      <div>
+        <h1 class="text-2xl font-black text-white tracking-wide">運動島 Sports Island</h1>
+        <p id="welcomeMsg" class="text-slate-200 text-sm font-medium mt-1">身分確認中...</p>
+      </div>
     </div>
+  </div>
 
-    <!-- 導航卡片：指向 Worker 網址並帶上參數 p -->
-    <a href="?p=Register" class="block w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-indigo-500 hover:shadow-md transition-all group">
+  <!-- 選單按鈕區塊 -->
+  <div class="max-w-md mx-auto p-6 space-y-4 -mt-4 relative z-10">
+    <!-- 家長報名 -->
+    <a href="?p=Register" class="block w-full bg-white p-6 rounded-3xl shadow-lg border border-white hover:border-indigo-500 transition-all group">
       <div class="flex items-center justify-between">
-        <div>
-          <span class="block text-lg font-bold text-slate-700">家長報名</span>
-          <span class="text-xs text-slate-400">LIFF 報名表單介面</span>
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center text-2xl">📝</div>
+          <div>
+            <span class="block text-lg font-bold text-slate-800">2026 課程報名</span>
+            <span class="text-xs text-slate-400">填寫報名表單與選課</span>
+          </div>
         </div>
-        <span class="text-2xl group-hover:translate-x-1 transition-transform">📝</span>
+        <span class="text-slate-300 group-hover:translate-x-1 transition-transform">❯</span>
       </div>
     </a>
 
-    <a href="?p=coach" class="block w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-emerald-500 hover:shadow-md transition-all group">
+    <!-- 教練點名 -->
+    <a href="?p=coach" class="block w-full bg-white p-6 rounded-3xl shadow-lg border border-white hover:border-emerald-500 transition-all group">
       <div class="flex items-center justify-between">
-        <div>
-          <span class="block text-lg font-bold text-slate-700">教練點名</span>
-          <span class="text-xs text-slate-400">課堂現場出席記錄</span>
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center text-2xl">⚽</div>
+          <div>
+            <span class="block text-lg font-bold text-slate-800">教練專區</span>
+            <span class="text-xs text-slate-400">課堂點名與出席紀錄</span>
+          </div>
         </div>
-        <span class="text-2xl group-hover:translate-x-1 transition-transform">⚽</span>
+        <span class="text-slate-300 group-hover:translate-x-1 transition-transform">❯</span>
       </div>
     </a>
 
-    <a href="?p=admin" class="block w-full bg-white p-6 rounded-3xl shadow-sm border border-slate-200 hover:border-orange-500 hover:shadow-md transition-all group">
+    <!-- 管理後台 -->
+    <a href="?p=admin" class="block w-full bg-white p-6 rounded-3xl shadow-lg border border-white hover:border-orange-500 transition-all group">
       <div class="flex items-center justify-between">
-        <div>
-          <span class="block text-lg font-bold text-slate-700">管理後台</span>
-          <span class="text-xs text-slate-400">數據統計與報名概況</span>
+        <div class="flex items-center space-x-4">
+          <div class="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-2xl">📊</div>
+          <div>
+            <span class="block text-lg font-bold text-slate-800">數據統計</span>
+            <span class="text-xs text-slate-400">年度營運與人數概況</span>
+          </div>
         </div>
-        <span class="text-2xl group-hover:translate-x-1 transition-transform">📊</span>
+        <span class="text-slate-300 group-hover:translate-x-1 transition-transform">❯</span>
       </div>
     </a>
 
     <div class="text-center pt-8">
-      <p class="text-[10px] text-slate-300 uppercase tracking-widest font-bold">Powered by Cloudflare & GAS</p>
+      <p class="text-[10px] text-slate-300 uppercase tracking-widest font-black">Powered by Sports Island Tech</p>
     </div>
   </div>
+
+  <script>
+    async function initLiff() {
+      try {
+        // 請確保這裡的 liffId 是正確的
+        await liff.init({ liffId: "2008792551-CzPJtVB1" });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          const profile = await liff.getProfile();
+          document.getElementById('welcomeMsg').innerText = "您好，" + profile.displayName + "！歡迎回來";
+        }
+      } catch (err) {
+        document.getElementById('welcomeMsg').innerText = "訪客模式";
+        console.error(err);
+      }
+    }
+    window.onload = initLiff;
+  </script>
 </body>
 </html>
