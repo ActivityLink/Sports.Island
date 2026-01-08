@@ -9,135 +9,105 @@
 <body class="bg-slate-50 min-h-screen pb-24 font-sans">
 
   <!-- 會員卡片 Header -->
-  <div class="bg-indigo-600 pt-16 pb-24 px-8 rounded-b-[3.5rem] shadow-lg relative">
-    <div class="flex items-center space-x-5">
-      <img id="userAvatar" src="https://via.placeholder.com/150" class="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-md object-cover">
+  <div class="bg-indigo-600 pt-12 pb-20 px-6 rounded-b-[3rem] shadow-lg">
+    <div class="flex items-center space-x-4">
+      <img id="userAvatar" src="https://via.placeholder.com/100" class="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-sm object-cover">
       <div>
-        <h1 id="userName" class="text-2xl font-black text-white">載入中...</h1>
-        <p class="text-indigo-200 text-xs font-bold tracking-widest mt-0.5 uppercase">Elite Member</p>
+        <h1 id="userName" class="text-xl font-black text-white">載入中...</h1>
+        <p class="text-indigo-200 text-xs">運動島 2026 會員專區</p>
       </div>
     </div>
   </div>
 
-  <!-- 功能內容區 -->
-  <div class="px-6 -mt-12 space-y-6 relative z-10">
-    <!-- 報名表單 -->
-    <div class="bg-white rounded-[2.5rem] shadow-xl p-8 border border-slate-100">
-      <h2 class="font-black text-slate-800 text-lg mb-6 flex items-center">
-        <span class="bg-indigo-50 p-2 rounded-xl mr-3">✍️</span> 註冊新課程
+  <!-- 主要功能區 -->
+  <div class="px-6 -mt-12 space-y-6">
+    <!-- 報名表單區 (摺疊或直接顯示) -->
+    <div class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
+      <h2 class="font-black text-slate-800 mb-4 flex items-center">
+        <span class="text-lg mr-2">📋</span> 課程報名
       </h2>
       <form id="regForm" class="space-y-4">
-        <div>
-          <label class="text-[10px] font-black text-slate-300 uppercase ml-2">學生姓名</label>
-          <input type="text" id="stuName" required class="w-full mt-1 p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 border-none">
-        </div>
-        <div>
-          <label class="text-[10px] font-black text-slate-300 uppercase ml-2">聯絡電話</label>
-          <input type="tel" id="pPhone" required class="w-full mt-1 p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 border-none">
-        </div>
-        <div>
-          <label class="text-[10px] font-black text-slate-300 uppercase ml-2">課程選擇</label>
-          <select id="cId" class="w-full mt-1 p-4 bg-slate-50 rounded-2xl border-none outline-none appearance-none">
-            <option value="S01">足球體驗課 ($600)</option>
-            <option value="B01">籃球訓練營 ($2500)</option>
-            <option value="C01">五日夏令營 ($8500)</option>
-          </select>
-        </div>
-        <button type="submit" id="subBtn" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-lg active:scale-95 transition-all mt-4">
-          確認註冊
+        <input type="text" id="stuName" placeholder="學生姓名" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all border-none">
+        <input type="tel" id="pPhone" placeholder="聯絡電話" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all border-none">
+        <select id="cId" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none">
+          <option value="S01">足球體驗課 ($600)</option>
+          <option value="B01">籃球訓練 ($2500)</option>
+          <option value="C01">五日夏令營 ($8500)</option>
+        </select>
+        <button type="submit" id="subBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-all mt-2">
+          確認報名
         </button>
       </form>
     </div>
 
-    <!-- 底部資訊 -->
-    <div class="bg-slate-100 p-6 rounded-[2.5rem] text-center">
-      <p class="text-xs text-slate-400 font-bold uppercase tracking-widest">運動島 Sports Island 2026</p>
+    <!-- 其它會員功能 -->
+    <div class="grid grid-cols-2 gap-4">
+      <button class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 text-center">
+        <div class="text-2xl mb-1">📅</div>
+        <div class="text-xs font-bold text-slate-700">我的紀錄</div>
+      </button>
+      <button class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 text-center">
+        <div class="text-2xl mb-1">💳</div>
+        <div class="text-xs font-bold text-slate-700">繳費通知</div>
+      </button>
     </div>
   </div>
 
   <!-- 底部導覽列 -->
-  <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-md border border-slate-200 px-6 py-3 flex space-x-12 rounded-full shadow-2xl z-50">
-    <a href="?p=index" class="flex flex-col items-center text-slate-300 hover:text-indigo-400 transition-colors">
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-100 px-8 py-3 flex justify-around items-center z-50">
+    <a href="?p=index" class="flex flex-col items-center text-slate-400">
       <span class="text-xl">🏠</span>
-      <span class="text-[8px] font-black mt-0.5 uppercase">課程專區</span>
+      <span class="text-[10px] font-bold mt-1">課程專區</span>
     </a>
     <a href="?p=Member" class="flex flex-col items-center text-indigo-600">
       <span class="text-xl">👤</span>
-      <span class="text-[8px] font-black mt-0.5 uppercase">會員中心</span>
+      <span class="text-[10px] font-bold mt-1">會員中心</span>
     </a>
   </nav>
 
   <script>
     let lineUid = "";
-    // 取得當前 Worker 代理網址作為 API Endpoint
     const API_URL = window.location.href.split('?')[0];
 
     async function init() {
       try {
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        
-        // 檢查登入狀態
-        if (!liff.isLoggedIn()) {
-          console.log("用戶尚未登入，引導至 LINE 登入頁面...");
-          liff.login();
-          return; // 重要：必須中斷執行，等待頁面跳轉
-        }
-        
-        // 只有在登入成功後才執行 API 呼叫
+        if (!liff.isLoggedIn()) { liff.login(); }
         const profile = await liff.getProfile();
         lineUid = profile.userId;
         document.getElementById('userName').innerText = profile.displayName;
         document.getElementById('userAvatar').src = profile.pictureUrl;
-        console.log("LIFF 初始化成功，已取得用戶資料");
-        
-      } catch (e) {
-        console.error("LIFF 初始化或取得資料失敗:", e);
-        // 如果是因為 Token 失效導致的錯誤，嘗試重新登入
-        if (e.message && e.message.includes("access_token")) {
-           liff.login();
-        }
-      }
+      } catch (e) { console.error(e); }
     }
 
     document.getElementById('regForm').onsubmit = async function(e) {
       e.preventDefault();
-      
-      if (!lineUid) {
-        alert("尚未取得用戶身分，請重新整理頁面或重新登入。");
-        return;
-      }
-
       const btn = document.getElementById('subBtn');
       btn.disabled = true;
       btn.innerText = "傳送中...";
+
+      const payload = {
+        action: 'register',
+        userId: lineUid,
+        name: document.getElementById('stuName').value,
+        phone: document.getElementById('pPhone').value,
+        courseId: document.getElementById('cId').value
+      };
 
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'register',
-            userId: lineUid,
-            name: document.getElementById('stuName').value,
-            phone: document.getElementById('pPhone').value,
-            courseId: document.getElementById('cId').value
-          })
+          body: JSON.stringify(payload)
         });
-        
-        if (!response.ok) throw new Error("伺服器回應異常");
-        
         const res = await response.json();
         alert(res.msg);
-        if(res.success) document.getElementById('regForm').reset();
-      } catch (err) {
-        console.error("提交報名失敗:", err);
-        alert("報名失敗，請稍後再試。");
-      } finally {
+      } catch (err) { alert("報名系統繁忙，請稍後再試。"); }
+      finally {
         btn.disabled = false;
-        btn.innerText = "確認註冊";
+        btn.innerText = "確認報名";
       }
     };
-
     window.onload = init;
   </script>
 </body>
