@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen pb-24 font-sans">
+
+  <!-- 會員卡片 Header -->
+  <div class="bg-indigo-600 pt-12 pb-20 px-6 rounded-b-[3rem] shadow-lg">
+    <div class="flex items-center space-x-4">
+      <img id="userAvatar" src="https://via.placeholder.com/100" class="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-sm object-cover">
+      <div>
+        <h1 id="userName" class="text-xl font-black text-white">載入中...</h1>
+        <p class="text-indigo-200 text-xs">運動島 2026 會員專區</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主要功能區 -->
+  <div class="px-6 -mt-12 space-y-6">
+    <!-- 報名表單區 (摺疊或直接顯示) -->
+    <div class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
+      <h2 class="font-black text-slate-800 mb-4 flex items-center">
+        <span class="text-lg mr-2">📋</span> 課程報名
+      </h2>
+      <form id="regForm" class="space-y-4">
+        <input type="text" id="stuName" placeholder="學生姓名" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all border-none">
+        <input type="tel" id="pPhone" placeholder="聯絡電話" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all border-none">
+        <select id="cId" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none">
+          <option value="S01">足球體驗課 ($600)</option>
+          <option value="B01">籃球訓練 ($2500)</option>
+          <option value="C01">五日夏令營 ($8500)</option>
+        </select>
+        <button type="submit" id="subBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-all mt-2">
+          確認報名
+        </button>
+      </form>
+    </div>
+
+    <!-- 其它會員功能 -->
+    <div class="grid grid-cols-2 gap-4">
+      <button class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 text-center">
+        <div class="text-2xl mb-1">📅</div>
+        <div class="text-xs font-bold text-slate-700">我的紀錄</div>
+      </button>
+      <button class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 text-center">
+        <div class="text-2xl mb-1">💳</div>
+        <div class="text-xs font-bold text-slate-700">繳費通知</div>
+      </button>
+    </div>
+  </div>
+
+  <!-- 底部導覽列 -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-100 px-8 py-3 flex justify-around items-center z-50">
+    <a href="?p=index" class="flex flex-col items-center text-slate-400">
+      <span class="text-xl">🏠</span>
+      <span class="text-[10px] font-bold mt-1">課程專區</span>
+    </a>
+    <a href="?p=Member" class="flex flex-col items-center text-indigo-600">
+      <span class="text-xl">👤</span>
+      <span class="text-[10px] font-bold mt-1">會員中心</span>
+    </a>
+  </nav>
+
+  <script>
+    let lineUid = "";
+    const API_URL = window.location.href.split('?')[0];
+
+    async function init() {
+      try {
+        await liff.init({ liffId: "2008792551-CzPJtVB1" });
+        if (!liff.isLoggedIn()) { liff.login(); }
+        const profile = await liff.getProfile();
+        lineUid = profile.userId;
+        document.getElementById('userName').innerText = profile.displayName;
+        document.getElementById('userAvatar').src = profile.pictureUrl;
+      } catch (e) { console.error(e); }
+    }
+
+    document.getElementById('regForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('subBtn');
+      btn.disabled = true;
+      btn.innerText = "傳送中...";
+
+      const payload = {
+        action: 'register',
+        userId: lineUid,
+        name: document.getElementById('stuName').value,
+        phone: document.getElementById('pPhone').value,
+        courseId: document.getElementById('cId').value
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+        alert(res.msg);
+      } catch (err) { alert("報名系統繁忙，請稍後再試。"); }
+      finally {
+        btn.disabled = false;
+        btn.innerText = "確認報名";
+      }
+    };
+    window.onload = init;
+  </script>
+</body>
+</html>
