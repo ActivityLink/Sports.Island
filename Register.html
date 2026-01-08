@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body class="bg-slate-50 min-h-screen p-4">
+  <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl overflow-hidden mt-6">
+    <div class="bg-indigo-600 p-8 text-white text-center">
+      <h1 class="text-2xl font-bold">運動島 2026 報名</h1>
+      <p id="userStatus" class="text-indigo-100 mt-2 text-sm">身分驗證中...</p>
+    </div>
+
+    <form id="regForm" class="p-8 space-y-6">
+      <input type="text" id="name" placeholder="學生姓名" required class="w-full p-4 bg-slate-100 rounded-2xl outline-none">
+      <input type="tel" id="phone" placeholder="電話" required class="w-full p-4 bg-slate-100 rounded-2xl outline-none">
+      <select id="course" class="w-full p-4 bg-slate-100 rounded-2xl outline-none">
+        <option value="S01">足球體驗課 ($600)</option>
+        <option value="B01">籃球訓練 ($2500)</option>
+      </select>
+      <button type="submit" id="btn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-bold shadow-lg">確認報名</button>
+    </form>
+  </div>
+
+  <script>
+    let uid = "";
+    const API_URL = window.location.href.split('?')[0]; // 指向 Worker 網址
+
+    async function init() {
+      try {
+        await liff.init({ liffId: "2008792551-CzPJtVB1" });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        } else {
+          const profile = await liff.getProfile();
+          uid = profile.userId;
+          document.getElementById('userStatus').innerText = "您好, " + profile.displayName;
+        }
+      } catch (err) { alert("LIFF 失敗: " + err.message); }
+    }
+
+    document.getElementById('regForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn');
+      btn.disabled = true;
+
+      const payload = {
+        action: 'register',
+        userId: uid,
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        courseId: document.getElementById('course').value
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const res = await response.json();
+        alert(res.msg);
+        if(res.success) liff.closeWindow();
+      } catch (err) { alert("報名失敗: " + err.message); }
+      finally { btn.disabled = false; }
+    };
+    window.onload = init;
+  </script>
+</body>
+</html>
