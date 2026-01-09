@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>運動島 - 管理後台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #f8fafc; font-family: sans-serif; }
+    .sidebar-active { background-color: #eff6ff; color: #2563eb; border-right: 4px solid #2563eb; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="flex min-h-screen">
+
+  <!-- 側邊選單 -->
+  <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
+    <div class="p-6 border-b border-slate-100">
+      <h1 class="text-xl font-black text-indigo-600 italic">SI ADMIN</h1>
+      <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Management System</p>
+    </div>
+    <nav class="flex-grow py-4">
+      <button onclick="switchTab('courses')" id="tab-courses" class="w-full text-left px-6 py-4 text-sm font-bold flex items-center sidebar-active">
+        <span class="mr-3">📚</span> 課程管理
+      </button>
+      <button onclick="switchTab('registrations')" id="tab-registrations" class="w-full text-left px-6 py-4 text-sm font-bold flex items-center text-slate-500 hover:bg-slate-50 transition-all">
+        <span class="mr-3">📝</span> 報名清單
+      </button>
+    </nav>
+  </aside>
+
+  <!-- 主要內容區 -->
+  <main class="flex-grow p-8">
+    
+    <!-- 1. 課程管理 -->
+    <section id="section-courses">
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h2 class="text-2xl font-black text-slate-800">課程管理</h2>
+          <p class="text-sm text-slate-400">管理您的運動課程（支援：單日、梯次、營隊、課後）</p>
+        </div>
+        <button onclick="openCourseModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-700">
+          + 新增課程
+        </button>
+      </div>
+
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black text-slate-400">
+              <th class="px-6 py-4">ID</th>
+              <th class="px-6 py-4">類別</th>
+              <th class="px-6 py-4">課程名稱</th>
+              <th class="px-6 py-4">價格</th>
+              <th class="px-6 py-4">狀態</th>
+              <th class="px-6 py-4 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody id="courseTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. 報名清單 -->
+    <section id="section-registrations" class="hidden">
+      <div class="mb-8">
+        <h2 class="text-2xl font-black text-slate-800">報名清單</h2>
+        <p class="text-sm text-slate-400">即時監控學員報名進度</p>
+      </div>
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black text-slate-400">
+              <th class="px-6 py-4">時間</th>
+              <th class="px-6 py-4">姓名</th>
+              <th class="px-6 py-4">課程</th>
+              <th class="px-6 py-4">備註</th>
+            </tr>
+          </thead>
+          <tbody id="regTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 編輯彈窗 -->
+  <div id="courseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-6 z-50">
+    <div class="bg-white w-full max-w-lg rounded-[2.5rem] p-10 shadow-2xl relative">
+      <h3 id="modalTitle" class="text-2xl font-black text-slate-800 mb-8">設定課程</h3>
+      <form id="courseForm" class="space-y-5">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程ID</label>
+            <input type="text" id="cId" placeholder="A01" required class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程類別</label>
+            <select id="cCategory" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none">
+              <option value="單日">單日課程</option>
+              <option value="梯次">梯次課程</option>
+              <option value="營隊">營隊專區</option>
+              <option value="課後">課後班</option> <!-- 此處已補上第四種類別 -->
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程名稱</label>
+          <input type="text" id="cName" required class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <input type="number" id="cPrice" placeholder="價格" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+          <select id="cStatus" class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+            <option value="報名中">報名中</option>
+            <option value="已額滿">已額滿</option>
+            <option value="停辦">停辦</option>
+          </select>
+        </div>
+        <div class="flex space-x-3 mt-4">
+          <button type="submit" id="saveBtn" class="flex-grow bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-lg">儲存變更</button>
+          <button type="button" onclick="closeCourseModal()" class="px-6 bg-slate-100 text-slate-400 py-4 rounded-2xl font-bold">取消</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://sport.wetw-net3.workers.dev/";
+    let allCourses = [];
+
+    async function fetchData() {
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminGetCourses' }) });
+        const json = await res.json();
+        allCourses = json.data || [];
+        renderCourseTable();
+
+        const regRes = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminGetRegs' }) });
+        const regJson = await regRes.json();
+        renderRegTable(regJson.data || []);
+      } catch (e) { console.error("Fetch Error", e); }
+    }
+
+    function renderCourseTable() {
+      const tbody = document.getElementById('courseTableBody');
+      tbody.innerHTML = allCourses.map((c, i) => `
+        <tr class="border-b border-slate-50 text-sm">
+          <td class="px-6 py-4 text-slate-400 font-mono">${c.id}</td>
+          <td class="px-6 py-4"><span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-[10px] font-bold">${c.category}</span></td>
+          <td class="px-6 py-4 font-bold text-slate-700">${c.name}</td>
+          <td class="px-6 py-4 font-black">$${c.price}</td>
+          <td class="px-6 py-4"><span class="text-[10px] font-bold ${c.status === '報名中' ? 'text-green-500' : 'text-slate-300'}">${c.status}</span></td>
+          <td class="px-6 py-4 text-right"><button onclick="editCourse(${i})" class="text-indigo-600 font-bold">編輯</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function renderRegTable(data) {
+      document.getElementById('regTableBody').innerHTML = data.map(r => `
+        <tr class="border-b border-slate-50 text-sm">
+          <td class="px-6 py-4 text-slate-400 text-xs">${r.time}</td>
+          <td class="px-6 py-4 font-bold">${r.name}</td>
+          <td class="px-6 py-4 text-slate-600">${r.course}</td>
+          <td class="px-6 py-4 text-xs text-slate-300">${r.status}</td>
+        </tr>
+      `).join('');
+    }
+
+    function switchTab(tab) {
+      document.getElementById('section-courses').classList.toggle('hidden', tab !== 'courses');
+      document.getElementById('section-registrations').classList.toggle('hidden', tab !== 'registrations');
+      document.getElementById('tab-courses').className = tab === 'courses' ? 'w-full text-left px-6 py-4 text-sm font-bold flex items-center sidebar-active' : 'w-full text-left px-6 py-4 text-sm font-bold flex items-center text-slate-500 hover:bg-slate-50 transition-all';
+      document.getElementById('tab-registrations').className = tab === 'registrations' ? 'w-full text-left px-6 py-4 text-sm font-bold flex items-center sidebar-active' : 'w-full text-left px-6 py-4 text-sm font-bold flex items-center text-slate-500 hover:bg-slate-50 transition-all';
+    }
+
+    function openCourseModal() {
+      document.getElementById('courseForm').reset();
+      document.getElementById('cId').disabled = false;
+      document.getElementById('courseModal').style.display = 'flex';
+    }
+    function closeCourseModal() { document.getElementById('courseModal').style.display = 'none'; }
+
+    function editCourse(index) {
+      const c = allCourses[index];
+      document.getElementById('cId').value = c.id;
+      document.getElementById('cId').disabled = true;
+      document.getElementById('cCategory').value = c.category;
+      document.getElementById('cName').value = c.name;
+      document.getElementById('cPrice').value = c.price;
+      document.getElementById('cStatus').value = c.status;
+      document.getElementById('courseModal').style.display = 'flex';
+    }
+
+    document.getElementById('courseForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true; btn.innerText = "同步中...";
+      const payload = {
+        action: 'adminSaveCourse',
+        id: document.getElementById('cId').value,
+        category: document.getElementById('cCategory').value,
+        name: document.getElementById('cName').value,
+        coach: "後台管理員",
+        price: document.getElementById('cPrice').value,
+        limit: 20,
+        status: document.getElementById('cStatus').value
+      };
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const json = await res.json();
+        alert(json.msg);
+        closeCourseModal();
+        fetchData();
+      } catch (e) { alert("儲存失敗"); }
+      finally { btn.disabled = false; btn.innerText = "儲存變更"; }
+    };
+    window.onload = fetchData;
+  </script>
+</body>
+</html>
