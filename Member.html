@@ -6,107 +6,147 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
+    /* 外部背景深灰色，模擬 FB 網頁版背景 */
     body { background-color: #f0f2f5; }
-    .app-card { background-color: #ffffff; }
+    /* 內容區白色 */
+    .app-container { background-color: #ffffff; }
+    /* 強制圖片維持比例 */
     .aspect-banner { aspect-ratio: 21 / 9; }
     @media (min-width: 768px) { .aspect-banner { aspect-ratio: 3 / 1; } }
+    /* 頁面切換控制 */
     .view-section { display: none; }
     .view-section.active { display: block; }
+    /* 隱藏捲軸 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
 
-  <div class="w-full max-w-4xl app-card min-h-screen shadow-2xl relative flex flex-col border-x border-slate-200">
+  <!-- 主容器 (FB 網頁版格式：桌面端限制寬度並置中) -->
+  <div class="w-full max-w-4xl app-container min-h-screen shadow-2xl relative flex flex-col border-x border-slate-200">
     
-    <!-- 頂部狀態列 -->
-    <div class="w-full h-14 bg-white px-6 flex justify-between items-center border-b border-slate-100 z-30">
+    <!-- 1. 頂部狀態列 (放置 Logo，不遮擋 Banner) -->
+    <div class="w-full h-14 bg-white px-6 flex justify-between items-center border-b border-slate-100 z-30 sticky top-0">
       <div class="flex items-center space-x-2">
-        <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black italic">SI</div>
+        <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black italic shadow-lg shadow-indigo-200">SI</div>
         <span class="text-xs font-black text-slate-400 uppercase tracking-tighter">Sports Island</span>
       </div>
+      <!-- 右上方小 Logo (用戶頭像) -->
       <div id="userBox" class="opacity-0 transition-opacity duration-700">
         <img id="userAvatar" src="" class="w-9 h-9 rounded-full border border-slate-200 object-cover shadow-sm bg-slate-50">
       </div>
     </div>
 
-    <!-- Banner 區域 -->
-    <div class="w-full aspect-banner bg-slate-100 overflow-hidden">
-      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-full object-cover">
+    <!-- 2. Banner 區域 (等比縮放容器) -->
+    <div class="relative w-full aspect-banner bg-slate-100 overflow-hidden">
+      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
+           class="w-full h-full object-cover" alt="Banner">
     </div>
 
-    <!-- 單頁內容區 -->
+    <!-- 3. 單頁內容區 (切換顯示) -->
     <main class="flex-grow pb-32">
       
-      <!-- 1. 課程專區 (Index) -->
+      <!-- A. 課程專區 (Index) -->
       <section id="view-index" class="view-section active">
         <div class="px-8 py-8 text-center md:text-left">
-          <h2 class="text-2xl font-black text-slate-800">2026 課程專區</h2>
-          <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Available Sports Courses</p>
+          <h2 class="text-2xl font-black text-slate-800 tracking-tight">2026 課程專區</h2>
+          <p class="text-slate-400 text-[10px] mt-1 font-black uppercase tracking-[0.2em]">Available Sports Courses</p>
         </div>
-        <div id="courseList" class="px-8 space-y-4">
-          <!-- 課程由 JS 動態生成或維持靜態 -->
-          <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center transition-all active:scale-[0.98]">
+        <div class="px-8 space-y-4" id="courseList">
+          <!-- 課程卡片由後端或靜態生成 -->
+          <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center transition-all hover:bg-slate-100 active:scale-[0.98] shadow-sm">
             <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mr-5 shadow-sm">⚽</div>
             <div class="flex-grow text-left">
               <h3 class="font-bold text-slate-800">週末足球體驗課</h3>
               <p class="text-[10px] text-slate-400 font-black uppercase mt-1 tracking-wider">$600 / Session</p>
             </div>
-            <button onclick="switchView('member')" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg">報名</button>
+            <button onclick="switchView('member')" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-indigo-100">報名</button>
           </div>
         </div>
       </section>
 
-      <!-- 2. 會員中心 (Member Dashboard) -->
+      <!-- B. 會員中心 (Member Dashboard) -->
       <section id="view-member" class="view-section">
         <div class="px-8 py-8 flex justify-between items-end">
           <div>
             <h1 id="userNameDisplay" class="text-3xl font-black text-slate-800 leading-tight">驗證中...</h1>
-            <p class="text-indigo-600 text-xs font-black uppercase tracking-[0.2em] mt-1">Family Management</p>
+            <p class="text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Family Management</p>
           </div>
-          <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md">+ 新增家人</button>
+          <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md">+ 新增成員</button>
         </div>
 
-        <div id="familyListArea" class="px-8 space-y-4">
-          <!-- 名單列表 -->
-          <div id="noMemberHint" class="bg-indigo-50 p-10 rounded-[2.5rem] text-center border-2 border-dashed border-indigo-200">
-            <p class="text-indigo-400 text-sm font-bold mb-4">您尚未註冊會員資料</p>
-            <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-indigo-100">立即註冊 / 新增家人</button>
+        <div class="px-8 space-y-4">
+          <!-- 無資料提示 -->
+          <div id="noMemberHint" class="bg-indigo-50 p-12 rounded-[2.5rem] text-center border-2 border-dashed border-indigo-200">
+            <p class="text-indigo-400 text-sm font-bold mb-5">尚未註冊任何成員資料</p>
+            <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-indigo-100">立即註冊帳號</button>
           </div>
+          <!-- 成員列表 -->
           <div id="familyListContainer" class="space-y-3"></div>
         </div>
       </section>
 
-      <!-- 3. 會員/家人 編輯表單 (Overlay or Section) -->
+      <!-- C. 會員註冊表單 (詳細框架) -->
       <section id="view-member-form" class="view-section">
         <div class="px-8 py-8">
-          <button onclick="switchView('member')" class="text-slate-400 text-sm font-bold mb-4">← 返回名單</button>
-          <h2 id="formTitle" class="text-2xl font-black text-slate-800">新增家人名單</h2>
+          <button onclick="switchView('member')" class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4 flex items-center">
+            <span class="mr-2">←</span> 返回名單
+          </button>
+          <h2 id="formTitle" class="text-2xl font-black text-slate-800">建立成員檔案</h2>
         </div>
+        
         <div class="px-8">
-          <form id="memberForm" class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-5">
+          <form id="memberForm" class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
             <input type="hidden" id="editIndex" value="">
-            <div>
-              <label class="text-[10px] font-black text-slate-400 uppercase ml-2">姓名</label>
-              <input type="text" id="mName" placeholder="請輸入姓名" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">姓名</label>
+                <input type="text" id="mName" placeholder="本名" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">聯絡電話</label>
+                <input type="tel" id="mPhone" placeholder="手機號碼" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">性別</label>
+                <select id="mGender" class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm">
+                  <option value="男">男</option>
+                  <option value="女">女</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">生日</label>
+                <input type="date" id="mBirthday" required class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm">
+              </div>
+              <div class="space-y-2 md:col-span-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">居住地區</label>
+                <input type="text" id="mAddress" placeholder="居住城市/區域" required class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm">
+              </div>
+              <div class="space-y-2 md:col-span-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">關係類型</label>
+                <select id="mRelation" class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm">
+                  <option value="本人(家長)">本人(家長)</option>
+                  <option value="子女">子女</option>
+                  <option value="配偶">配偶</option>
+                  <option value="其他家屬">其他家屬</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label class="text-[10px] font-black text-slate-400 uppercase ml-2">聯絡電話</label>
-              <input type="tel" id="mPhone" placeholder="家長電話" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-            </div>
-            <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">儲存資料</button>
+            <button type="submit" id="saveBtn" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all">儲存成員資料</button>
           </form>
         </div>
       </section>
 
     </main>
 
-    <!-- 底部導覽列 -->
+    <!-- 4. 底部導覽列 (與主容器寬度一致) -->
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-xl border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
-      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center text-indigo-600">
+      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center text-indigo-600 transition-colors">
         <span class="text-2xl">🏠</span>
         <span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
       </button>
-      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300">
+      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300 transition-colors">
         <span class="text-2xl">👤</span>
         <span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
       </button>
@@ -114,9 +154,9 @@
   </div>
 
   <script>
-    let currentLineId = "";
-    let familyData = []; // 存放家人名單快取
-    const API_ENDPOINT = window.location.href.split('?')[0];
+    let lineUserId = "";
+    let familyData = [];
+    const API_URL = window.location.href.split('?')[0];
 
     function switchView(viewId) {
       document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
@@ -124,19 +164,23 @@
       const navIndex = document.getElementById('nav-index');
       const navMember = document.getElementById('nav-member');
       navIndex.className = viewId === 'index' ? "flex flex-col items-center text-indigo-600" : "flex flex-col items-center text-slate-300";
-      navMember.className = viewId === 'member' || viewId === 'member-form' ? "flex flex-col items-center text-indigo-600" : "flex flex-col items-center text-slate-300";
+      navMember.className = (viewId === 'member' || viewId === 'member-form') ? "flex flex-col items-center text-indigo-600" : "flex flex-col items-center text-slate-300";
       window.scrollTo(0, 0);
     }
 
     function showMemberForm(index = -1) {
       document.getElementById('editIndex').value = index;
-      document.getElementById('formTitle').innerText = index === -1 ? "新增家人名單" : "編輯成員資料";
+      document.getElementById('formTitle').innerText = index === -1 ? "新增成員檔案" : "編輯成員資料";
       if(index !== -1) {
-        document.getElementById('mName').value = familyData[index].name;
-        document.getElementById('mPhone').value = familyData[index].phone;
+        const item = familyData[index];
+        document.getElementById('mName').value = item.name;
+        document.getElementById('mPhone').value = item.phone;
+        document.getElementById('mGender').value = item.gender;
+        document.getElementById('mBirthday').value = item.birthday;
+        document.getElementById('mAddress').value = item.address;
+        document.getElementById('mRelation').value = item.relation;
       } else {
-        document.getElementById('mName').value = "";
-        document.getElementById('mPhone').value = "";
+        document.getElementById('memberForm').reset();
       }
       switchView('member-form');
     }
@@ -146,7 +190,7 @@
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
         if (!liff.isLoggedIn()) { liff.login(); return; }
         const profile = await liff.getProfile();
-        currentLineId = profile.userId;
+        lineUserId = profile.userId;
         document.getElementById('userAvatar').src = profile.pictureUrl;
         document.getElementById('userBox').style.opacity = "1";
         document.getElementById('userNameDisplay').innerText = "您好，" + profile.displayName;
@@ -154,18 +198,17 @@
       } catch (err) { console.error(err); }
     }
 
-    // 從後端抓取家人名單
     async function loadFamilyList() {
       try {
-        const response = await fetch(API_ENDPOINT, {
+        const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'getFamily', userId: currentLineId })
+          body: JSON.stringify({ action: 'getFamily', userId: lineUserId })
         });
         const res = await response.json();
         familyData = res.data || [];
         renderFamilyList();
-      } catch (e) { console.error("載入失敗", e); }
+      } catch (e) { console.error("Load Error", e); }
     }
 
     function renderFamilyList() {
@@ -178,34 +221,41 @@
         hint.style.display = "none";
         familyData.forEach((item, index) => {
           container.innerHTML += `
-            <div class="bg-white p-5 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm">
-              <div>
-                <span class="block font-bold text-slate-700">${item.name}</span>
-                <span class="text-[10px] text-slate-400 font-bold">${item.phone}</span>
+            <div class="bg-white p-6 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm">
+              <div class="flex items-center space-x-4">
+                <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-lg">${item.gender === '女' ? '👧' : '👦'}</div>
+                <div>
+                  <span class="block font-black text-slate-700">${item.name} <span class="text-[10px] font-normal text-slate-400 ml-1">(${item.relation})</span></span>
+                  <span class="text-[10px] text-slate-400 font-bold tracking-wider">${item.phone}</span>
+                </div>
               </div>
-              <div class="space-x-2">
-                <button onclick="showMemberForm(${index})" class="text-indigo-600 text-xs font-bold bg-indigo-50 px-3 py-1.5 rounded-lg">編輯</button>
-              </div>
+              <button onclick="showMemberForm(${index})" class="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-2 rounded-xl">EDIT</button>
             </div>
           `;
         });
       }
     }
 
-    // 處理家人資料儲存 (新增/修改)
     document.getElementById('memberForm').onsubmit = async (e) => {
       e.preventDefault();
-      const index = document.getElementById('editIndex').value;
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.innerText = "資料同步中...";
+      
       const payload = {
         action: 'saveFamily',
-        userId: currentLineId,
+        userId: lineUserId,
         name: document.getElementById('mName').value,
         phone: document.getElementById('mPhone').value,
-        index: index
+        gender: document.getElementById('mGender').value,
+        birthday: document.getElementById('mBirthday').value,
+        address: document.getElementById('mAddress').value,
+        relation: document.getElementById('mRelation').value,
+        index: document.getElementById('editIndex').value
       };
       
       try {
-        const response = await fetch(API_ENDPOINT, {
+        const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -213,10 +263,11 @@
         const res = await response.json();
         alert(res.msg);
         if(res.success) {
-          loadFamilyList();
+          await loadFamilyList();
           switchView('member');
         }
-      } catch (e) { alert("系統忙碌中"); }
+      } catch (e) { alert("系統連線異常"); }
+      finally { btn.disabled = false; btn.innerText = "儲存成員資料"; }
     };
 
     window.onload = init;
