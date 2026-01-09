@@ -8,11 +8,8 @@
   <style>
     body { background-color: #f0f2f5; }
     .app-card { background-color: #ffffff; }
-    .aspect-banner { 
-      position: relative;
-      width: 100%;
-      aspect-ratio: 21 / 9; 
-    }
+    /* 強制 Banner 比例 (手機 21:9, 桌機 3:1) */
+    .aspect-banner { aspect-ratio: 21 / 9; }
     @media (min-width: 768px) { .aspect-banner { aspect-ratio: 3 / 1; } }
     .view-section { display: none; }
     .view-section.active { display: block; }
@@ -22,10 +19,10 @@
 
   <div class="w-full max-w-4xl app-card min-h-screen shadow-2xl relative flex flex-col border-x border-slate-200">
     
-    <!-- 頂部狀態列 -->
+    <!-- 1. 頂部導覽列 (小 Logo 置右) -->
     <div class="w-full h-14 bg-white px-6 flex justify-between items-center border-b border-slate-100 z-30 sticky top-0">
       <div class="flex items-center space-x-2">
-        <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black italic shadow-lg shadow-indigo-200">SI</div>
+        <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black italic">SI</div>
         <span class="text-xs font-black text-slate-400 uppercase tracking-tighter">Sports Island</span>
       </div>
       <div id="userBox" class="opacity-0 transition-opacity duration-700">
@@ -33,31 +30,32 @@
       </div>
     </div>
 
-    <!-- Banner -->
+    <!-- 2. Banner 區域 -->
     <div class="w-full aspect-banner bg-slate-100 overflow-hidden">
       <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-full object-cover">
     </div>
 
     <main class="flex-grow pb-32">
-      <!-- 1. 課程專區 -->
+      
+      <!-- A. 課程專區 (Index) -->
       <section id="view-index" class="view-section active">
-        <div class="px-8 py-8 text-center md:text-left">
-          <h2 class="text-2xl font-black text-slate-800 tracking-tight">2026 課程專區</h2>
-          <p class="text-slate-400 text-[10px] mt-1 font-black uppercase tracking-[0.2em]">Available Sports Courses</p>
+        <div class="px-8 py-8">
+          <h2 class="text-2xl font-black text-slate-800">2026 課程專區</h2>
+          <p class="text-slate-400 text-[10px] mt-1 font-black uppercase tracking-widest">Available Sports Courses</p>
         </div>
-        <div id="courseList" class="px-8 space-y-4">
-          <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center transition-all hover:bg-slate-100 active:scale-[0.98] shadow-sm">
-            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mr-5">⚽</div>
+        <div class="px-8 space-y-4">
+          <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center active:scale-[0.98] transition-all">
+            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mr-5 shadow-sm">⚽</div>
             <div class="flex-grow text-left">
               <h3 class="font-bold text-slate-800">週末足球體驗課</h3>
-              <p class="text-[10px] text-slate-400 font-black uppercase mt-1 tracking-wider">$600 / Session</p>
+              <p class="text-[10px] text-slate-400 font-black mt-1">$600 / Session</p>
             </div>
             <button onclick="switchView('member')" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg">報名</button>
           </div>
         </div>
       </section>
 
-      <!-- 2. 會員中心 -->
+      <!-- B. 會員中心 (家人名單與管理) -->
       <section id="view-member" class="view-section">
         <div class="px-8 py-8 flex justify-between items-end">
           <div>
@@ -68,84 +66,54 @@
         </div>
         <div class="px-8 space-y-4">
           <div id="noMemberHint" class="bg-indigo-50 p-12 rounded-[2.5rem] text-center border-2 border-dashed border-indigo-200">
-            <p class="text-indigo-400 text-sm font-bold mb-5">尚未註冊任何成員資料</p>
-            <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black">立即建立檔案</button>
+            <p class="text-indigo-400 text-sm font-bold mb-5">尚未註冊成員資料</p>
+            <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg">立即建立檔案</button>
           </div>
           <div id="familyListContainer" class="space-y-3"></div>
         </div>
       </section>
 
-      <!-- 3. 註冊表單 -->
+      <!-- C. 會員/成員註冊表單 -->
       <section id="view-member-form" class="view-section">
         <div class="px-8 py-8">
-          <button onclick="switchView('member')" class="text-slate-400 text-xs font-black uppercase tracking-widest mb-4">← 返回名單</button>
+          <button onclick="switchView('member')" class="text-slate-400 text-xs font-black mb-4">← 返回列表</button>
           <h2 id="formTitle" class="text-2xl font-black text-slate-800">建立成員檔案</h2>
         </div>
         <div class="px-8">
-          <form id="memberForm" class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
-            <input type="hidden" id="editIndex" value="">
+          <form id="memberForm" class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">姓名</label>
-                <input type="text" id="mName" placeholder="本名" required class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm">
-              </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">聯絡電話</label>
-                <input type="tel" id="mPhone" placeholder="手機號碼" required class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm">
-              </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">性別</label>
-                <select id="mGender" class="w-full p-4 bg-white rounded-2xl border-none shadow-sm">
-                  <option value="男">男</option>
-                  <option value="女">女</option>
-                </select>
-              </div>
-              <div class="space-y-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">生日</label>
-                <input type="date" id="mBirthday" required class="w-full p-4 bg-white rounded-2xl border-none shadow-sm">
-              </div>
-              <div class="space-y-2 md:col-span-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">居住地區</label>
-                <input type="text" id="mAddress" placeholder="居住地區" required class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm">
-              </div>
-              <div class="space-y-2 md:col-span-2">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider ml-1">關係類型</label>
-                <select id="mRelation" class="w-full p-4 bg-white rounded-2xl border-none shadow-sm">
-                  <option value="本人(家長)">本人(家長)</option>
-                  <option value="子女">子女</option>
-                  <option value="配偶">配偶</option>
-                  <option value="其他">其他</option>
-                </select>
-              </div>
+              <input type="text" id="mName" placeholder="姓名" required class="w-full p-4 rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+              <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+              <select id="mGender" class="w-full p-4 rounded-2xl border-none shadow-sm outline-none">
+                <option value="男">男</option><option value="女">女</option>
+              </select>
+              <input type="date" id="mBirthday" required class="w-full p-4 rounded-2xl border-none shadow-sm outline-none">
+              <input type="text" id="mAddress" placeholder="居住地區" required class="w-full p-4 rounded-2xl border-none shadow-sm md:col-span-2 outline-none">
+              <select id="mRelation" class="w-full p-4 rounded-2xl border-none shadow-sm outline-none md:col-span-2">
+                <option value="本人(家長)">本人(家長)</option><option value="子女">子女</option><option value="配偶">配偶</option><option value="其他">其他</option>
+              </select>
             </div>
-            <button type="submit" id="saveBtn" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all mt-4">儲存成員資料</button>
+            <button type="submit" id="saveBtn" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all">儲存成員資料</button>
           </form>
         </div>
       </section>
+
     </main>
 
-    <!-- 底部導覽列 -->
+    <!-- 4. 底部導覽列 -->
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-xl border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
       <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center text-indigo-600">
-        <span class="text-2xl">🏠</span>
-        <span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
+        <span class="text-2xl">🏠</span><span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
       </button>
       <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300">
-        <span class="text-2xl">👤</span>
-        <span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
+        <span class="text-2xl">👤</span><span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
       </button>
     </nav>
   </div>
 
   <script>
-    let lineUserId = "";
+    let currentUid = "";
     let familyData = [];
-    
-    /**
-     * 【修正 API_URL】
-     * 如果是透過 Cloudflare Worker 開啟，URL 應該是當前網址
-     * 如果直接開 GitHub Pages 網址，POST 會報 405 錯誤
-     */
     const API_URL = window.location.origin + window.location.pathname;
 
     function switchView(viewId) {
@@ -158,20 +126,8 @@
       window.scrollTo(0, 0);
     }
 
-    function showMemberForm(index = -1) {
-      document.getElementById('editIndex').value = index;
-      document.getElementById('formTitle').innerText = index === -1 ? "建立成員檔案" : "編輯成員資料";
-      if(index !== -1) {
-        const item = familyData[index];
-        document.getElementById('mName').value = item.name;
-        document.getElementById('mPhone').value = item.phone;
-        document.getElementById('mGender').value = item.gender;
-        document.getElementById('mBirthday').value = item.birthday;
-        document.getElementById('mAddress').value = item.address;
-        document.getElementById('mRelation').value = item.relation;
-      } else {
-        document.getElementById('memberForm').reset();
-      }
+    function showMemberForm() {
+      document.getElementById('memberForm').reset();
       switchView('member-form');
     }
 
@@ -180,7 +136,7 @@
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
         if (!liff.isLoggedIn()) { liff.login(); return; }
         const profile = await liff.getProfile();
-        lineUserId = profile.userId;
+        currentUid = profile.userId;
         document.getElementById('userAvatar').src = profile.pictureUrl;
         document.getElementById('userBox').style.opacity = "1";
         document.getElementById('userNameDisplay').innerText = "您好，" + profile.displayName;
@@ -193,23 +149,17 @@
         const response = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'getFamily', userId: lineUserId })
+          body: JSON.stringify({ action: 'getFamily', userId: currentUid })
         });
         
-        // 檢查回應是否為 JSON
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("伺服器未回傳 JSON。請確認您是透過 Worker 網址存取，而非 GitHub 直接網址。");
-        }
-
+        if (!response.ok) throw new Error("HTTP 錯誤");
         const res = await response.json();
         familyData = res.data || [];
         renderFamilyList();
       } catch (e) { 
-        console.error("Load Error", e);
-        // 如果載入失敗且是在 GitHub 網址下，給予提示
+        console.error(e);
         if(window.location.hostname.includes('github.io')) {
-          alert("錯誤：您直接開啟了 GitHub 網址。請使用 Cloudflare Worker 網址進入系統以執行 API 請求。");
+          alert("【警告】您目前使用 GitHub 直接網址。請更換為 Worker 代理網址以正常使用 API 功能。");
         }
       }
     }
@@ -225,14 +175,14 @@
         familyData.forEach((item, index) => {
           container.innerHTML += `
             <div class="bg-white p-6 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm">
-              <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-4 text-left">
                 <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-lg">${item.gender === '女' ? '👧' : '👦'}</div>
                 <div>
                   <span class="block font-black text-slate-700">${item.name} <span class="text-[10px] font-normal text-slate-400 ml-1">(${item.relation})</span></span>
                   <span class="text-[10px] text-slate-400 font-bold tracking-wider">${item.phone}</span>
                 </div>
               </div>
-              <button onclick="showMemberForm(${index})" class="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-2 rounded-xl">EDIT</button>
+              <button onclick="alert('編輯功能開發中')" class="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-2 rounded-xl">EDIT</button>
             </div>
           `;
         });
@@ -243,11 +193,11 @@
       e.preventDefault();
       const btn = document.getElementById('saveBtn');
       btn.disabled = true;
-      btn.innerText = "資料同步中...";
+      btn.innerText = "資料儲存中...";
       
       const payload = {
         action: 'saveFamily',
-        userId: lineUserId,
+        userId: currentUid,
         name: document.getElementById('mName').value,
         phone: document.getElementById('mPhone').value,
         gender: document.getElementById('mGender').value,
@@ -268,11 +218,8 @@
           await loadFamilyList();
           switchView('member');
         }
-      } catch (e) { alert("通訊連線異常，請確認網址正確性。"); }
-      finally {
-        btn.disabled = false;
-        btn.innerText = "儲存成員資料";
-      }
+      } catch (e) { alert("系統忙碌中，請確認網址正確性"); }
+      finally { btn.disabled = false; btn.innerText = "儲存成員資料"; }
     };
 
     window.onload = init;
