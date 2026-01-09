@@ -6,78 +6,85 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .banner-img { width: 100%; height: 100%; object-fit: cover; }
+    body { background-color: #cbd5e1; } /* 外部背景灰色 */
+    .app-container { background-color: #f8fafc; } /* 內容區白色 */
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-24 font-sans text-slate-900">
+<body class="min-h-screen flex justify-center">
 
-  <!-- Banner 區域 (純淨版，無文字) -->
-  <div class="w-full h-56 md:h-72 overflow-hidden shadow-sm">
-    <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
-         class="w-full h-full object-cover" alt="運動島橫幅">
-  </div>
-
-  <!-- 內容區 -->
-  <div class="px-5 -mt-6 relative z-10">
-    <div class="bg-white rounded-t-3xl p-6 shadow-sm border-x border-t border-slate-100">
-      <h2 class="text-xl font-black text-slate-800 flex items-center">
-        <span class="w-2 h-6 bg-indigo-500 rounded-full mr-3"></span>
-        2026 課程專區
-      </h2>
-      <p class="text-slate-400 text-xs mt-1">探索適合您的運動成長計畫</p>
+  <!-- 主容器 (FB 網頁版格式) -->
+  <div class="w-full max-w-4xl app-container min-h-screen shadow-2xl relative flex flex-col">
+    
+    <!-- Banner 區域 (等比縮放 & 小 Logo) -->
+    <div class="relative w-full aspect-[21/9] md:aspect-[3/1] bg-black overflow-hidden">
+      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
+           class="banner-img" alt="Banner">
+      
+      <!-- 右上方小 Logo (用戶頭像) -->
+      <div class="absolute top-4 right-4 z-20">
+        <div id="userBox" class="flex items-center space-x-2 bg-black/30 backdrop-blur-md p-1.5 rounded-full border border-white/20">
+          <img id="userAvatar" src="https://via.placeholder.com/40" class="w-8 h-8 rounded-full border border-white/50 object-cover shadow-sm">
+        </div>
+      </div>
     </div>
 
-    <!-- 課程列表 Grid -->
-    <div class="grid grid-cols-1 gap-4 mt-4">
+    <!-- 課程專區標題 -->
+    <div class="px-6 md:px-12 mt-8 mb-4">
+      <h2 class="text-2xl font-black text-slate-800 flex items-center">
+        <span class="w-1.5 h-6 bg-indigo-600 rounded-full mr-3"></span>
+        2026 課程專區
+      </h2>
+      <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-wider">Explore Sports Island Courses</p>
+    </div>
+
+    <!-- 課程列表 -->
+    <div class="px-6 md:px-12 space-y-4 flex-grow pb-32">
       <!-- 足球 -->
-      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
-        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl">⚽</div>
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center hover:shadow-md transition-all active:scale-[0.98]">
+        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-inner">⚽</div>
         <div class="flex-grow">
-          <h3 class="font-bold text-slate-700">週末足球體驗課</h3>
-          <p class="text-xs text-slate-400">單日課程 | $600</p>
+          <h3 class="font-bold text-slate-800">週末足球體驗課</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5 font-black uppercase">$600 / Session</p>
         </div>
-        <a href="?p=Member" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">查看</a>
+        <a href="?p=Member" class="bg-indigo-600 text-white px-5 py-2 rounded-2xl text-xs font-bold shadow-lg">報名</a>
       </div>
 
       <!-- 籃球 -->
-      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
-        <div class="w-16 h-16 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl">🏀</div>
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex items-center hover:shadow-md transition-all active:scale-[0.98]">
+        <div class="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-inner">🏀</div>
         <div class="flex-grow">
-          <h3 class="font-bold text-slate-700">籃球基礎訓練營</h3>
-          <p class="text-xs text-slate-400">梯次課程 | $2500</p>
+          <h3 class="font-bold text-slate-800">籃球基礎訓練營</h3>
+          <p class="text-[10px] text-slate-400 mt-0.5 font-black uppercase">$2500 / Term</p>
         </div>
-        <a href="?p=Member" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">查看</a>
-      </div>
-
-      <!-- 夏令營 -->
-      <div class="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex items-center space-x-4">
-        <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-3xl">⛺</div>
-        <div class="flex-grow">
-          <h3 class="font-bold text-slate-700">全能運動五日營</h3>
-          <p class="text-xs text-slate-400">營隊專區 | $8500</p>
-        </div>
-        <a href="?p=Member" class="bg-indigo-50 text-indigo-600 px-4 py-2 rounded-xl text-xs font-bold">查看</a>
+        <a href="?p=Member" class="bg-indigo-600 text-white px-5 py-2 rounded-2xl text-xs font-bold shadow-lg">報名</a>
       </div>
     </div>
-  </div>
 
-  <!-- 底部導覽列 (Bottom Nav) -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-100 px-8 py-3 flex justify-around items-center z-50">
-    <a href="?p=index" class="flex flex-col items-center text-indigo-600">
-      <span class="text-xl">🏠</span>
-      <span class="text-[10px] font-bold mt-1">課程專區</span>
-    </a>
-    <a href="?p=Member" class="flex flex-col items-center text-slate-400 hover:text-indigo-600">
-      <span class="text-xl">👤</span>
-      <span class="text-[10px] font-bold mt-1">會員中心</span>
-    </a>
-  </nav>
+    <!-- 底部導覽列 -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/90 backdrop-blur-xl border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
+      <a href="?p=index" class="flex flex-col items-center text-indigo-600 group">
+        <span class="text-2xl group-active:scale-90 transition-transform">🏠</span>
+        <span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
+      </a>
+      <a href="?p=Member" class="flex flex-col items-center text-slate-400 group">
+        <span class="text-2xl group-active:scale-90 transition-transform">👤</span>
+        <span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
+      </a>
+    </nav>
+  </div>
 
   <script>
     async function init() {
-      await liff.init({ liffId: "2008792551-CzPJtVB1" });
-      if (!liff.isLoggedIn()) { liff.login(); }
+      try {
+        await liff.init({ liffId: "2008792551-CzPJtVB1" });
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+        const profile = await liff.getProfile();
+        document.getElementById('userAvatar').src = profile.pictureUrl;
+      } catch (e) { console.error(e); }
     }
     window.onload = init;
   </script>
