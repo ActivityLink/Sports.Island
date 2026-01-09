@@ -5,65 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    /* 確保圖片在桌機版縮放時不會變形 */
+    .banner-img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+  </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-24 font-sans">
+<body class="bg-slate-200 min-h-screen font-sans text-slate-900 flex justify-center">
 
-  <!-- 會員卡片 Header -->
-  <div class="bg-indigo-600 pt-12 pb-20 px-6 rounded-b-[3rem] shadow-lg">
-    <div class="flex items-center space-x-4">
-      <img id="userAvatar" src="https://via.placeholder.com/100" class="w-16 h-16 rounded-2xl border-2 border-white/20 shadow-sm object-cover">
-      <div>
-        <h1 id="userName" class="text-xl font-black text-white">載入中...</h1>
-        <p class="text-indigo-200 text-xs">運動島 2026 會員專區</p>
+  <!-- 主容器：模仿 FB 寬度並居中 -->
+  <div class="w-full max-w-4xl bg-slate-50 min-h-screen shadow-2xl relative flex flex-col">
+    
+    <!-- Banner 區域：等比縮放 -->
+    <div class="w-full bg-black overflow-hidden aspect-[21/9] md:aspect-[3/1]">
+      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
+           class="banner-img" alt="Banner">
+    </div>
+
+    <!-- 會員資訊 Header (懸浮於 Banner 下方) -->
+    <div class="px-6 md:px-12 -mt-10 md:-mt-16 mb-6">
+      <div class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 flex flex-col md:flex-row items-center md:items-end space-y-4 md:space-y-0 md:space-x-6">
+        <img id="userAvatar" src="https://via.placeholder.com/150" 
+             class="w-24 h-24 md:w-32 md:h-32 rounded-3xl border-4 border-white shadow-lg object-cover">
+        <div class="text-center md:text-left pb-2">
+          <h1 id="userName" class="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">載入中...</h1>
+          <p class="text-indigo-500 text-sm font-bold uppercase tracking-widest mt-1">Sport Island Elite Member</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- 主要功能區 -->
-  <div class="px-6 -mt-12 space-y-6">
-    <!-- 報名表單區 (摺疊或直接顯示) -->
-    <div class="bg-white rounded-3xl shadow-sm p-6 border border-slate-100">
-      <h2 class="font-black text-slate-800 mb-4 flex items-center">
-        <span class="text-lg mr-2">📋</span> 課程報名
-      </h2>
-      <form id="regForm" class="space-y-4">
-        <input type="text" id="stuName" placeholder="學生姓名" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all border-none">
-        <input type="tel" id="pPhone" placeholder="聯絡電話" required class="w-full p-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all border-none">
-        <select id="cId" class="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none">
-          <option value="S01">足球體驗課 ($600)</option>
-          <option value="B01">籃球訓練 ($2500)</option>
-          <option value="C01">五日夏令營 ($8500)</option>
-        </select>
-        <button type="submit" id="subBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-md active:scale-95 transition-all mt-2">
-          確認報名
-        </button>
-      </form>
+    <!-- 功能內容區 -->
+    <div class="px-6 md:px-12 space-y-6 pb-32">
+      
+      <!-- 報名表單卡片 -->
+      <div class="bg-white rounded-3xl shadow-sm p-8 border border-slate-100">
+        <div class="flex items-center space-x-3 mb-6">
+          <div class="bg-indigo-600 p-2 rounded-xl text-white">📋</div>
+          <h2 class="font-black text-slate-800 text-xl">課程註冊報名</h2>
+        </div>
+        
+        <form id="regForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">學生姓名</label>
+            <input type="text" id="stuName" placeholder="請輸入全名" required 
+                   class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          
+          <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">聯絡電話</label>
+            <input type="tel" id="pPhone" placeholder="09XX-XXX-XXX" required 
+                   class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+          </div>
+          
+          <div class="space-y-2 md:col-span-2">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">選擇欲報名課程</label>
+            <select id="cId" class="w-full p-4 bg-slate-100 rounded-2xl border-none outline-none appearance-none cursor-pointer">
+              <option value="S01">週末足球體驗課 ($600)</option>
+              <option value="B01">籃球基礎訓練營 ($2500)</option>
+              <option value="C01">全能五日夏令營 ($8500)</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2 pt-2">
+            <button type="submit" id="subBtn" 
+                    class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-100 hover:bg-indigo-700 active:scale-[0.98] transition-all">
+              確認送出報名
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 快捷功能選單 -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+          <div class="text-3xl mb-2">📅</div>
+          <div class="text-xs font-bold text-slate-700">我的紀錄</div>
+        </div>
+        <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-center hover:shadow-md transition-shadow cursor-pointer">
+          <div class="text-3xl mb-2">💳</div>
+          <div class="text-xs font-bold text-slate-700">繳費通知</div>
+        </div>
+        <div class="hidden md:flex bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex-col items-center justify-center hover:shadow-md transition-shadow cursor-pointer">
+          <div class="text-3xl mb-2">🏆</div>
+          <div class="text-xs font-bold text-slate-700">成就勳章</div>
+        </div>
+        <div class="hidden md:flex bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex-col items-center justify-center hover:shadow-md transition-shadow cursor-pointer">
+          <div class="text-3xl mb-2">📢</div>
+          <div class="text-xs font-bold text-slate-700">最新公告</div>
+        </div>
+      </div>
+
+      <!-- 頁尾聲明 -->
+      <div class="text-center py-6">
+        <p class="text-[10px] text-slate-300 font-black uppercase tracking-[0.2em]">Sports Island Management System 2026</p>
+      </div>
     </div>
 
-    <!-- 其它會員功能 -->
-    <div class="grid grid-cols-2 gap-4">
-      <button class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 text-center">
-        <div class="text-2xl mb-1">📅</div>
-        <div class="text-xs font-bold text-slate-700">我的紀錄</div>
-      </button>
-      <button class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 text-center">
-        <div class="text-2xl mb-1">💳</div>
-        <div class="text-xs font-bold text-slate-700">繳費通知</div>
-      </button>
-    </div>
+    <!-- 底部導覽列：適配容器寬度 -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/90 backdrop-blur-xl border-t border-slate-100 px-10 py-5 flex justify-around items-center z-50">
+      <a href="?p=index" class="flex flex-col items-center text-slate-400 group">
+        <span class="text-2xl group-hover:scale-110 transition-transform">🏠</span>
+        <span class="text-[10px] font-black mt-1 uppercase tracking-tighter">課程專區</span>
+      </a>
+      <a href="?p=Member" class="flex flex-col items-center text-indigo-600 group">
+        <span class="text-2xl group-hover:scale-110 transition-transform">👤</span>
+        <span class="text-[10px] font-black mt-1 uppercase tracking-tighter">會員中心</span>
+      </a>
+    </nav>
   </div>
-
-  <!-- 底部導覽列 -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-lg border-t border-slate-100 px-8 py-3 flex justify-around items-center z-50">
-    <a href="?p=index" class="flex flex-col items-center text-slate-400">
-      <span class="text-xl">🏠</span>
-      <span class="text-[10px] font-bold mt-1">課程專區</span>
-    </a>
-    <a href="?p=Member" class="flex flex-col items-center text-indigo-600">
-      <span class="text-xl">👤</span>
-      <span class="text-[10px] font-bold mt-1">會員中心</span>
-    </a>
-  </nav>
 
   <script>
     let lineUid = "";
@@ -72,16 +124,24 @@
     async function init() {
       try {
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        if (!liff.isLoggedIn()) { liff.login(); }
+        if (!liff.isLoggedIn()) { 
+          liff.login(); 
+          return;
+        }
         const profile = await liff.getProfile();
         lineUid = profile.userId;
         document.getElementById('userName').innerText = profile.displayName;
         document.getElementById('userAvatar').src = profile.pictureUrl;
-      } catch (e) { console.error(e); }
+      } catch (e) {
+        console.error("LIFF 初始化失敗", e);
+      }
     }
 
     document.getElementById('regForm').onsubmit = async function(e) {
       e.preventDefault();
+      
+      if (!lineUid) return alert("尚未取得身分資訊，請稍候。");
+
       const btn = document.getElementById('subBtn');
       btn.disabled = true;
       btn.innerText = "傳送中...";
@@ -100,14 +160,21 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
+        
         const res = await response.json();
         alert(res.msg);
-      } catch (err) { alert("報名系統繁忙，請稍後再試。"); }
-      finally {
+        
+        if (res.success) {
+          document.getElementById('regForm').reset();
+        }
+      } catch (err) {
+        alert("報名系統繁忙，請稍後再試。");
+      } finally {
         btn.disabled = false;
-        btn.innerText = "確認報名";
+        btn.innerText = "確認送出報名";
       }
     };
+
     window.onload = init;
   </script>
 </body>
