@@ -7,102 +7,106 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     body { background-color: #f0f2f5; }
+    .app-card { background-color: #ffffff; }
     .aspect-banner { aspect-ratio: 21 / 9; }
     @media (min-width: 768px) { .aspect-banner { aspect-ratio: 3 / 1; } }
-    .page-view { display: none; }
-    .page-view.active { display: block; }
-    /* 隱藏捲軸 */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .view-section { display: none; }
+    .view-section.active { display: block; }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
 
-  <div class="w-full max-w-4xl bg-white min-h-screen shadow-lg relative flex flex-col">
+  <div class="w-full max-w-4xl app-card min-h-screen shadow-2xl relative flex flex-col border-x border-slate-200">
     
-    <!-- 1. 頂部狀態列 (放置 Logo，不遮擋 Banner) -->
-    <div class="w-full bg-white px-4 py-2 flex justify-between items-center border-b border-slate-100 z-30">
+    <!-- 頂部狀態列 -->
+    <div class="w-full h-14 bg-white px-6 flex justify-between items-center border-b border-slate-100 z-30">
       <div class="flex items-center space-x-2">
-        <div class="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center text-white text-[10px] font-black">SI</div>
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Sports Island</span>
+        <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black italic">SI</div>
+        <span class="text-xs font-black text-slate-400 uppercase tracking-tighter">Sports Island</span>
       </div>
-      <!-- 小尺寸用戶 Logo -->
-      <div id="userLogo" class="opacity-0 transition-opacity duration-500">
-        <img id="userAvatar" src="" class="w-8 h-8 rounded-full border border-slate-200 object-cover bg-slate-100 shadow-sm">
+      <div id="userBox" class="opacity-0 transition-opacity duration-700">
+        <img id="userAvatar" src="" class="w-9 h-9 rounded-full border border-slate-200 object-cover shadow-sm bg-slate-50">
       </div>
     </div>
 
-    <!-- 2. Banner 區域 (等比縮放) -->
-    <div class="relative w-full aspect-banner bg-slate-200 overflow-hidden">
-      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
-           class="w-full h-full object-cover" alt="Banner">
+    <!-- Banner 區域 -->
+    <div class="w-full aspect-banner bg-slate-100 overflow-hidden">
+      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-full object-cover">
     </div>
 
-    <!-- 3. 頁面內容區 (單頁切換邏輯) -->
+    <!-- 單頁內容區 -->
     <main class="flex-grow pb-32">
       
-      <!-- 頁面 A: 課程專區 (index) -->
-      <div id="view-index" class="page-view active">
-        <div class="px-6 py-8">
-          <h2 class="text-2xl font-black text-slate-800 flex items-center">
-            <span class="w-1.5 h-6 bg-indigo-600 rounded-full mr-3"></span>
-            2026 課程專區
-          </h2>
-          <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Available Courses</p>
+      <!-- 1. 課程專區 (Index) -->
+      <section id="view-index" class="view-section active">
+        <div class="px-8 py-8 text-center md:text-left">
+          <h2 class="text-2xl font-black text-slate-800">2026 課程專區</h2>
+          <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Available Sports Courses</p>
         </div>
-        <div class="px-6 space-y-4">
-          <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-center active:scale-95 transition-all">
-            <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-sm">⚽</div>
-            <div class="flex-grow">
+        <div id="courseList" class="px-8 space-y-4">
+          <!-- 課程由 JS 動態生成或維持靜態 -->
+          <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center transition-all active:scale-[0.98]">
+            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mr-5 shadow-sm">⚽</div>
+            <div class="flex-grow text-left">
               <h3 class="font-bold text-slate-800">週末足球體驗課</h3>
-              <p class="text-[10px] text-slate-400 font-black uppercase tracking-wider">$600 / Session</p>
+              <p class="text-[10px] text-slate-400 font-black uppercase mt-1 tracking-wider">$600 / Session</p>
             </div>
-            <button onclick="switchPage('Member')" class="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-md">報名</button>
-          </div>
-          <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-center active:scale-95 transition-all">
-            <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-sm">🏀</div>
-            <div class="flex-grow">
-              <h3 class="font-bold text-slate-800">籃球基礎訓練營</h3>
-              <p class="text-[10px] text-slate-400 font-black uppercase tracking-wider">$2500 / Term</p>
-            </div>
-            <button onclick="switchPage('Member')" class="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-md">報名</button>
+            <button onclick="switchView('member')" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg">報名</button>
           </div>
         </div>
-      </div>
+      </section>
 
-      <!-- 頁面 B: 會員中心 (Member) -->
-      <div id="view-Member" class="page-view">
-        <div class="px-6 py-8">
-          <h1 id="userName" class="text-3xl font-black text-slate-800 tracking-tight leading-tight">驗證中...</h1>
-          <p class="text-indigo-600 text-xs font-black uppercase tracking-[0.2em] mt-1">Member Registration</p>
-        </div>
-        <div class="px-6 space-y-6">
-          <div class="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-            <h2 class="font-black text-slate-700 text-lg mb-6 flex items-center">
-              <span class="bg-white p-2 rounded-xl mr-3 shadow-sm">📋</span> 填寫報名資料
-            </h2>
-            <form id="regForm" class="space-y-5">
-              <input type="text" id="stuName" placeholder="學生姓名" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-              <input type="tel" id="pPhone" placeholder="家長聯絡電話" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-              <select id="cId" class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm appearance-none">
-                <option value="S01">週末足球體驗課 ($600)</option>
-                <option value="B01">籃球基礎訓練營 ($2500)</option>
-                <option value="C01">全能五日營 ($8500)</option>
-              </select>
-              <button type="submit" id="subBtn" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all mt-4">確認報名</button>
-            </form>
+      <!-- 2. 會員中心 (Member Dashboard) -->
+      <section id="view-member" class="view-section">
+        <div class="px-8 py-8 flex justify-between items-end">
+          <div>
+            <h1 id="userNameDisplay" class="text-3xl font-black text-slate-800 leading-tight">驗證中...</h1>
+            <p class="text-indigo-600 text-xs font-black uppercase tracking-[0.2em] mt-1">Family Management</p>
           </div>
+          <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md">+ 新增家人</button>
         </div>
-      </div>
+
+        <div id="familyListArea" class="px-8 space-y-4">
+          <!-- 名單列表 -->
+          <div id="noMemberHint" class="bg-indigo-50 p-10 rounded-[2.5rem] text-center border-2 border-dashed border-indigo-200">
+            <p class="text-indigo-400 text-sm font-bold mb-4">您尚未註冊會員資料</p>
+            <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg shadow-indigo-100">立即註冊 / 新增家人</button>
+          </div>
+          <div id="familyListContainer" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- 3. 會員/家人 編輯表單 (Overlay or Section) -->
+      <section id="view-member-form" class="view-section">
+        <div class="px-8 py-8">
+          <button onclick="switchView('member')" class="text-slate-400 text-sm font-bold mb-4">← 返回名單</button>
+          <h2 id="formTitle" class="text-2xl font-black text-slate-800">新增家人名單</h2>
+        </div>
+        <div class="px-8">
+          <form id="memberForm" class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-5">
+            <input type="hidden" id="editIndex" value="">
+            <div>
+              <label class="text-[10px] font-black text-slate-400 uppercase ml-2">姓名</label>
+              <input type="text" id="mName" placeholder="請輸入姓名" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-slate-400 uppercase ml-2">聯絡電話</label>
+              <input type="tel" id="mPhone" placeholder="家長電話" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl active:scale-95 transition-all">儲存資料</button>
+          </form>
+        </div>
+      </section>
 
     </main>
 
-    <!-- 4. 底部導覽列 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-md border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
-      <button onclick="switchPage('index')" id="nav-index" class="nav-item flex flex-col items-center text-indigo-600">
+    <!-- 底部導覽列 -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-xl border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
+      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center text-indigo-600">
         <span class="text-2xl">🏠</span>
         <span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
       </button>
-      <button onclick="switchPage('Member')" id="nav-Member" class="nav-item flex flex-col items-center text-slate-400">
+      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300">
         <span class="text-2xl">👤</span>
         <span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
       </button>
@@ -110,69 +114,109 @@
   </div>
 
   <script>
-    let lineUid = "";
-    const API_URL = window.location.href.split('?')[0];
+    let currentLineId = "";
+    let familyData = []; // 存放家人名單快取
+    const API_ENDPOINT = window.location.href.split('?')[0];
 
-    // 切換頁面函式 (不重載網頁)
-    function switchPage(pageId) {
-      document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
-      document.getElementById('view-' + pageId).classList.add('active');
-      
-      // 更新 Nav 顏色
-      document.querySelectorAll('.nav-item').forEach(n => n.classList.replace('text-indigo-600', 'text-slate-400'));
-      document.getElementById('nav-' + pageId).classList.replace('text-slate-400', 'text-indigo-600');
-      
-      // 捲回頂部
+    function switchView(viewId) {
+      document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + viewId).classList.add('active');
+      const navIndex = document.getElementById('nav-index');
+      const navMember = document.getElementById('nav-member');
+      navIndex.className = viewId === 'index' ? "flex flex-col items-center text-indigo-600" : "flex flex-col items-center text-slate-300";
+      navMember.className = viewId === 'member' || viewId === 'member-form' ? "flex flex-col items-center text-indigo-600" : "flex flex-col items-center text-slate-300";
       window.scrollTo(0, 0);
+    }
+
+    function showMemberForm(index = -1) {
+      document.getElementById('editIndex').value = index;
+      document.getElementById('formTitle').innerText = index === -1 ? "新增家人名單" : "編輯成員資料";
+      if(index !== -1) {
+        document.getElementById('mName').value = familyData[index].name;
+        document.getElementById('mPhone').value = familyData[index].phone;
+      } else {
+        document.getElementById('mName').value = "";
+        document.getElementById('mPhone').value = "";
+      }
+      switchView('member-form');
     }
 
     async function init() {
       try {
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-          return;
-        }
+        if (!liff.isLoggedIn()) { liff.login(); return; }
         const profile = await liff.getProfile();
-        lineUid = profile.userId;
-        
-        // 顯示頂部頭像
+        currentLineId = profile.userId;
         document.getElementById('userAvatar').src = profile.pictureUrl;
-        document.getElementById('userLogo').style.opacity = "1";
-        
-        // 更新會員中心歡迎詞
-        document.getElementById('userName').innerText = "您好，" + profile.displayName;
-
-        // 檢查網址參數是否有指定初始頁面
-        const urlParams = new URLSearchParams(window.location.search);
-        const startPage = urlParams.get('p');
-        if (startPage === 'Member') switchPage('Member');
-        
-      } catch (e) { console.error("LIFF Init Failed", e); }
+        document.getElementById('userBox').style.opacity = "1";
+        document.getElementById('userNameDisplay').innerText = "您好，" + profile.displayName;
+        loadFamilyList();
+      } catch (err) { console.error(err); }
     }
 
-    document.getElementById('regForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('subBtn');
-      btn.disabled = true;
-      btn.innerText = "傳送中...";
+    // 從後端抓取家人名單
+    async function loadFamilyList() {
       try {
-        const response = await fetch(API_URL, {
+        const response = await fetch(API_ENDPOINT, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'register',
-            userId: lineUid,
-            name: document.getElementById('stuName').value,
-            phone: document.getElementById('pPhone').value,
-            courseId: document.getElementById('cId').value
-          })
+          body: JSON.stringify({ action: 'getFamily', userId: currentLineId })
+        });
+        const res = await response.json();
+        familyData = res.data || [];
+        renderFamilyList();
+      } catch (e) { console.error("載入失敗", e); }
+    }
+
+    function renderFamilyList() {
+      const container = document.getElementById('familyListContainer');
+      const hint = document.getElementById('noMemberHint');
+      container.innerHTML = "";
+      if (familyData.length === 0) {
+        hint.style.display = "block";
+      } else {
+        hint.style.display = "none";
+        familyData.forEach((item, index) => {
+          container.innerHTML += `
+            <div class="bg-white p-5 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm">
+              <div>
+                <span class="block font-bold text-slate-700">${item.name}</span>
+                <span class="text-[10px] text-slate-400 font-bold">${item.phone}</span>
+              </div>
+              <div class="space-x-2">
+                <button onclick="showMemberForm(${index})" class="text-indigo-600 text-xs font-bold bg-indigo-50 px-3 py-1.5 rounded-lg">編輯</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    // 處理家人資料儲存 (新增/修改)
+    document.getElementById('memberForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const index = document.getElementById('editIndex').value;
+      const payload = {
+        action: 'saveFamily',
+        userId: currentLineId,
+        name: document.getElementById('mName').value,
+        phone: document.getElementById('mPhone').value,
+        index: index
+      };
+      
+      try {
+        const response = await fetch(API_ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
         const res = await response.json();
         alert(res.msg);
-        if(res.success) document.getElementById('regForm').reset();
-      } catch (err) { alert("報名通訊失敗"); }
-      finally { btn.disabled = false; btn.innerText = "確認報名"; }
+        if(res.success) {
+          loadFamilyList();
+          switchView('member');
+        }
+      } catch (e) { alert("系統忙碌中"); }
     };
 
     window.onload = init;
