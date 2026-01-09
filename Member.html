@@ -9,77 +9,122 @@
     body { background-color: #f0f2f5; }
     .aspect-banner { aspect-ratio: 21 / 9; }
     @media (min-width: 768px) { .aspect-banner { aspect-ratio: 3 / 1; } }
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+    /* 隱藏捲軸 */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
 
   <div class="w-full max-w-4xl bg-white min-h-screen shadow-lg relative flex flex-col">
     
-    <!-- Banner 區域 -->
+    <!-- 1. 頂部狀態列 (放置 Logo，不遮擋 Banner) -->
+    <div class="w-full bg-white px-4 py-2 flex justify-between items-center border-b border-slate-100 z-30">
+      <div class="flex items-center space-x-2">
+        <div class="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center text-white text-[10px] font-black">SI</div>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Sports Island</span>
+      </div>
+      <!-- 小尺寸用戶 Logo -->
+      <div id="userLogo" class="opacity-0 transition-opacity duration-500">
+        <img id="userAvatar" src="" class="w-8 h-8 rounded-full border border-slate-200 object-cover bg-slate-100 shadow-sm">
+      </div>
+    </div>
+
+    <!-- 2. Banner 區域 (等比縮放) -->
     <div class="relative w-full aspect-banner bg-slate-200 overflow-hidden">
       <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
            class="w-full h-full object-cover" alt="Banner">
+    </div>
+
+    <!-- 3. 頁面內容區 (單頁切換邏輯) -->
+    <main class="flex-grow pb-32">
       
-      <!-- 右上方小 Logo -->
-      <div class="absolute top-3 right-3 md:top-6 md:right-6 z-20">
-        <div class="bg-black/20 backdrop-blur-md p-1 rounded-full border border-white/30 shadow-lg">
-          <img id="userAvatar" src="https://via.placeholder.com/100?text=..." 
-               class="w-8 h-8 md:w-12 md:h-12 rounded-full object-cover bg-white">
+      <!-- 頁面 A: 課程專區 (index) -->
+      <div id="view-index" class="page-view active">
+        <div class="px-6 py-8">
+          <h2 class="text-2xl font-black text-slate-800 flex items-center">
+            <span class="w-1.5 h-6 bg-indigo-600 rounded-full mr-3"></span>
+            2026 課程專區
+          </h2>
+          <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Available Courses</p>
+        </div>
+        <div class="px-6 space-y-4">
+          <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-center active:scale-95 transition-all">
+            <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-sm">⚽</div>
+            <div class="flex-grow">
+              <h3 class="font-bold text-slate-800">週末足球體驗課</h3>
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-wider">$600 / Session</p>
+            </div>
+            <button onclick="switchPage('Member')" class="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-md">報名</button>
+          </div>
+          <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-center active:scale-95 transition-all">
+            <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-sm">🏀</div>
+            <div class="flex-grow">
+              <h3 class="font-bold text-slate-800">籃球基礎訓練營</h3>
+              <p class="text-[10px] text-slate-400 font-black uppercase tracking-wider">$2500 / Term</p>
+            </div>
+            <button onclick="switchPage('Member')" class="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-md">報名</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 會員專區標題 -->
-    <div class="px-6 py-8">
-      <h1 id="userName" class="text-3xl font-black text-slate-800 tracking-tight leading-tight">載入中...</h1>
-      <p class="text-indigo-600 text-xs font-black uppercase tracking-[0.2em] mt-1">Member Registration</p>
-    </div>
-
-    <!-- 表單內容區 -->
-    <div class="px-6 space-y-6 flex-grow pb-32">
-      <div class="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
-        <h2 class="font-black text-slate-700 text-lg mb-6 flex items-center">
-          <span class="bg-white p-2 rounded-xl mr-3 shadow-sm text-sm">📋</span> 填寫報名資料
-        </h2>
-        
-        <form id="regForm" class="space-y-5">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input type="text" id="stuName" placeholder="學生姓名" required 
-                   class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
-            <input type="tel" id="pPhone" placeholder="家長聯絡電話" required 
-                   class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+      <!-- 頁面 B: 會員中心 (Member) -->
+      <div id="view-Member" class="page-view">
+        <div class="px-6 py-8">
+          <h1 id="userName" class="text-3xl font-black text-slate-800 tracking-tight leading-tight">驗證中...</h1>
+          <p class="text-indigo-600 text-xs font-black uppercase tracking-[0.2em] mt-1">Member Registration</p>
+        </div>
+        <div class="px-6 space-y-6">
+          <div class="bg-slate-50 rounded-[2.5rem] p-8 border border-slate-100 shadow-sm">
+            <h2 class="font-black text-slate-700 text-lg mb-6 flex items-center">
+              <span class="bg-white p-2 rounded-xl mr-3 shadow-sm">📋</span> 填寫報名資料
+            </h2>
+            <form id="regForm" class="space-y-5">
+              <input type="text" id="stuName" placeholder="學生姓名" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+              <input type="tel" id="pPhone" placeholder="家長聯絡電話" required class="w-full p-4 bg-white rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm">
+              <select id="cId" class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm appearance-none">
+                <option value="S01">週末足球體驗課 ($600)</option>
+                <option value="B01">籃球基礎訓練營 ($2500)</option>
+                <option value="C01">全能五日營 ($8500)</option>
+              </select>
+              <button type="submit" id="subBtn" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all mt-4">確認報名</button>
+            </form>
           </div>
-          
-          <select id="cId" class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm appearance-none">
-            <option value="S01">週末足球體驗課 ($600)</option>
-            <option value="B01">籃球基礎訓練營 ($2500)</option>
-            <option value="C01">全能五日營 ($8500)</option>
-          </select>
-
-          <button type="submit" id="subBtn" 
-                  class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all mt-4">
-            確認報名
-          </button>
-        </form>
+        </div>
       </div>
-    </div>
 
-    <!-- 底部導覽列 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-xl border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
-      <a href="?p=index" class="flex flex-col items-center text-slate-400 hover:text-indigo-500">
+    </main>
+
+    <!-- 4. 底部導覽列 -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-md border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
+      <button onclick="switchPage('index')" id="nav-index" class="nav-item flex flex-col items-center text-indigo-600">
         <span class="text-2xl">🏠</span>
         <span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
-      </a>
-      <a href="?p=Member" class="flex flex-col items-center text-indigo-600">
+      </button>
+      <button onclick="switchPage('Member')" id="nav-Member" class="nav-item flex flex-col items-center text-slate-400">
         <span class="text-2xl">👤</span>
         <span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
-      </a>
+      </button>
     </nav>
   </div>
 
   <script>
     let lineUid = "";
     const API_URL = window.location.href.split('?')[0];
+
+    // 切換頁面函式 (不重載網頁)
+    function switchPage(pageId) {
+      document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+      document.getElementById('view-' + pageId).classList.add('active');
+      
+      // 更新 Nav 顏色
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.replace('text-indigo-600', 'text-slate-400'));
+      document.getElementById('nav-' + pageId).classList.replace('text-slate-400', 'text-indigo-600');
+      
+      // 捲回頂部
+      window.scrollTo(0, 0);
+    }
 
     async function init() {
       try {
@@ -90,9 +135,20 @@
         }
         const profile = await liff.getProfile();
         lineUid = profile.userId;
-        document.getElementById('userName').innerText = "您好，" + profile.displayName;
+        
+        // 顯示頂部頭像
         document.getElementById('userAvatar').src = profile.pictureUrl;
-      } catch (e) { console.error(e); }
+        document.getElementById('userLogo').style.opacity = "1";
+        
+        // 更新會員中心歡迎詞
+        document.getElementById('userName').innerText = "您好，" + profile.displayName;
+
+        // 檢查網址參數是否有指定初始頁面
+        const urlParams = new URLSearchParams(window.location.search);
+        const startPage = urlParams.get('p');
+        if (startPage === 'Member') switchPage('Member');
+        
+      } catch (e) { console.error("LIFF Init Failed", e); }
     }
 
     document.getElementById('regForm').onsubmit = async (e) => {
@@ -100,7 +156,6 @@
       const btn = document.getElementById('subBtn');
       btn.disabled = true;
       btn.innerText = "傳送中...";
-      
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
@@ -116,9 +171,10 @@
         const res = await response.json();
         alert(res.msg);
         if(res.success) document.getElementById('regForm').reset();
-      } catch (err) { alert("報名通訊失敗，請重試"); }
+      } catch (err) { alert("報名通訊失敗"); }
       finally { btn.disabled = false; btn.innerText = "確認報名"; }
     };
+
     window.onload = init;
   </script>
 </body>
