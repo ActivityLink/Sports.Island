@@ -13,49 +13,38 @@
 </head>
 <body class="flex min-h-screen">
 
-  <!-- 側邊選單 -->
-  <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
+  <aside class="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col sticky top-0 h-screen">
     <div class="p-6 border-b border-slate-100">
       <h1 class="text-xl font-black text-indigo-600 italic">SI ADMIN</h1>
-      <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Management System</p>
     </div>
     <nav class="flex-grow py-4">
-      <button onclick="switchTab('courses')" id="tab-courses" class="w-full text-left px-6 py-4 text-sm font-bold flex items-center sidebar-active">
-        <span class="mr-3">📚</span> 課程管理
-      </button>
-      <button onclick="switchTab('registrations')" id="tab-registrations" class="w-full text-left px-6 py-4 text-sm font-bold flex items-center text-slate-500 hover:bg-slate-50 transition-all">
-        <span class="mr-3">📝</span> 報名名單
-      </button>
+      <button onclick="switchTab('courses')" id="tab-courses" class="w-full text-left px-6 py-4 text-sm font-bold sidebar-active">📚 課程管理</button>
+      <button onclick="switchTab('registrations')" id="tab-registrations" class="w-full text-left px-6 py-4 text-sm font-bold text-slate-500">📝 報名清單</button>
     </nav>
   </aside>
 
-  <!-- 主要內容區 -->
   <main class="flex-grow p-8">
-    
-    <!-- 課程管理區塊 -->
     <section id="section-courses">
       <div class="flex justify-between items-center mb-8">
         <div>
           <h2 class="text-2xl font-black text-slate-800">課程管理中心</h2>
-          <p class="text-sm text-slate-400">符合 2026 系統手冊規格之課程編修</p>
+          <p class="text-sm text-slate-400">管理課程、梯次與活動圖片</p>
         </div>
-        <button onclick="openCourseModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-700 transition-all">
-          + 新增課程
-        </button>
+        <button onclick="openCourseModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-700">+ 新增課程</button>
       </div>
 
-      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+      <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse min-w-[800px]">
+          <table class="w-full text-left border-collapse min-w-[1000px]">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black text-slate-400">
-                <th class="px-6 py-4">課程 ID</th>
-                <th class="px-6 py-4">類別</th>
-                <th class="px-6 py-4">課程名稱 / 負責教練</th>
-                <th class="px-6 py-4">上課日期</th>
-                <th class="px-6 py-4">價格 / 限額</th>
+                <th class="px-6 py-4">預覽</th>
+                <th class="px-6 py-4">ID / 類別</th>
+                <th class="px-6 py-4">課程名稱 / 梯次</th>
+                <th class="px-6 py-4">負責教練 / 日期</th>
+                <th class="px-6 py-4">價格</th>
                 <th class="px-6 py-4">狀態</th>
-                <th class="px-6 py-4 text-right">操作</th>
+                <th class="px-6 py-4 text-right">管理</th>
               </tr>
             </thead>
             <tbody id="courseTableBody"></tbody>
@@ -64,76 +53,80 @@
       </div>
     </section>
 
-    <!-- 報名清單區塊 (略，維持原樣) -->
     <section id="section-registrations" class="hidden">
-      <div class="mb-8">
-        <h2 class="text-2xl font-black text-slate-800">報名數據監控</h2>
-      </div>
-      <div id="regTableContainer" class="bg-white rounded-3xl shadow-sm border border-slate-100">
-        <table class="w-full text-left"><tbody id="regTableBody"></tbody></table>
+      <div class="mb-8"><h2 class="text-2xl font-black text-slate-800">報名即時監控</h2></div>
+      <div class="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100 text-[10px] uppercase font-black text-slate-400">
+              <th class="px-6 py-4">時間</th><th class="px-6 py-4">姓名</th><th class="px-6 py-4">課程</th><th class="px-6 py-4">狀態</th>
+            </tr>
+          </thead>
+          <tbody id="regTableBody"></tbody>
+        </table>
       </div>
     </section>
   </main>
 
-  <!-- 課程編修視窗 (規格化 Modal) -->
+  <!-- 課程編輯彈窗 -->
   <div id="courseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-6 z-50 overflow-y-auto">
     <div class="bg-white w-full max-w-2xl rounded-[2.5rem] p-10 shadow-2xl relative my-8">
-      <h3 id="modalTitle" class="text-2xl font-black text-slate-800 mb-6">課程規格設定</h3>
+      <h3 id="modalTitle" class="text-2xl font-black text-slate-800 mb-6">課程/梯次編修</h3>
       
-      <form id="courseForm" class="space-y-6">
-        <div class="grid grid-cols-2 gap-6">
+      <form id="courseForm" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程唯一 ID</label>
-            <input type="text" id="cId" placeholder="例如: A01" required class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500">
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程 ID</label>
+            <input type="text" id="cId" placeholder="B01-T1" required class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500">
           </div>
           <div>
             <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程類別</label>
-            <select id="cCategory" class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none">
-              <option value="單日">單日課程</option>
-              <option value="梯次">梯次課程</option>
-              <option value="營隊專區">營隊專區</option>
-              <option value="課後班">課後班</option>
+            <select id="cCategory" class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+              <option value="單日">單日課程</option><option value="梯次">梯次課程</option><option value="營隊專區">營隊專區</option><option value="課後班">課後班</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程主名稱</label>
+            <input type="text" id="cName" placeholder="籃球基礎訓練" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+          </div>
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">梯次名稱 (如無則填 -)</label>
+            <input type="text" id="cBatch" placeholder="第一梯次" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">教練</label>
+            <input type="text" id="cCoach" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+          </div>
+          <div>
+            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">上課日期</label>
+            <input type="text" id="cDates" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div><label class="text-[10px] font-black text-slate-400 ml-1">原價</label><input type="number" id="cPrice" required class="w-full p-4 bg-slate-50 rounded-2xl border-none"></div>
+          <div><label class="text-[10px] font-black text-slate-400 ml-1">上限人數</label><input type="number" id="cLimit" required class="w-full p-4 bg-slate-50 rounded-2xl border-none"></div>
+          <div>
+            <label class="text-[10px] font-black text-slate-400 ml-1">狀態</label>
+            <select id="cStatus" class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+              <option value="報名中">報名中</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程全名</label>
-          <input type="text" id="cName" placeholder="請輸入完整課程標題" required class="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-indigo-500">
+          <label class="text-[10px] font-black text-slate-400 uppercase ml-1">活動圖片網址</label>
+          <input type="text" id="cImg" placeholder="https://..." class="w-full p-4 bg-slate-50 rounded-2xl border-none">
         </div>
 
-        <div class="grid grid-cols-2 gap-6">
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">負責教練 (多位請用逗號)</label>
-            <input type="text" id="cCoach" placeholder="例如: 王教練, Sarah老師" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
-          </div>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">上課日期 / 區段</label>
-            <input type="text" id="cDates" placeholder="例如: 2026/02/01 - 02/05" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
-          </div>
-        </div>
-
-        <div class="grid grid-cols-3 gap-6">
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">課程原價</label>
-            <input type="number" id="cPrice" placeholder="600" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
-          </div>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">招生人數上限</label>
-            <input type="number" id="cLimit" placeholder="20" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
-          </div>
-          <div>
-            <label class="text-[10px] font-black text-slate-400 uppercase ml-1">目前狀態</label>
-            <select id="cStatus" class="w-full p-4 bg-slate-50 rounded-2xl border-none shadow-sm">
-              <option value="報名中">報名中</option>
-              <option value="已額滿">已額滿</option>
-              <option value="停辦">停辦</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="flex space-x-3 pt-4">
-          <button type="submit" id="saveBtn" class="flex-grow bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 active:scale-95 transition-all">儲存至雲端</button>
+        <div class="flex space-x-3 mt-4">
+          <button type="submit" id="saveBtn" class="flex-grow bg-indigo-600 text-white py-4 rounded-2xl font-black shadow-xl hover:bg-indigo-700 active:scale-95 transition-all">儲存資料</button>
           <button type="button" onclick="closeCourseModal()" class="px-8 bg-slate-100 text-slate-400 py-4 rounded-2xl font-bold">取消</button>
         </div>
       </form>
@@ -150,90 +143,75 @@
         const json = await res.json();
         allCourses = json.data || [];
         renderCourseTable();
-      } catch (e) { console.error("資料載入失敗"); }
+        
+        const regRes = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminGetRegs' }) });
+        const regJson = await regRes.json();
+        renderRegTable(regJson.data || []);
+      } catch (e) { console.error("API 連線失敗"); }
     }
 
     function renderCourseTable() {
-      const tbody = document.getElementById('courseTableBody');
-      tbody.innerHTML = allCourses.map((c, i) => `
+      document.getElementById('courseTableBody').innerHTML = allCourses.map((c, i) => `
         <tr class="border-b border-slate-50 text-sm hover:bg-slate-50/50">
-          <td class="px-6 py-4 text-slate-400 font-mono text-xs">${c.id}</td>
-          <td class="px-6 py-4"><span class="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-[10px] font-bold">${c.category}</span></td>
-          <td class="px-6 py-4">
-            <div class="font-bold text-slate-700">${c.name}</div>
-            <div class="text-[10px] text-slate-400 font-bold uppercase">Coach: ${c.coach}</div>
-          </td>
-          <td class="px-6 py-4 text-xs text-slate-500">${c.dates}</td>
-          <td class="px-6 py-4">
-            <div class="font-black text-slate-700">$${c.price}</div>
-            <div class="text-[10px] text-slate-400 font-bold">Limit: ${c.limit}</div>
-          </td>
-          <td class="px-6 py-4">
-            <span class="${c.status === '報名中' ? 'text-green-500' : 'text-slate-300'} text-[10px] font-black italic underline underline-offset-4">${c.status}</span>
-          </td>
-          <td class="px-6 py-4 text-right">
-            <button onclick="editCourse(${i})" class="text-indigo-600 font-bold hover:underline">編輯</button>
-          </td>
+          <td class="px-4 py-4"><img src="${c.img || 'https://via.placeholder.com/80x50'}" class="w-16 h-10 object-cover rounded-lg bg-slate-100"></td>
+          <td class="px-6 py-4 font-mono text-xs"><div class="text-slate-700">${c.id}</div><span class="bg-indigo-50 text-indigo-600 px-1 rounded text-[8px] font-bold">${c.category}</span></td>
+          <td class="px-6 py-4"><div class="font-bold text-slate-700">${c.name}</div><div class="text-[10px] text-slate-400 font-bold">${c.batch || '-'}</div></td>
+          <td class="px-6 py-4"><div class="font-medium text-slate-600">${c.coach}</div><div class="text-[10px] text-slate-400">${c.dates}</div></td>
+          <td class="px-6 py-4 font-black text-slate-700">$${c.price}</td>
+          <td class="px-6 py-4"><span class="text-[10px] font-bold underline ${c.status === '報名中' ? 'text-green-500' : 'text-slate-300'}">${c.status}</span></td>
+          <td class="px-6 py-4 text-right space-x-2"><button onclick="editCourse(${i})" class="text-indigo-600 font-bold hover:underline">編輯</button><button onclick="copyCourse(${i})" class="text-emerald-600 font-bold hover:underline">複製</button></td>
         </tr>
       `).join('');
     }
 
-    function openCourseModal() {
-      document.getElementById('courseForm').reset();
+    function renderRegTable(data) {
+      document.getElementById('regTableBody').innerHTML = data.map(r => `<tr class="border-b border-slate-50 text-sm"><td class="px-6 py-4 text-slate-400 text-xs">${r.time}</td><td class="px-6 py-4 font-bold">${r.name}</td><td class="px-6 py-4">${r.course}</td><td class="px-6 py-4 text-xs font-bold text-green-500">${r.status}</td></tr>`).join('');
+    }
+
+    function openCourseModal() { document.getElementById('courseForm').reset(); document.getElementById('cId').disabled = false; document.getElementById('courseModal').classList.replace('hidden', 'flex'); }
+    function closeCourseModal() { document.getElementById('courseModal').classList.replace('flex', 'hidden'); }
+
+    function editCourse(i) {
+      const c = allCourses[i];
+      document.getElementById('cId').value = c.id; document.getElementById('cId').disabled = true;
+      document.getElementById('cCategory').value = c.category; document.getElementById('cName').value = c.name;
+      document.getElementById('cBatch').value = c.batch; document.getElementById('cCoach').value = c.coach;
+      document.getElementById('cDates').value = c.dates; document.getElementById('cPrice').value = c.price;
+      document.getElementById('cLimit').value = c.limit; document.getElementById('cStatus').value = c.status;
+      document.getElementById('cImg').value = c.img;
+      document.getElementById('courseModal').classList.replace('hidden', 'flex');
+    }
+
+    function copyCourse(i) {
+      editCourse(i);
+      document.getElementById('cId').value = allCourses[i].id + "-NEW";
       document.getElementById('cId').disabled = false;
-      document.getElementById('courseModal').classList.replace('hidden', 'flex');
-    }
-
-    function closeCourseModal() {
-      document.getElementById('courseModal').classList.replace('flex', 'hidden');
-    }
-
-    function editCourse(index) {
-      const c = allCourses[index];
-      document.getElementById('cId').value = c.id;
-      document.getElementById('cId').disabled = true; // 鎖定 ID
-      document.getElementById('cCategory').value = c.category;
-      document.getElementById('cName').value = c.name;
-      document.getElementById('cCoach').value = c.coach;
-      document.getElementById('cDates').value = c.dates;
-      document.getElementById('cPrice').value = c.price;
-      document.getElementById('cLimit').value = c.limit;
-      document.getElementById('cStatus').value = c.status;
-      document.getElementById('courseModal').classList.replace('hidden', 'flex');
+      document.getElementById('cBatch').value = allCourses[i].batch + " (新梯次)";
     }
 
     document.getElementById('courseForm').onsubmit = async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('saveBtn');
-      btn.disabled = true; btn.innerText = "資料同步中...";
-      
+      const btn = document.getElementById('saveBtn'); btn.disabled = true; btn.innerText = "同步中...";
       const payload = {
-        action: 'adminSaveCourse',
-        id: document.getElementById('cId').value,
-        category: document.getElementById('cCategory').value,
-        name: document.getElementById('cName').value,
-        coach: document.getElementById('cCoach').value,
-        dates: document.getElementById('cDates').value,
-        price: document.getElementById('cPrice').value,
-        limit: document.getElementById('cLimit').value,
-        status: document.getElementById('cStatus').value
+        action: 'adminSaveCourse', id: document.getElementById('cId').value, category: document.getElementById('cCategory').value,
+        name: document.getElementById('cName').value, batch: document.getElementById('cBatch').value, coach: document.getElementById('cCoach').value,
+        dates: document.getElementById('cDates').value, price: document.getElementById('cPrice').value, limit: document.getElementById('cLimit').value,
+        status: document.getElementById('cStatus').value, img: document.getElementById('cImg').value
       };
-
       try {
         const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
         const json = await res.json();
         alert(json.msg);
-        closeCourseModal();
-        fetchData();
+        closeCourseModal(); fetchData();
       } catch (e) { alert("儲存失敗"); }
-      finally { btn.disabled = false; btn.innerText = "儲存至雲端"; }
+      finally { btn.disabled = false; btn.innerText = "儲存資料"; }
     };
 
     function switchTab(tab) {
       document.getElementById('section-courses').classList.toggle('hidden', tab !== 'courses');
       document.getElementById('section-registrations').classList.toggle('hidden', tab !== 'registrations');
-      document.getElementById('tab-courses').className = tab === 'courses' ? 'w-full text-left px-6 py-4 text-sm font-bold flex items-center sidebar-active' : 'w-full text-left px-6 py-4 text-sm font-bold flex items-center text-slate-500 hover:bg-slate-50 transition-all';
-      document.getElementById('tab-registrations').className = tab === 'registrations' ? 'w-full text-left px-6 py-4 text-sm font-bold flex items-center sidebar-active' : 'w-full text-left px-6 py-4 text-sm font-bold flex items-center text-slate-500 hover:bg-slate-50 transition-all';
+      document.getElementById('tab-courses').className = tab === 'courses' ? 'w-full text-left px-6 py-4 text-sm font-bold sidebar-active' : 'w-full text-left px-6 py-4 text-sm font-bold text-slate-500';
+      document.getElementById('tab-registrations').className = tab === 'registrations' ? 'w-full text-left px-6 py-4 text-sm font-bold sidebar-active' : 'w-full text-left px-6 py-4 text-sm font-bold text-slate-500';
     }
 
     window.onload = fetchData;
