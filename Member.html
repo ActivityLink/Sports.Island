@@ -1,4 +1,4 @@
-<!-- 檔案名稱：Member.html (用戶報名端完全體) -->
+<!-- 檔案名稱：Member.html (用戶報名端完全體 - 多日梯次計費版) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -11,9 +11,14 @@
     body { background-color: #ffffff; font-family: 'Noto Sans TC', sans-serif; color: #334155; }
     .view-section { display: none; }
     .view-section.active { display: block; }
-    .nav-active { color: #06C755; border-top: 3px solid #06C755; }
-    .price-text { color: #e11d48; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.05em; }
+    .nav-active { color: #06C755; border-top: 3px solid #06C755; font-weight: 700; }
+    .price-display { color: #e11d48; font-size: 1.75rem; font-weight: 700; }
     .no-round { border-radius: 0 !important; }
+    /* 日期勾選列樣式 */
+    .date-row { transition: all 0.2s; }
+    .date-row.selected { background-color: #f0fdf4; }
+    .btn-status { font-size: 10px; padding: 4px 8px; border: 1px solid #e2e8f0; color: #94a3b8; font-weight: 500; }
+    .btn-status.active { background-color: #06C755; color: #ffffff; border-color: #06C755; }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
@@ -24,19 +29,18 @@
       <!-- 1. 活動課程專區 -->
       <section id="view-index" class="view-section active">
         <div class="px-6 py-10 border-b">
-          <h2 class="text-3xl font-bold text-slate-800 italic uppercase">Sports Island</h2>
-          <p class="text-green-600 text-[10px] font-medium uppercase tracking-[0.3em] mt-1">2026 Professional Enrollment</p>
+          <h2 class="text-3xl font-bold text-slate-800 italic uppercase tracking-tighter">Sports Island</h2>
+          <p class="text-green-600 text-[10px] font-medium uppercase tracking-[0.3em] mt-1">2026 Enrollment System</p>
         </div>
         <div id="dynamicCourseContainer" class="divide-y divide-gray-100">
-          <div class="text-center py-20 text-slate-300 animate-pulse">載入活動中...</div>
+          <div class="text-center py-20 text-slate-300 animate-pulse font-medium">資料同步中...</div>
         </div>
       </section>
 
-      <!-- 2. 報名查詢紀錄 -->
+      <!-- 2. 報名查詢 -->
       <section id="view-query" class="view-section">
         <div class="px-6 py-10 border-b">
           <h2 class="text-2xl font-bold text-slate-800">報名紀錄查詢</h2>
-          <p class="text-green-600 text-[10px] font-medium uppercase tracking-widest mt-1">History Records</p>
         </div>
         <div id="historyContainer" class="divide-y divide-gray-100"></div>
       </section>
@@ -45,9 +49,9 @@
       <section id="view-member" class="view-section">
         <div class="px-6 py-10 flex justify-between items-center border-b">
           <h1 id="userNameDisplay" class="text-2xl font-bold text-slate-800">您好...</h1>
-          <img id="userAvatar" src="" class="w-14 h-14 rounded-full border shadow-sm bg-gray-50">
+          <img id="userAvatar" src="" class="w-14 h-14 rounded-full border shadow-sm">
         </div>
-        <div class="p-6"><button onclick="showMemberForm()" class="w-full bg-slate-900 text-white py-4 font-medium no-round uppercase tracking-widest shadow-lg">+ 新增成員檔案</button></div>
+        <div class="p-6"><button onclick="showMemberForm()" class="w-full bg-slate-900 text-white py-4 font-medium no-round uppercase tracking-widest shadow-xl">+ 新增成員檔案</button></div>
         <div id="familyListContainer" class="divide-y divide-gray-100 border-t"></div>
       </section>
 
@@ -57,8 +61,8 @@
         <form id="memberForm" class="px-6 space-y-8 pb-32">
            <input type="hidden" id="editRowId" value="">
            <div>
-             <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block">學員姓名</label>
-             <input type="text" id="mName" placeholder="請輸入本名" required class="w-full p-4 bg-gray-50 border-b-2 border-gray-200 no-round font-medium">
+             <label class="text-[10px] font-bold text-slate-400 uppercase mb-2 block tracking-widest">學員姓名</label>
+             <input type="text" id="mName" placeholder="本名" required class="w-full p-4 bg-gray-50 border-b-2 border-gray-200 no-round font-medium focus:border-green-500 outline-none">
            </div>
            <div class="grid grid-cols-2 gap-6">
              <select id="mGender" class="p-4 bg-gray-50 border-b-2 border-gray-200 no-round font-medium"><option value="男">男</option><option value="女">女</option></select>
@@ -67,52 +71,64 @@
            <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-gray-50 border-b-2 border-gray-200 no-round font-medium">
            <input type="text" id="mAddress" placeholder="居住地區" required class="w-full p-4 bg-gray-50 border-b-2 border-gray-200 no-round font-medium">
            <select id="mRelation" class="w-full p-4 bg-gray-50 border-b-2 border-gray-200 no-round font-medium"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
-           <button type="submit" id="saveBtn" class="w-full bg-green-600 text-white py-5 font-bold no-round shadow-xl">儲存並同步</button>
+           <button type="submit" id="saveBtn" class="w-full bg-green-600 text-white py-5 font-bold no-round shadow-xl uppercase tracking-widest">儲存變更並返回</button>
         </form>
       </section>
     </main>
 
     <!-- 底部導覽 -->
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-md border-t px-0 py-4 flex justify-around items-center z-50">
-      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active w-1/3 py-2"><span class="text-xl">🏠</span><span class="text-[9px] font-bold mt-1">活動</span></button>
-      <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center text-slate-300 w-1/3 py-2"><span class="text-xl">🔍</span><span class="text-[9px] font-bold mt-1">紀錄</span></button>
-      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300 w-1/3 py-2"><span class="text-xl">👤</span><span class="text-[9px] font-bold mt-1">我的</span></button>
+      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active w-1/3 py-1"><span class="text-xl">🏠</span><span class="text-[10px] mt-1">活動</span></button>
+      <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center text-slate-300 w-1/3 py-1"><span class="text-xl">🔍</span><span class="text-[10px] mt-1">紀錄</span></button>
+      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300 w-1/3 py-1"><span class="text-xl">👤</span><span class="text-[10px] mt-1">我的</span></button>
     </nav>
   </div>
 
-  <!-- 報名試算彈窗 -->
-  <div id="enrollModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-0">
-    <div class="bg-white w-full max-w-lg no-round p-10 shadow-2xl relative overflow-y-auto max-h-[90vh]">
+  <!-- 報名參數調整彈窗 -->
+  <div id="enrollModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-0">
+    <div class="bg-white w-full max-w-lg no-round p-10 shadow-2xl relative overflow-y-auto max-h-[95vh]">
       <div class="flex justify-between items-start mb-6">
-        <h3 id="modalTitle" class="text-xl font-bold text-slate-800">活動報名</h3>
-        <button onclick="closeEnroll()" class="text-gray-300 text-3xl">&times;</button>
+        <div>
+          <h3 id="modalTitle" class="text-2xl font-bold text-slate-800 tracking-tight">課程報名</h3>
+          <p id="modalPriceHint" class="text-red-500 text-sm font-medium mt-1"></p>
+        </div>
+        <button onclick="closeEnroll()" class="text-gray-300 text-4xl leading-none">&times;</button>
       </div>
-      <p id="modalPriceHint" class="text-red-500 text-sm font-medium mb-8 border-b pb-4"></p>
       
       <div class="space-y-8">
+        <!-- 1. 成員選擇 -->
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase mb-3 block">1. 選擇參加成員</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase mb-3 block">1. 選擇報名成員</label>
           <select id="selectMember" class="w-full p-4 bg-gray-50 border-b-2 border-green-600 no-round font-medium text-lg"></select>
         </div>
 
-        <div id="equipSection" class="hidden">
-          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block">2. 設備租用需求</label>
-          <div id="equipContainer" class="space-y-2"></div>
-        </div>
-
-        <div class="p-8 bg-slate-900 text-white no-round">
-          <div class="flex justify-between items-center">
-            <span class="text-xs font-medium opacity-60">結算金額</span>
-            <span id="totalDisplay" class="text-2xl font-bold text-yellow-400 font-mono">$0</span>
+        <!-- 2. 日期出席設定 (採取不出席勾選/狀態切換) -->
+        <div id="dateSelectSection">
+          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block">2. 出席日期與時段設定</label>
+          <div id="dateListContainer" class="space-y-2 border-t pt-2">
+             <!-- JS 動態生成 -->
           </div>
         </div>
 
-        <div class="p-5 bg-green-50 border-l-4 border-green-500 text-[11px] text-green-700 leading-relaxed">
-          <p class="font-bold mb-1 uppercase tracking-widest text-green-600">Payment Instructions</p>
-          <p id="paymentNote"></p>
+        <!-- 3. 設備租用 -->
+        <div id="equipSection" class="hidden">
+          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block">3. 設備租用需求</label>
+          <div id="equipContainer" class="space-y-2"></div>
         </div>
 
-        <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-green-600 text-white py-5 font-bold no-round shadow-xl tracking-[0.3em]">確認報名送出</button>
+        <!-- 結算總額 -->
+        <div class="p-8 bg-slate-900 text-white no-round">
+          <div class="flex justify-between items-center mb-1">
+            <span class="text-[10px] opacity-60 uppercase tracking-widest">計費明細</span>
+            <span class="text-[10px] font-bold text-green-400" id="earlyStatusText">適用早鳥價格</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium">應繳總金額</span>
+            <span id="totalDisplay" class="text-3xl font-bold text-yellow-400 font-mono">$0</span>
+          </div>
+        </div>
+
+        <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-green-600 text-white py-6 font-bold no-round shadow-xl tracking-[0.4em] active:bg-black transition-all">確認報名送出</button>
       </div>
     </div>
   </div>
@@ -145,54 +161,106 @@
           <img src="${c.封面 || 'https://via.placeholder.com/800x400'}" class="w-full aspect-[21/9] object-cover">
           <div class="p-8">
             <div class="flex justify-between items-start mb-4">
-              <div><span class="bg-slate-900 text-white px-2 py-1 font-bold text-[10px] uppercase">${c.類別}</span><h3 class="text-xl font-bold text-slate-800 mt-3">${c.顯示名稱}</h3></div>
+              <div><span class="bg-slate-900 text-white px-2 py-1 font-bold text-[9px] uppercase tracking-widest">${c.類別}</span><h3 class="text-xl font-bold text-slate-800 mt-3">${c.顯示名稱}</h3></div>
               <div class="text-right">
-                <p class="price-text">$${Number(c.目前單價).toLocaleString()}</p>
-                ${c.是否早鳥 ? '<span class="text-[9px] font-bold text-red-600 uppercase">早鳥優惠</span>' : ''}
+                <p class="price-display">$${Number(c.目前全日單價).toLocaleString()}</p>
+                <p class="text-[9px] text-slate-400 font-medium uppercase mt-1">/ 每日全天</p>
               </div>
             </div>
-            <p class="text-[10px] text-slate-400 font-medium mb-6 uppercase tracking-widest">活動日期：${c.開始} ~ ${c.結束}</p>
-            <button onclick="openEnroll(${i})" class="w-full bg-black text-white py-5 no-round font-bold text-sm active:bg-green-600 tracking-[0.2em]">立即報名</button>
+            <p class="text-[10px] text-slate-400 font-medium mb-6 uppercase tracking-widest">課程區間：${c.開始} ~ ${c.結束}</p>
+            <button onclick="openEnroll(${i})" class="w-full bg-black text-white py-5 no-round font-bold text-sm active:bg-green-600 transition-all uppercase tracking-[0.2em]">立即預約 / 日期選擇</button>
           </div>
         </div>
       `).join('');
     }
 
     function openEnroll(idx) {
-      if(familyData.length === 0) { alert("請先完成個人檔案！"); switchView('member'); return; }
+      if(familyData.length === 0) { alert("請先建立個人檔案！"); switchView('member'); return; }
       activeCourse = courseData[idx];
       document.getElementById('modalTitle').innerText = activeCourse.顯示名稱;
-      document.getElementById('modalPriceHint').innerText = activeCourse.是否早鳥 ? `適用早鳥價: $${activeCourse.目前單價}` : `標準價: $${activeCourse.目前單價}`;
-      document.getElementById('paymentNote').innerText = activeCourse.匯款資訊 || "請依指示完成匯款。";
+      document.getElementById('earlyStatusText').classList.toggle('hidden', !activeCourse.是否早鳥);
+      
+      // 生成日期選擇列表 (多日計費)
+      const dates = generateDateArray(activeCourse.開始.split(' ')[0], activeCourse.結束.split(' ')[0]);
+      const container = document.getElementById('dateListContainer');
+      container.innerHTML = dates.map((d, i) => `
+        <div class="flex items-center justify-between p-4 bg-gray-50 border-b border-white date-row" id="row-${i}">
+          <span class="text-sm font-bold text-slate-600">${d}</span>
+          <div class="flex space-x-1">
+            <button type="button" onclick="setDateStatus(${i}, '不出席')" class="btn-status rounded-l-lg active" id="btn-${i}-0">不出席</button>
+            <button type="button" onclick="setDateStatus(${i}, '半日')" class="btn-status" id="btn-${i}-1">半日</button>
+            <button type="button" onclick="setDateStatus(${i}, '全日')" class="btn-status rounded-r-lg" id="btn-${i}-2">全日</button>
+            <input type="hidden" id="val-${i}" value="不出席" class="date-val">
+          </div>
+        </div>
+      `).join('');
+
       document.getElementById('selectMember').innerHTML = familyData.map(f => `<option value="${f.name}|${f.phone}">${f.name} (${f.relation})</option>`).join('');
+      
       const equips = JSON.parse(activeCourse.設備清單 || "[]");
       const area = document.getElementById('equipSection');
       if(equips.length > 0) {
         area.classList.remove('hidden');
         document.getElementById('equipContainer').innerHTML = equips.map(e => `
-          <label class="flex justify-between items-center p-4 bg-gray-50 border-b-2 border-white cursor-pointer active:bg-gray-100">
+          <label class="flex justify-between items-center p-4 bg-gray-50 border-b border-white cursor-pointer active:bg-gray-100">
             <div class="flex items-center space-x-3"><input type="checkbox" name="equip" value="${e.項目}|${e.金額}" onchange="calcTotal()" class="w-5 h-5 accent-green-600"><span class="font-medium text-slate-700">${e.項目}</span></div>
             <span class="font-bold text-green-600">+$${e.金額}</span>
           </label>`).join('');
       } else { area.classList.add('hidden'); }
+
       calcTotal();
       document.getElementById('enrollModal').classList.replace('hidden', 'flex');
     }
 
+    function setDateStatus(idx, status) {
+      document.getElementById('val-' + idx).value = status;
+      const row = document.getElementById('row-' + idx);
+      const btns = row.querySelectorAll('.btn-status');
+      btns.forEach(b => b.classList.remove('active'));
+      const target = Array.from(btns).find(b => b.innerText === status);
+      target.classList.add('active');
+      row.classList.toggle('selected', status !== '不出席');
+      calcTotal();
+    }
+
+    function generateDateArray(start, end) {
+      let dates = [];
+      let curr = new Date(start);
+      let stop = new Date(end);
+      while(curr <= stop) {
+        dates.push(curr.toISOString().split('T')[0]);
+        curr.setDate(curr.getDate() + 1);
+      }
+      return dates;
+    }
+
     function calcTotal() {
-      let total = Number(activeCourse.目前單價);
+      let total = 0;
+      document.querySelectorAll('.date-val').forEach(v => {
+        if(v.value === '全日') total += Number(activeCourse.目前全日單價);
+        else if(v.value === '半日') total += Number(activeCourse.目前半日單價);
+      });
       document.querySelectorAll('input[name="equip"]:checked').forEach(el => { total += Number(el.value.split('|')[1]); });
       document.getElementById('totalDisplay').innerText = "$" + total.toLocaleString();
     }
 
     async function submitEnroll() {
       const btn = document.getElementById('enrollBtn');
-      btn.disabled = true; btn.innerText = "傳送中...";
+      btn.disabled = true; btn.innerText = "正在傳送...";
       const [name, phone] = document.getElementById('selectMember').value.split('|');
       const selectedEquips = Array.from(document.querySelectorAll('input[name="equip"]:checked')).map(el => el.value.split('|')[0]).join(', ') || "無";
+      
+      const attendance = Array.from(document.querySelectorAll('.date-row')).map(row => {
+        const date = row.querySelector('span').innerText;
+        const status = row.querySelector('.date-val').value;
+        return `${date}:${status}`;
+      }).filter(s => !s.includes('不出席')).join('; ');
+
+      if(!attendance) { alert("請至少選擇一天的出席時段！"); btn.disabled = false; btn.innerText = "確認報名送出"; return; }
+
       const totalPrice = document.getElementById('totalDisplay').innerText.replace('$', '').replace(',', '');
-      await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId: currentUid, name, phone, courseName: activeCourse.顯示名稱, selectedEquips, totalPrice }) });
-      alert("報名成功！"); closeEnroll(); switchView('query');
+      await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId: currentUid, name, phone, courseName: activeCourse.顯示名稱, selectedEquips, attendance, totalPrice }) });
+      alert("報名完成！"); closeEnroll(); switchView('query');
     }
 
     function closeEnroll() { document.getElementById('enrollModal').classList.replace('flex', 'hidden'); }
@@ -201,9 +269,16 @@
       if(!currentUid) return;
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getUserRegistrations', userId: currentUid }) }).then(r => r.json());
       document.getElementById('historyContainer').innerHTML = (res.data || []).map(r => `
-        <div class="bg-white p-6 flex justify-between items-center">
-          <div><div class="text-[10px] text-green-600 font-bold mb-1 uppercase tracking-widest">${r.日期}</div><h4 class="font-bold text-slate-800">${r.課程}</h4><p class="text-[10px] text-slate-400 font-medium mt-1">${r.姓名} | ${r.設備}</p></div>
-          <div class="text-right"><div class="font-bold text-slate-700 text-lg">$${Number(r.金額).toLocaleString()}</div><span class="text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 uppercase">${r.狀態}</span></div>
+        <div class="bg-white p-8 flex justify-between items-start">
+          <div class="flex-grow">
+            <div class="text-[10px] text-green-600 font-bold mb-1 uppercase">${r.日期}</div>
+            <h4 class="font-bold text-slate-800 text-lg">${r.課程}</h4>
+            <p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">學員: ${r.姓名}<br>出席詳情: ${r.出席詳情}<br>設備: ${r.設備}</p>
+          </div>
+          <div class="text-right ml-4">
+             <div class="font-bold text-slate-700 text-xl font-mono">$${Number(r.金額).toLocaleString()}</div>
+             <span class="text-[9px] font-bold bg-green-50 text-green-600 px-2 uppercase border border-green-100">${r.狀態}</span>
+          </div>
         </div>`).join('');
     }
 
@@ -217,8 +292,8 @@
       } else {
         container.innerHTML = familyData.map((f, i) => `
           <div class="bg-white p-8 flex justify-between items-center group">
-            <div><div class="flex items-center space-x-3"><span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span><span class="text-xl font-bold text-slate-800 tracking-tighter">${f.name}</span><span class="text-[9px] bg-slate-900 text-white px-2 py-0.5 no-round font-medium uppercase">${f.relation}</span></div><p class="text-[10px] text-slate-400 font-medium mt-1">${f.phone} | ${f.address}</p></div>
-            <button onclick="editMember(${i})" class="text-slate-900 text-[10px] font-medium border border-slate-900 px-4 py-2 no-round hover:bg-black hover:text-white transition-all">EDIT</button>
+            <div><div class="flex items-center space-x-3"><span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span><span class="text-lg font-bold text-slate-800 tracking-tighter">${f.name}</span><span class="text-[9px] bg-black text-white px-2 py-0.5 no-round font-medium uppercase tracking-tighter">${f.relation}</span></div><p class="text-[10px] text-slate-400 font-medium mt-2 uppercase tracking-widest">${f.phone} | ${f.address}</p></div>
+            <button onclick="editMember(${i})" class="text-slate-400 text-[10px] font-medium border border-slate-200 px-4 py-2 no-round hover:bg-black hover:text-white hover:border-black transition-all">EDIT</button>
           </div>`).join('');
       }
     }
@@ -248,7 +323,7 @@
       e.preventDefault();
       const payload = { action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value, gender: document.getElementById('mGender').value, phone: document.getElementById('mPhone').value, birthday: document.getElementById('mBirthday').value, address: document.getElementById('mAddress').value, relation: document.getElementById('mRelation').value };
       await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-      alert("存檔成功"); loadFamily(); switchView('member');
+      alert("儲存成功"); loadFamily(); switchView('member');
     };
 
     window.onload = init;
