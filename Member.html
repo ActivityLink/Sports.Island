@@ -1,4 +1,4 @@
-<!-- 檔案名稱：Member.html (用戶端 - V6 三層架構計費版) -->
+<!-- 檔案名稱：Member.html (用戶端完全體 - V6 邏輯修正版) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -12,8 +12,9 @@
     .view-section { display: none; }
     .view-section.active { display: block; }
     .nav-active { color: #06C755; border-top: 3px solid #06C755; font-weight: 700; }
-    .absent-row { background-color: #fff1f2; opacity: 0.7; }
     .no-round { border-radius: 0 !important; }
+    .absent-row { background-color: #fff1f2; color: #f43f5e; opacity: 0.6; }
+    .price-main { color: #e11d48; font-size: 1.8rem; font-weight: 700; }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
@@ -21,83 +22,80 @@
   <div class="w-full max-w-4xl min-h-screen relative flex flex-col bg-white border-x border-gray-100">
     
     <main class="flex-grow pb-32">
-      <!-- 1. 活動課程列表 -->
+      <!-- 活動列表 -->
       <section id="view-index" class="view-section active">
         <div class="px-6 py-10 border-b">
           <h2 class="text-3xl font-bold text-slate-800 italic uppercase">Sports Island</h2>
-          <p class="text-green-600 text-[10px] font-medium uppercase tracking-[0.3em] mt-1">2026 Professional Session v6</p>
+          <p class="text-green-600 text-[10px] font-medium uppercase tracking-[0.3em] mt-1">2026 Professional Enrollment</p>
         </div>
         <div id="dynamicCourseContainer" class="divide-y divide-gray-100">
-          <div class="text-center py-20 text-slate-300 font-medium">連線雲端中...</div>
+          <div class="text-center py-20 text-slate-300 font-medium">連線中...</div>
         </div>
       </section>
 
-      <!-- 2. 報名查詢 -->
+      <!-- 報名紀錄 -->
       <section id="view-query" class="view-section">
         <div class="px-6 py-10 border-b">
-          <h2 class="text-2xl font-bold text-slate-800">我的報名清單</h2>
+          <h2 class="text-2xl font-bold text-slate-800 tracking-tight">我的報名清單</h2>
         </div>
         <div id="historyContainer" class="divide-y divide-gray-100"></div>
       </section>
 
-      <!-- 3. 會員中心 -->
+      <!-- 會員中心 -->
       <section id="view-member" class="view-section">
         <div class="px-6 py-10 flex justify-between items-center border-b">
           <h1 id="userNameDisplay" class="text-2xl font-bold text-slate-800">您好...</h1>
           <img id="userAvatar" src="" class="w-14 h-14 rounded-full border shadow-sm">
         </div>
-        <div class="p-6"><button onclick="showMemberForm()" class="w-full bg-slate-900 text-white py-4 font-medium no-round">+ 新增成員檔案</button></div>
+        <div class="p-6"><button onclick="showMemberForm()" class="w-full bg-slate-900 text-white py-4 font-medium no-round uppercase tracking-widest">+ 新增成員檔案</button></div>
         <div id="familyListContainer" class="divide-y divide-gray-100 border-t"></div>
       </section>
 
-      <!-- 4. 成員表單 -->
+      <!-- 成員表單 -->
       <section id="view-member-form" class="view-section">
-        <div class="px-6 py-10"><button onclick="switchView('member')" class="text-slate-400 font-medium text-xs uppercase">← Back</button></div>
+        <div class="px-6 py-10"><button onclick="switchView('member')" class="text-slate-400 font-medium text-xs uppercase tracking-widest">← Back</button></div>
         <form id="memberForm" class="px-6 space-y-8 pb-32">
-           <input type="text" id="mName" placeholder="本名" required class="w-full p-4 bg-gray-50 border-b-2 font-medium no-round">
+           <input type="text" id="mName" placeholder="學員姓名" required class="w-full p-4 bg-gray-50 border-b-2 font-medium no-round focus:border-green-600 outline-none">
            <div class="grid grid-cols-2 gap-6">
              <select id="mGender" class="p-4 bg-gray-50 border-b-2 no-round font-medium"><option value="男">男</option><option value="女">女</option></select>
              <input type="date" id="mBirthday" required class="p-4 bg-gray-50 border-b-2 no-round font-medium">
            </div>
-           <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-gray-50 border-b-2 no-round font-medium">
-           <input type="text" id="mAddress" placeholder="居住地區" required class="w-full p-4 bg-gray-50 border-b-2 no-round font-medium">
+           <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-gray-50 border-b-2 font-medium no-round">
+           <input type="text" id="mAddress" placeholder="居住地區" required class="w-full p-4 bg-gray-50 border-b-2 font-medium no-round">
            <select id="mRelation" class="w-full p-4 bg-gray-50 border-b-2 no-round font-medium"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
            <button type="submit" class="w-full bg-green-600 text-white py-5 font-bold no-round shadow-xl">儲存並返回</button>
         </form>
       </section>
     </main>
 
-    <!-- 底部導覽列 -->
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-md border-t px-0 py-4 flex justify-around items-center z-50">
-      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active w-1/3 py-2 text-xs font-medium"><span class="text-xl">🏠</span>課程</button>
+      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active w-1/3 py-2 text-xs font-medium"><span class="text-xl">🏠</span>活動</button>
       <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center text-slate-300 w-1/3 py-2 text-xs font-medium"><span class="text-xl">🔍</span>紀錄</button>
       <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300 w-1/3 py-2 text-xs font-medium"><span class="text-xl">👤</span>我的</button>
     </nav>
   </div>
 
-  <!-- 報名視窗 (V6 核心：勾選不出席) -->
+  <!-- 報名視窗 (核心邏輯：不出席扣除) -->
   <div id="enrollModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-0">
     <div class="bg-white w-full max-w-lg no-round p-10 shadow-2xl relative overflow-y-auto max-h-[95vh]">
       <div class="flex justify-between items-start mb-6">
-        <h3 id="modalTitle" class="text-2xl font-bold text-slate-800">報名確認</h3>
+        <h3 id="modalTitle" class="text-2xl font-bold text-slate-800 tracking-tight">報名確認</h3>
         <button onclick="closeEnroll()" class="text-gray-300 text-4xl leading-none">&times;</button>
       </div>
 
       <div class="space-y-8">
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase mb-3 block">1. 選擇成員</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase mb-3 block tracking-widest">1. 選擇成員 / Member</label>
           <select id="selectMember" class="w-full p-4 bg-gray-50 border-b-2 border-green-600 no-round font-medium text-lg"></select>
         </div>
 
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block">2. 勾選【不出席】日期 (扣除每日單價)</label>
-          <div id="absenceContainer" class="space-y-1">
-             <!-- JS 動態生成 -->
-          </div>
+          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">2. 勾選【不出席】日期 (系統將自動扣除學費)</label>
+          <div id="absenceContainer" class="space-y-1"></div>
         </div>
 
         <div id="addonSection" class="hidden">
-          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block">3. 設備租用 / 加購 (可選項目)</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">3. 設備租用 / 加購項目</label>
           <div id="addonContainer" class="space-y-2"></div>
         </div>
 
@@ -107,12 +105,12 @@
             <span class="text-xs font-bold text-green-400" id="earlyHint">適用早鳥折扣</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-sm font-medium">應繳總金額</span>
+            <span class="text-sm font-medium">最終結算金額</span>
             <span id="totalDisplay" class="text-3xl font-bold text-yellow-400 font-mono">$0</span>
           </div>
         </div>
 
-        <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-green-600 text-white py-6 font-bold no-round shadow-xl tracking-[0.3em] uppercase transition-all active:bg-black">Confirm Registration</button>
+        <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-green-600 text-white py-6 font-bold no-round shadow-xl tracking-[0.3em] uppercase active:bg-black transition-all">Confirm & Enroll</button>
       </div>
     </div>
   </div>
@@ -141,20 +139,20 @@
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) }).then(r => r.json());
       sessionData = res.data || [];
       document.getElementById('dynamicCourseContainer').innerHTML = sessionData.map((s, i) => `
-        <div class="bg-white p-8 border-none hover:bg-slate-50 transition-colors">
+        <div class="bg-white p-8 group hover:bg-slate-50 transition-colors">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <span class="bg-slate-900 text-white px-2 py-1 font-bold text-[9px] uppercase tracking-widest">${s.類別}</span>
-              <h3 class="text-2xl font-bold text-slate-800 mt-2">${s.名稱}</h3>
-              <p class="text-[10px] text-green-600 font-bold uppercase mt-1 tracking-widest">${s.梯次}</p>
+              <span class="bg-slate-900 text-white px-2 py-1 font-bold text-[9px] uppercase tracking-widest">${s.category}</span>
+              <h3 class="text-2xl font-bold text-slate-800 mt-2">${s.name}</h3>
+              <p class="text-[10px] text-green-600 font-bold uppercase mt-1 tracking-widest">${s.batch}</p>
             </div>
             <div class="text-right">
-              <p class="text-red-600 text-2xl font-bold font-mono">$${Number(s.全梯次總價).toLocaleString()}</p>
-              <p class="text-[9px] text-slate-400 font-medium uppercase mt-1">Full Session Price</p>
+              <p class="price-main">$${Number(s.fullPrice).toLocaleString()}</p>
+              <p class="text-[9px] text-slate-400 font-medium uppercase mt-1">Full Session</p>
             </div>
           </div>
-          <p class="text-[10px] text-slate-400 font-medium mb-6 uppercase tracking-widest">日期：${s.開始} ~ ${s.結束}</p>
-          <button onclick="openEnroll(${i})" class="w-full bg-black text-white py-5 no-round font-bold text-sm active:bg-green-600 transition-all uppercase tracking-[0.2em]">立即報名 / 選擇日期</button>
+          <p class="text-[10px] text-slate-400 font-medium mb-6 uppercase tracking-widest">期間：${s.start} ~ ${s.end}</p>
+          <button onclick="openEnroll(${i})" class="w-full bg-black text-white py-5 no-round font-bold text-sm active:bg-green-600 transition-all uppercase tracking-[0.2em]">立即預約 / 選擇日期</button>
         </div>
       `).join('');
     }
@@ -162,23 +160,21 @@
     function openEnroll(idx) {
       if(familyData.length === 0) { alert("請先建立個人檔案！"); switchView('member'); return; }
       activeSession = sessionData[idx];
-      document.getElementById('modalTitle').innerText = activeSession.名稱;
+      document.getElementById('modalTitle').innerText = activeSession.name;
       document.getElementById('earlyHint').classList.toggle('hidden', !activeSession.是否早鳥);
       
-      // 生成日期清單供「不出席」勾選
-      const dates = generateDateArray(activeSession.開始, activeSession.結束);
+      const dates = generateDateArray(activeSession.start, activeSession.end);
       const container = document.getElementById('absenceContainer');
       container.innerHTML = dates.map((d, i) => `
-        <label class="flex items-center justify-between p-4 bg-gray-50 border border-white cursor-pointer absence-row-label" id="abs-label-${i}">
+        <label class="flex items-center justify-between p-4 bg-gray-50 border border-white cursor-pointer absence-label" id="abs-box-${i}">
           <span class="text-sm font-bold text-slate-600">${d}</span>
           <div class="flex items-center space-x-2">
              <span class="text-[10px] text-slate-300 font-bold uppercase">不出席</span>
-             <input type="checkbox" class="w-6 h-6 accent-red-500 absent-checkbox" onchange="calculateV6Total()" value="${d}">
+             <input type="checkbox" class="w-6 h-6 accent-red-500 abs-check" onchange="calcV6()" value="${d}">
           </div>
         </label>
       `).join('');
 
-      // 加購項目列表
       const addonArea = document.getElementById('addonSection');
       const addonContainer = document.getElementById('addonContainer');
       let addons = [];
@@ -187,132 +183,87 @@
       if(addons.length > 0) {
         addonArea.classList.remove('hidden');
         addonContainer.innerHTML = addons.map(a => `
-          <label class="flex justify-between items-center p-4 bg-slate-50 no-round border-b border-white cursor-pointer active:bg-gray-100">
+          <label class="flex justify-between items-center p-4 bg-slate-50 no-round border-b border-white cursor-pointer">
             <div class="flex items-center space-x-3">
-              <input type="checkbox" name="addon" value="${a.項目}|${a.單價}|${a.計費類型}" onchange="calculateV6Total()" class="w-5 h-5 accent-green-600">
-              <span class="font-medium text-slate-700">${a.項目} (${a.計費類型 === '按天計費' ? '每日' : '單次'})</span>
+              <input type="checkbox" name="addon" value="${a.項目}|${a.金額}|${a.計費類型}" onchange="calcV6()" class="w-5 h-5 accent-green-600">
+              <span class="font-medium text-slate-700">${a.項目} (${a.計費類型 === '按天計費' ? '每日' : '固定'})</span>
             </div>
-            <span class="font-bold text-green-600">+$${a.單價}</span>
+            <span class="font-bold text-green-600">+$${a.金額}</span>
           </label>`).join('');
       } else { addonArea.classList.add('hidden'); }
 
       document.getElementById('selectMember').innerHTML = familyData.map(f => `<option value="${f.name}|${f.phone}">${f.name} (${f.relation})</option>`).join('');
-      
-      calculateV6Total();
+      calcV6();
       document.getElementById('enrollModal').classList.replace('hidden', 'flex');
     }
 
-    /**
-     * V6 核心計算函數
-     * 出席天數 = 總天數 - 不出席勾選數
-     * 學費 = 出席天數 * 每日單價
-     * 設備 = (按天計費項目 * 出席天數) + 固定計費項目
-     */
-    function calculateV6Total() {
-      const checkboxes = document.querySelectorAll('.absent-checkbox');
-      const absentCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-      const totalDays = Number(activeSession.招生天數 || generateDateArray(activeSession.開始, activeSession.結束).length);
+    function calcV6() {
+      const checks = document.querySelectorAll('.abs-check');
+      const absentCount = Array.from(checks).filter(c => c.checked).length;
+      const totalDays = generateDateArray(activeSession.start, activeSession.end).length;
       const attendingDays = totalDays - absentCount;
       
-      // 更新視覺樣式
-      checkboxes.forEach((cb, i) => {
-        document.getElementById(`abs-label-${i}`).classList.toggle('absent-row', cb.checked);
-      });
+      checks.forEach((c, i) => document.getElementById(`abs-box-${i}`).classList.toggle('absent-row', c.checked));
 
-      // 1. 計算基本學費
-      const baseFee = attendingDays * Number(activeSession.每日單價);
-      
-      // 2. 計算加購設備
+      const baseFee = attendingDays * Number(activeSession.baseUnit);
       let addonFee = 0;
       document.querySelectorAll('input[name="addon"]:checked').forEach(el => {
-        const [name, price, type] = el.value.split('|');
-        if(type === '按天計費') {
-          addonFee += Number(price) * attendingDays;
-        } else {
-          addonFee += Number(price);
-        }
+        const [n, p, type] = el.value.split('|');
+        addonFee += (type === '按天計費') ? Number(p) * attendingDays : Number(p);
       });
 
-      const finalTotal = baseFee + addonFee;
-      document.getElementById('totalDisplay').innerText = "$" + finalTotal.toLocaleString();
+      document.getElementById('totalDisplay').innerText = "$" + (baseFee + addonFee).toLocaleString();
       document.getElementById('attendingCountDisplay').innerText = attendingDays;
     }
 
     async function submitEnroll() {
       const btn = document.getElementById('enrollBtn');
-      const checkboxes = document.querySelectorAll('.absent-checkbox');
-      const absentCount = Array.from(checkboxes).filter(cb => cb.checked).length;
-      const attendingDays = Number(activeSession.招生天數 || generateDateArray(activeSession.開始, activeSession.結束).length) - absentCount;
+      const checks = document.querySelectorAll('.abs-check');
+      const attendingDays = generateDateArray(activeSession.start, activeSession.end).length - Array.from(checks).filter(c => c.checked).length;
+      if(attendingDays <= 0) return alert("出席天數不可為 0");
 
-      if(attendingDays <= 0) { alert("出席天數不可為 0 天，請重新選擇日期。"); return; }
-
-      btn.disabled = true; btn.innerText = "正在儲存交易快照...";
+      btn.disabled = true;
       const [name, phone] = document.getElementById('selectMember').value.split('|');
-      const absentDates = Array.from(checkboxes).filter(cb => cb.checked).map(cb => cb.value).join(', ') || "無";
-      const selectedAddons = Array.from(document.querySelectorAll('input[name="addon"]:checked')).map(el => el.value.split('|')[0]).join(', ') || "無";
+      const absentDates = Array.from(checks).filter(c => c.checked).map(c => c.value).join(',') || "無";
+      const equips = Array.from(document.querySelectorAll('input[name="addon"]:checked')).map(el => el.value.split('|')[0]).join(',') || "無";
       const totalPrice = document.getElementById('totalDisplay').innerText.replace('$', '').replace(',', '');
 
-      const payload = {
-        action: 'register',
-        userId: currentUid,
-        name, phone,
-        courseName: `${activeSession.名稱} (${activeSession.梯次})`,
-        attendance: `出席 ${attendingDays} 天 (不出席: ${absentDates})`,
-        selectedEquips: selectedAddons,
-        totalPrice: totalPrice
-      };
-
       try {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        alert("報名完成！感謝您的配合。");
-        closeEnroll(); switchView('query');
-      } catch(e) { alert("傳送失敗"); }
-      finally { btn.disabled = false; btn.innerText = "確認報名送出"; }
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId: currentUid, name, phone, sessionId: activeSession.id, courseName: `${activeSession.name} (${activeSession.batch})`, attendance: `出席 ${attendingDays} 天 (缺席: ${absentDates})`, selectedEquips: equips, totalPrice }) }).then(r => r.json());
+        if(!res.success) throw new Error(res.msg);
+        alert("報名成功！"); closeEnroll(); switchView('query');
+      } catch(e) { alert("報名失敗: " + e.message); }
+      finally { btn.disabled = false; }
     }
 
-    function generateDateArray(start, end) {
-      let dates = [];
-      let curr = new Date(start);
-      let stop = new Date(end);
+    function generateDateArray(s, e) {
+      let dates = []; let curr = new Date(s); let stop = new Date(e);
       while(curr <= stop) { dates.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate() + 1); }
       return dates;
     }
-
     function closeEnroll() { document.getElementById('enrollModal').classList.replace('flex', 'hidden'); }
-
     async function loadHistory() {
       if(!currentUid) return;
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getUserRegistrations', userId: currentUid }) }).then(r => r.json());
-      document.getElementById('historyContainer').innerHTML = (res.data || []).map(r => `
-        <div class="bg-white p-8 flex justify-between items-start">
+      document.getElementById('historyContainer').innerHTML = res.data.map(r => `
+        <div class="bg-white p-8 flex justify-between items-start group">
           <div class="flex-grow">
-            <div class="text-[10px] text-green-600 font-bold mb-1 uppercase">${r.日期}</div>
-            <h4 class="font-bold text-slate-800 text-lg">${r.課程}</h4>
-            <p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">學員: ${r.姓名}<br>明細: ${r.出席詳情}<br>設備: ${r.設備}</p>
+            <div class="text-[10px] text-green-600 font-bold mb-1 uppercase tracking-widest">${r.日期}</div>
+            <h4 class="font-bold text-slate-800 text-lg tracking-tight">${r.課程}</h4>
+            <p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">${r.姓名} | ${r.出席詳情}<br>設備: ${r.設備}</p>
           </div>
-          <div class="text-right ml-4">
+          <div class="text-right">
              <div class="font-bold text-slate-700 text-xl font-mono">$${Number(r.金額).toLocaleString()}</div>
-             <span class="text-[9px] font-bold bg-green-50 text-green-600 px-2 uppercase border border-green-100">${r.狀態}</span>
+             <span class="text-[9px] font-bold bg-green-50 text-green-600 px-2 border border-green-100 uppercase">${r.狀態}</span>
           </div>
         </div>`).join('');
     }
-
     async function loadFamily() {
       if(!currentUid) return;
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFamily', userId: currentUid }) }).then(r => r.json());
       familyData = res.data || [];
-      const container = document.getElementById('familyListContainer');
-      if(familyData.length === 0) {
-        container.innerHTML = '<p class="text-center py-12 text-slate-300 text-xs font-medium uppercase tracking-widest">無成員檔案</p>';
-      } else {
-        container.innerHTML = familyData.map((f, i) => `
-          <div class="bg-white p-8 flex justify-between items-center group">
-            <div><div class="flex items-center space-x-3"><span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span><span class="text-lg font-bold text-slate-800">${f.name}</span><span class="text-[9px] bg-black text-white px-2 py-0.5 no-round font-medium uppercase">${f.relation}</span></div><p class="text-[10px] text-slate-400 font-medium mt-2">${f.phone}</p></div>
-            <button onclick="editMember(${i})" class="text-slate-400 text-[10px] font-medium border border-slate-200 px-4 py-2 no-round hover:border-black hover:text-black transition-all">EDIT</button>
-          </div>`).join('');
-      }
+      document.getElementById('familyListContainer').innerHTML = familyData.map((f, i) => `<div class="bg-white p-8 flex justify-between items-center"><div><div class="flex items-center space-x-3"><span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span><span class="text-lg font-bold text-slate-800">${f.name}</span><span class="text-[9px] bg-black text-white px-2 py-0.5 no-round uppercase">${f.relation}</span></div><p class="text-[10px] text-slate-400 mt-2">${f.phone}</p></div><button onclick="editMember(${i})" class="text-slate-400 text-[10px] font-medium border border-slate-200 px-4 py-2 no-round hover:bg-black hover:text-white hover:border-black transition-all">EDIT</button></div>`).join('');
     }
-
     async function switchView(v) {
       document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
       document.getElementById('view-' + v).classList.add('active');
@@ -323,24 +274,20 @@
       if(v === 'member') loadFamily();
       window.scrollTo(0,0);
     }
-
-    function showMemberForm() { document.getElementById('memberForm').reset(); document.getElementById('editRowId').value = ""; switchView('member-form'); }
-
+    function showMemberForm() { document.getElementById('memberForm').reset(); switchView('member-form'); }
     function editMember(i) {
       const f = familyData[i];
       document.getElementById('mName').value = f.name; document.getElementById('mGender').value = f.gender;
       document.getElementById('mBirthday').value = f.birthday; document.getElementById('mPhone').value = f.phone;
       document.getElementById('mAddress').value = f.address; document.getElementById('mRelation').value = f.relation;
-      document.getElementById('editRowId').value = i; switchView('member-form');
+      switchView('member-form');
     }
-
     document.getElementById('memberForm').onsubmit = async (e) => {
       e.preventDefault();
       const payload = { action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value, gender: document.getElementById('mGender').value, phone: document.getElementById('mPhone').value, birthday: document.getElementById('mBirthday').value, address: document.getElementById('mAddress').value, relation: document.getElementById('mRelation').value };
       await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-      alert("個人檔案已儲存成功。"); loadFamily(); switchView('member');
+      alert("儲存成功"); loadFamily(); switchView('member');
     };
-
     window.onload = init;
   </script>
 </body>
