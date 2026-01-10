@@ -1,4 +1,4 @@
-<!-- 檔案名稱：web/Member.html (用戶端完全體 - V6 邏輯版) -->
+<!-- 檔案名稱：web/Member.html (用戶端完全體 - V6 修復版) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -8,13 +8,13 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-    body { background-color: #ffffff; font-family: 'Noto Sans TC', sans-serif; color: #334155; font-size: 15px; }
+    body { background-color: #ffffff; font-family: 'Noto Sans TC', sans-serif; color: #334155; }
     .view-section { display: none; }
     .view-section.active { display: block; }
     .nav-active { color: #06C755; border-top: 3px solid #06C755; font-weight: 700; }
-    .absent-row { background-color: #fff1f2; opacity: 0.7; text-decoration: line-through; color: #f43f5e; }
-    .price-tag { color: #e11d48; font-size: 1.75rem; font-weight: 700; }
+    .absent-row { background-color: #fff1f2; opacity: 0.7; color: #f43f5e; }
     .no-round { border-radius: 0 !important; }
+    .price-big { color: #e11d48; font-size: 1.8rem; font-weight: 700; }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
@@ -22,18 +22,18 @@
   <div class="w-full max-w-4xl min-h-screen relative flex flex-col bg-white border-x border-gray-100 shadow-sm">
     
     <main class="flex-grow pb-32">
-      <!-- 活動列表 -->
+      <!-- 1. 活動列表 -->
       <section id="view-index" class="view-section active">
         <div class="px-6 py-10 border-b border-gray-50">
-          <h2 class="text-3xl font-bold text-slate-800 italic uppercase tracking-tighter">Sports Island</h2>
-          <p class="text-green-600 text-[10px] font-medium uppercase tracking-[0.3em] mt-1">2026 Enrollment v6.0</p>
+          <h2 class="text-3xl font-bold text-slate-800 italic uppercase">Sports Island</h2>
+          <p class="text-green-600 text-[10px] font-medium uppercase tracking-[0.3em] mt-1">2026 Enrollment System V6</p>
         </div>
         <div id="dynamicCourseContainer" class="divide-y divide-gray-100">
-          <div class="text-center py-20 text-slate-300 animate-pulse font-medium">同步課程中...</div>
+          <div class="text-center py-20 text-slate-300 animate-pulse font-medium">資料同步中...</div>
         </div>
       </section>
 
-      <!-- 我的紀錄 -->
+      <!-- 2. 報名紀錄 -->
       <section id="view-query" class="view-section">
         <div class="px-6 py-10 border-b">
           <h2 class="text-2xl font-bold text-slate-800">報名紀錄查詢</h2>
@@ -41,21 +41,21 @@
         <div id="historyContainer" class="divide-y divide-gray-100"></div>
       </section>
 
-      <!-- 個人檔案 (略) -->
+      <!-- 3. 會員中心 -->
       <section id="view-member" class="view-section">
         <div class="px-6 py-10 flex justify-between items-center border-b">
-          <h1 id="userNameDisplay" class="text-2xl font-bold text-slate-800">您好...</h1>
+          <h1 id="userNameDisplay" class="text-2xl font-bold text-slate-800 italic">您好...</h1>
           <img id="userAvatar" src="" class="w-14 h-14 rounded-full border shadow-sm">
         </div>
-        <div class="p-6"><button onclick="showMemberForm()" class="w-full bg-slate-900 text-white py-4 font-medium no-round uppercase">+ 新增成員檔案</button></div>
+        <div class="p-6"><button onclick="showMemberForm()" class="w-full bg-slate-900 text-white py-4 font-medium no-round uppercase tracking-widest">+ 新增成員檔案</button></div>
         <div id="familyListContainer" class="divide-y divide-gray-100 border-t"></div>
       </section>
 
-      <!-- 成員表單 -->
+      <!-- 4. 成員表單 -->
       <section id="view-member-form" class="view-section">
-        <div class="px-6 py-10"><button onclick="switchView('member')" class="text-slate-400 font-medium text-xs uppercase tracking-widest">← Back</button></div>
+        <div class="px-6 py-10"><button onclick="switchView('member')" class="text-slate-400 font-medium text-xs uppercase">← Back</button></div>
         <form id="memberForm" class="px-6 space-y-8 pb-32">
-           <input type="text" id="mName" placeholder="本名" required class="w-full p-4 bg-gray-50 border-b-2 border-gray-200 no-round font-medium outline-none focus:border-green-500">
+           <input type="text" id="mName" placeholder="學員本名" required class="w-full p-4 bg-gray-50 border-b-2 font-medium no-round outline-none focus:border-green-500">
            <div class="grid grid-cols-2 gap-6">
              <select id="mGender" class="p-4 bg-gray-50 border-b-2 no-round font-medium"><option value="男">男</option><option value="女">女</option></select>
              <input type="date" id="mBirthday" required class="p-4 bg-gray-50 border-b-2 no-round font-medium">
@@ -63,16 +63,16 @@
            <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-gray-50 border-b-2 no-round font-medium">
            <input type="text" id="mAddress" placeholder="居住地區" required class="w-full p-4 bg-gray-50 border-b-2 no-round font-medium">
            <select id="mRelation" class="w-full p-4 bg-gray-50 border-b-2 no-round font-medium"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
-           <button type="submit" class="w-full bg-green-600 text-white py-5 font-bold no-round shadow-xl transition-all active:scale-95">儲存並同步雲端</button>
+           <button type="submit" class="w-full bg-green-600 text-white py-5 font-bold no-round shadow-xl">儲存並同步</button>
         </form>
       </section>
     </main>
 
     <!-- 底部導覽 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-md border-t px-0 py-4 flex justify-around items-center z-50">
-      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active w-1/3 py-2 text-xs font-medium"><span class="text-xl">🏠</span>活動</button>
-      <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center text-slate-300 w-1/3 py-2 text-xs font-medium"><span class="text-xl">🔍</span>紀錄</button>
-      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300 w-1/3 py-2 text-xs font-medium"><span class="text-xl">👤</span>我的</button>
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-md border-t px-0 py-4 flex justify-around items-center z-50 shadow-inner">
+      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active w-1/3 py-1"><span class="text-xl">🏠</span><span class="text-[10px] mt-1 uppercase">活動</span></button>
+      <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center text-slate-300 w-1/3 py-1"><span class="text-xl">🔍</span><span class="text-[10px] mt-1 uppercase">紀錄</span></button>
+      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300 w-1/3 py-1"><span class="text-xl">👤</span><span class="text-[10px] mt-1 uppercase">個人</span></button>
     </nav>
   </div>
 
@@ -80,21 +80,18 @@
   <div id="enrollModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-0">
     <div class="bg-white w-full max-w-lg no-round p-10 shadow-2xl relative overflow-y-auto max-h-[95vh]">
       <div class="flex justify-between items-start mb-6">
-        <div>
-          <h3 id="modalTitle" class="text-2xl font-bold text-slate-800 tracking-tight">報名確認</h3>
-          <p id="modalPriceHint" class="text-red-500 text-sm font-medium mt-1"></p>
-        </div>
+        <div><h3 id="modalTitle" class="text-2xl font-bold text-slate-800">報名確認</h3><p id="modalPriceHint" class="text-red-500 text-sm font-medium mt-1"></p></div>
         <button onclick="closeEnroll()" class="text-gray-300 text-4xl leading-none">&times;</button>
       </div>
 
       <div class="space-y-8">
         <div>
           <label class="text-[10px] font-bold text-slate-400 uppercase mb-3 block tracking-widest">1. 選擇報名成員</label>
-          <select id="selectMember" class="w-full p-4 bg-gray-50 border-b-2 border-green-600 no-round font-medium text-lg outline-none"></select>
+          <select id="selectMember" class="w-full p-4 bg-gray-50 border-b-2 border-green-600 no-round font-medium text-lg"></select>
         </div>
 
         <div>
-          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">2. 勾選【不出席】日期 (系統自動扣除學費與設備)</label>
+          <label class="text-[10px] font-bold text-slate-400 uppercase mb-4 block tracking-widest">2. 勾選【不出席】日期 (扣除每日單價與設備)</label>
           <div id="absenceContainer" class="space-y-1 border-t pt-2"></div>
         </div>
 
@@ -104,17 +101,17 @@
         </div>
 
         <div class="p-8 bg-slate-900 text-white no-round">
-          <div class="flex justify-between items-center mb-2 text-[10px] opacity-60 font-bold uppercase tracking-widest">
-            <span>出席進度：<span id="attendingCount">0</span> 天</span>
-            <span class="text-green-400" id="earlyHint">適用早鳥折扣</span>
+          <div class="flex justify-between items-center mb-1 text-[10px] opacity-60 uppercase tracking-widest">
+            <span>出席：<span id="attCount">0</span> 天</span>
+            <span class="text-green-400" id="earlyHint">已套用早鳥價格</span>
           </div>
           <div class="flex justify-between items-center">
-            <span class="text-sm font-medium uppercase tracking-widest">最終應繳總額</span>
+            <span class="text-sm font-medium uppercase tracking-widest">應繳總金額</span>
             <span id="totalDisplay" class="text-3xl font-bold text-yellow-400 font-mono">$0</span>
           </div>
         </div>
 
-        <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-green-600 text-white py-6 font-bold no-round shadow-xl tracking-[0.4em] uppercase transition-all active:bg-black">Confirm & Enroll</button>
+        <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-green-600 text-white py-6 font-bold no-round shadow-xl tracking-[0.4em] uppercase transition-all active:bg-black">Confirm & Pay</button>
       </div>
     </div>
   </div>
@@ -124,7 +121,8 @@
     let familyData = [];
     let sessionData = []; 
     let activeSession = null;
-    const API_URL = window.location.href.split('?')[0];
+    
+    const API_URL = "https://sport.wetw-net3.workers.dev/";
 
     async function init() {
       try {
@@ -136,29 +134,30 @@
         document.getElementById('userNameDisplay').innerText = "您好, " + profile.displayName;
         loadCourses();
         loadFamily();
-      } catch (e) { console.error("LIFF Init Error", e); }
+      } catch (e) { console.error("LIFF Error", e); }
     }
 
     async function loadCourses() {
-      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) }).then(r => r.json());
-      sessionData = res.data || [];
-      document.getElementById('dynamicCourseContainer').innerHTML = sessionData.map((s, i) => `
-        <div class="bg-white p-8 group border-none">
-          <div class="flex justify-between items-start mb-4">
-            <div>
-              <span class="bg-slate-900 text-white px-2 py-0.5 font-bold text-[9px] uppercase tracking-widest">${s.類別}</span>
-              <h3 class="text-2xl font-bold text-slate-800 mt-2 tracking-tight">${s.名稱}</h3>
-              <p class="text-[11px] text-green-600 font-bold uppercase mt-1 tracking-widest">${s.梯次}</p>
+      try {
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) }).then(r => r.json());
+        sessionData = res.data || [];
+        document.getElementById('dynamicCourseContainer').innerHTML = sessionData.map((s, i) => `
+          <div class="bg-white p-8 border-none group transition-all">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <span class="bg-slate-900 text-white px-2 py-0.5 font-bold text-[9px] uppercase tracking-widest">${s.類別}</span>
+                <h3 class="text-2xl font-bold text-slate-800 mt-2">${s.名稱}</h3>
+                <p class="text-[11px] text-green-600 font-bold uppercase mt-1 tracking-widest">${s.梯次}</p>
+              </div>
+              <div class="text-right">
+                <p class="price-big">$${Number(s.全梯次總價).toLocaleString()}</p>
+                <p class="text-[9px] text-slate-400 font-medium uppercase mt-1">Full Price</p>
+              </div>
             </div>
-            <div class="text-right">
-              <p class="price-tag">$${Number(s.全梯次總價).toLocaleString()}</p>
-              <p class="text-[9px] text-slate-400 font-medium uppercase mt-1">Full Session Price</p>
-            </div>
-          </div>
-          <p class="text-[10px] text-slate-400 font-medium mb-6 uppercase tracking-widest">期間：${s.開始} ~ ${s.結束}</p>
-          <button onclick="openEnroll(${i})" class="w-full bg-black text-white py-5 no-round font-bold text-sm active:bg-green-600 transition-all uppercase tracking-[0.2em]">立即報名 / 勾選不出席</button>
-        </div>
-      `).join('');
+            <p class="text-[10px] text-slate-400 font-medium mb-6 uppercase tracking-widest">期間：${s.開始} ~ ${s.結束}</p>
+            <button onclick="openEnroll(${i})" class="w-full bg-black text-white py-5 no-round font-bold text-sm active:bg-green-600 transition-all uppercase tracking-[0.2em]">立即預約 / 選擇日期</button>
+          </div>`).join('');
+      } catch(e) { alert("無法取得課程，請檢查 Worker 連線。"); }
     }
 
     function openEnroll(idx) {
@@ -173,39 +172,33 @@
         <label class="flex items-center justify-between p-4 bg-gray-50 border border-white cursor-pointer abs-label" id="abs-box-${i}">
           <span class="text-sm font-bold text-slate-600 font-mono">${d}</span>
           <div class="flex items-center space-x-2">
-             <span class="text-[10px] text-slate-300 font-bold uppercase">不出席</span>
-             <input type="checkbox" class="w-6 h-6 accent-red-500 abs-check" onchange="calculateV6()" value="${d}">
+             <span class="text-[10px] text-slate-300 font-bold uppercase tracking-widest">不出席</span>
+             <input type="checkbox" class="w-6 h-6 accent-red-500 abs-check" onchange="calcTotalV6()" value="${d}">
           </div>
-        </label>
-      `).join('');
+        </label>`).join('');
 
       const addonArea = document.getElementById('addonSection');
       const addonContainer = document.getElementById('addonContainer');
       let addons = []; try { addons = JSON.parse(activeSession.設備清單 || "[]"); } catch(e) {}
-      
       if(addons.length > 0) {
         addonArea.classList.remove('hidden');
         addonContainer.innerHTML = addons.map(a => `
-          <label class="flex justify-between items-center p-4 bg-slate-50 border-b border-white cursor-pointer active:bg-slate-100">
-            <div class="flex items-center space-x-3">
-              <input type="checkbox" name="addon" value="${a.項目}|${a.金額}|${a.計費類型}" onchange="calculateV6()" class="w-5 h-5 accent-green-600">
-              <span class="font-medium text-slate-700">${a.項目} (${a.計費類型 === '按天計費' ? '每日' : '單次'})</span>
-            </div>
+          <label class="flex justify-between items-center p-4 bg-slate-50 border-b border-white cursor-pointer">
+            <div class="flex items-center space-x-3"><input type="checkbox" name="addon" value="${a.項目}|${a.金額}|${a.計費類型}" onchange="calcTotalV6()" class="w-5 h-5 accent-green-600"><span class="font-medium text-slate-700">${a.項目} (${a.計費類型 === '按天計費' ? '每日' : '單次'})</span></div>
             <span class="font-bold text-green-600">+$${a.金額}</span>
           </label>`).join('');
       } else { addonArea.classList.add('hidden'); }
 
       document.getElementById('selectMember').innerHTML = familyData.map(f => `<option value="${f.name}|${f.phone}">${f.name} (${f.relation})</option>`).join('');
-      calculateV6();
+      calcTotalV6();
       document.getElementById('enrollModal').classList.replace('hidden', 'flex');
     }
 
-    function calculateV6() {
+    function calcTotalV6() {
       const checks = document.querySelectorAll('.abs-check');
       const absentCount = Array.from(checks).filter(c => c.checked).length;
-      const dates = generateDateArray(activeSession.開始, activeSession.結束);
-      const attendingDays = dates.length - absentCount;
-      
+      const totalDays = generateDateArray(activeSession.開始, activeSession.結束).length;
+      const attendingDays = totalDays - absentCount;
       checks.forEach((c, i) => document.getElementById(`abs-box-${i}`).classList.toggle('absent-row', c.checked));
 
       const baseFee = attendingDays * Number(activeSession.每日單價);
@@ -216,7 +209,7 @@
       });
 
       document.getElementById('totalDisplay').innerText = "$" + (baseFee + addonFee).toLocaleString();
-      document.getElementById('attendingCount').innerText = attendingDays;
+      document.getElementById('attCount').innerText = attendingDays;
     }
 
     async function submitEnroll() {
@@ -225,16 +218,15 @@
       const attendingDays = generateDateArray(activeSession.開始, activeSession.結束).length - Array.from(checks).filter(c => c.checked).length;
       if(attendingDays <= 0) return alert("出席天數不可為 0");
 
-      btn.disabled = true; btn.innerText = "傳送交易快照...";
+      btn.disabled = true; btn.innerText = "同步快照...";
       const [name, phone] = document.getElementById('selectMember').value.split('|');
       const absentDates = Array.from(checks).filter(c => c.checked).map(c => c.value).join(',') || "無";
-      const selectedAddons = Array.from(document.querySelectorAll('input[name="addon"]:checked')).map(el => el.value.split('|')[0]).join(',') || "無";
-      const totalPrice = document.getElementById('totalDisplay').innerText.replace('$', '').replace(',', '');
-
+      const addons = Array.from(document.querySelectorAll('input[name="addon"]:checked')).map(el => el.value.split('|')[0]).join(',') || "無";
+      
       try {
-        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId: currentUid, name, phone, sessionId: activeSession.id, courseName: `${activeSession.名稱} (${activeSession.梯次})`, attendance: `出席 ${attendingDays} 天 (缺席: ${absentDates})`, selectedEquips: selectedAddons, totalPrice }) }).then(r => r.json());
+        const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId: currentUid, name, phone, sessionId: activeSession.id, courseName: `${activeSession.名稱} (${activeSession.梯次})`, attendance: `出席 ${attendingDays} 天 (缺席: ${absentDates})`, selectedEquips: addons, totalPrice: document.getElementById('totalDisplay').innerText.replace('$', '').replace(',', '') }) }).then(r => r.json());
         if(!res.success) throw new Error(res.msg);
-        alert("報名完成！"); closeEnroll(); switchView('query');
+        alert("報名成功！"); closeEnroll(); switchView('query');
       } catch(e) { alert("失敗：" + e.message); }
       finally { btn.disabled = false; btn.innerText = "確認報名送出"; }
     }
@@ -249,23 +241,17 @@
       if(!currentUid) return;
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getUserRegistrations', userId: currentUid }) }).then(r => r.json());
       document.getElementById('historyContainer').innerHTML = res.data.map(r => `
-        <div class="bg-white p-8 flex justify-between items-start group">
-          <div class="flex-grow">
-            <div class="text-[10px] text-green-600 font-bold mb-1 uppercase tracking-widest">${r.日期}</div>
-            <h4 class="font-bold text-slate-800 text-lg">${r.課程}</h4>
-            <p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">${r.姓名} | ${r.出席詳情}<br>設備: ${r.設備}</p>
-          </div>
-          <div class="text-right">
-             <div class="font-bold text-slate-700 text-xl font-mono">$${Number(r.金額).toLocaleString()}</div>
-             <span class="text-[9px] font-bold bg-green-50 text-green-600 px-2 border border-green-100 uppercase">${r.狀態}</span>
-          </div>
+        <div class="bg-white p-8 flex justify-between items-start">
+          <div class="flex-grow"><div class="text-[10px] text-green-600 font-bold mb-1 uppercase">${r.日期}</div><h4 class="font-bold text-slate-800 text-lg">${r.課程}</h4><p class="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">${r.姓名} | ${r.出席詳情}<br>設備: ${r.設備}</p></div>
+          <div class="text-right ml-4"><div class="font-bold text-slate-700 text-xl font-mono">$${Number(r.金額).toLocaleString()}</div><span class="text-[9px] font-bold bg-green-50 text-green-600 px-2 uppercase border border-green-100">${r.狀態}</span></div>
         </div>`).join('');
     }
     async function loadFamily() {
       if(!currentUid) return;
       const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFamily', userId: currentUid }) }).then(r => r.json());
       familyData = res.data || [];
-      document.getElementById('familyListContainer').innerHTML = familyData.map((f, i) => `<div class="bg-white p-8 flex justify-between items-center group"><div><div class="flex items-center space-x-3"><span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span><span class="text-lg font-bold text-slate-800 tracking-tight">${f.name}</span><span class="text-[9px] bg-black text-white px-2 py-0.5 no-round font-medium uppercase">${f.relation}</span></div><p class="text-[10px] text-slate-400 font-medium mt-2 uppercase tracking-widest">${f.phone}</p></div><button onclick="editMember(${i})" class="text-slate-900 text-[10px] font-medium border border-slate-200 px-5 py-2.5 no-round hover:border-black transition-all">EDIT</button></div>`).join('');
+      const container = document.getElementById('familyListContainer');
+      container.innerHTML = familyData.length ? familyData.map((f, i) => `<div class="bg-white p-8 flex justify-between items-center group"><div><div class="flex items-center space-x-3"><span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span><span class="text-lg font-bold text-slate-800">${f.name}</span><span class="text-[9px] bg-black text-white px-2 py-0.5 no-round font-medium uppercase">${f.relation}</span></div><p class="text-[10px] text-slate-400 font-medium mt-2 tracking-widest">${f.phone}</p></div><button onclick="editMember(${i})" class="text-slate-900 text-[10px] font-medium border border-slate-200 px-4 py-2 no-round hover:bg-black transition-all">EDIT</button></div>`).join('') : '<p class="text-center py-12 text-slate-300 text-xs font-medium uppercase tracking-widest">無成員檔案</p>';
     }
     async function switchView(v) {
       document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
@@ -289,7 +275,7 @@
       e.preventDefault();
       const payload = { action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value, gender: document.getElementById('mGender').value, phone: document.getElementById('mPhone').value, birthday: document.getElementById('mBirthday').value, address: document.getElementById('mAddress').value, relation: document.getElementById('mRelation').value };
       await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-      alert("資料已儲存"); loadFamily(); switchView('member');
+      alert("存檔成功"); loadFamily(); switchView('member');
     };
     window.onload = init;
   </script>
