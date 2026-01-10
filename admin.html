@@ -1,189 +1,339 @@
-<!-- 檔案名稱：admin.html (管理後台 - V6.5.3 穩定提交版) -->
+<!-- 檔案名稱：admin.html (LINE OA 專業風格版 - V6.5.4) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>運動島管理系統 - 管理中心</title>
+  <title>LINE Official Account Manager | 運動島管理中心</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
     
-    /* 核心設計：無灰階、純色對比、大字體 */
-    body { background-color: #ffffff; font-family: 'Noto Sans TC', sans-serif; color: #000000; font-size: 16px; margin: 0; }
-    
-    .sidebar { background-color: #000000; width: 260px; }
-    .sidebar-item { color: #ffffff; padding: 20px 24px; display: block; border-bottom: 2px solid #111; width: 100%; text-align: left; }
-    .sidebar-item:hover { background-color: #004dc0; }
-    .sidebar-item.active { background-color: #004dc0; border-right: 10px solid #52c41a; font-weight: 900; }
-    
-    .tag { padding: 6px 12px; border: 2px solid #000; color: #ffffff; font-weight: 900; font-size: 13px; text-transform: uppercase; }
-    .tag-單日 { background-color: #003a8c; }
-    .tag-梯次 { background-color: #135200; }
-    .tag-營隊 { background-color: #873800; }
+    /* LINE OA 品牌色規範 */
+    :root {
+      --line-green: #06C755;
+      --line-dark-green: #05b34c;
+      --bg-light: #F4F5F7;
+      --text-main: #000000;
+      --border-color: #E7E9ED;
+    }
 
-    /* 全螢幕沈浸式編輯器 */
-    #full-editor { display: none; position: fixed; inset: 0; background: #ffffff; z-index: 1000; overflow-y: auto; }
+    body { 
+      background-color: var(--bg-light); 
+      font-family: 'Noto Sans TC', -apple-system, sans-serif; 
+      color: var(--text-main); 
+      font-size: 15px; 
+      margin: 0; 
+    }
+
+    /* 側邊導覽列 (LINE OA 側欄風格) */
+    .sidebar { 
+      background-color: #FFFFFF; 
+      width: 220px; 
+      border-right: 1px solid var(--border-color);
+      z-index: 50;
+    }
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .sidebar-item { 
+      color: #333333; 
+      padding: 14px 24px; 
+      display: block; 
+      width: 100%; 
+      text-align: left; 
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .sidebar-item:hover { background-color: #F8F9FA; color: var(--line-green); }
+    .sidebar-item.active { 
+      background-color: #F0FBF5; 
+      color: var(--line-green); 
+      border-right: 4px solid var(--line-green);
+      font-weight: 700;
+    }
+
+    /* 頂部導覽列 */
+    .top-bar {
+      height: 64px;
+      background-color: #FFFFFF;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      padding: 0 32px;
+      justify-content: space-between;
+    }
+
+    /* 按鈕樣式 */
+    .btn-primary {
+      background-color: var(--line-green);
+      color: #FFFFFF;
+      padding: 10px 24px;
+      border-radius: 4px;
+      font-weight: 700;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background-color: var(--line-dark-green); }
+    .btn-secondary {
+      background-color: #FFFFFF;
+      color: #333333;
+      border: 1px solid #D1D5DB;
+      padding: 10px 24px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    .btn-secondary:hover { background-color: #F9FAFB; }
+
+    /* 表格樣式 */
+    .table-container {
+      background-color: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    table th { 
+      background-color: #FBFBFC; 
+      color: #666666; 
+      font-size: 13px; 
+      padding: 12px 24px; 
+      text-align: left; 
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 700;
+    }
+    table td { 
+      padding: 18px 24px; 
+      border-bottom: 1px solid var(--border-color);
+      color: #000000;
+    }
+
+    /* 全螢幕編輯器 */
+    #full-editor { 
+      display: none; 
+      position: fixed; 
+      inset: 0; 
+      background: var(--bg-light); 
+      z-index: 100; 
+      overflow-y: auto; 
+    }
     #full-editor.active { display: block; }
     
-    .form-card { border: 4px solid #000000; padding: 40px; margin-bottom: 40px; background: #ffffff; }
-    .form-label { font-size: 16px; font-weight: 900; color: #000000; margin-bottom: 12px; display: block; text-transform: uppercase; }
-    .form-input { 
-      width: 100%; padding: 16px; border: 3px solid #000000; border-radius: 0; 
-      font-size: 18px; color: #000000; background: #ffffff; outline: none; 
+    .editor-header {
+      background: #FFFFFF;
+      padding: 16px 40px;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 110;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .form-input:focus { border-color: #004dc0; background-color: #f0f7ff; }
-    .form-input[readonly] { background-color: #eeeeee; border-color: #555555; cursor: not-allowed; }
 
-    /* 表格 */
-    table { width: 100%; border-collapse: collapse; border: 4px solid #000; }
-    table th { background-color: #000000; color: #ffffff; padding: 20px; text-align: left; font-weight: 900; font-size: 14px; }
-    table td { border: 2px solid #000000; padding: 24px; vertical-align: middle; }
-    
-    .price-heavy { color: #cf1322; font-weight: 900; font-size: 24px; font-family: monospace; }
-    
-    /* 訊息遮罩 */
-    #loading-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); color: white; display: none; flex-direction: column; items-center justify-center; z-index: 3000; }
-    .spinner { border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+    .form-section {
+      background: #FFFFFF;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    .section-label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333333;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+    }
+    .section-label::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background-color: var(--line-green);
+      margin-right: 12px;
+      border-radius: 2px;
+    }
+
+    .input-label { font-size: 14px; font-weight: 700; color: #000000; margin-bottom: 8px; display: block; }
+    .form-input { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid #D1D5DB; 
+      border-radius: 4px; 
+      font-size: 15px; 
+      color: #000000;
+      outline: none; 
+    }
+    .form-input:focus { border-color: var(--line-green); ring: 2px var(--line-green); }
+    .form-input[readonly] { background-color: #F3F4F6; color: #666; cursor: not-allowed; }
+
+    /* Loading 遮罩 */
+    #loading-overlay { 
+      position: fixed; inset: 0; background: rgba(255,255,255,0.8); 
+      display: none; flex-direction: column; items-center justify-center; z-index: 2000; 
+    }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--line-green); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="flex min-h-screen">
 
-  <div id="loading-overlay">
+  <!-- 讀取中遮罩 -->
+  <div id="loading-overlay" class="flex flex-col items-center justify-center">
     <div class="spinner"></div>
-    <p class="text-2xl font-black tracking-widest">正在同步資料至雲端，請勿關閉視窗...</p>
+    <p class="mt-4 font-bold text-gray-600">正在處理中...</p>
   </div>
 
-  <aside class="sidebar flex flex-col fixed inset-y-0 left-0 z-50 shadow-2xl">
-    <div class="p-8 border-b-4 border-gray-800 bg-black text-center">
-      <h1 class="text-white font-black text-3xl tracking-tighter italic">SI ADMIN</h1>
-      <p class="text-green-500 text-xs mt-2 font-black uppercase tracking-widest">2026 Management</p>
+  <!-- 側邊選單 -->
+  <aside class="sidebar flex flex-col fixed inset-y-0 left-0">
+    <div class="sidebar-header">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" class="w-8 h-8 mb-2" alt="LINE">
+      <div class="font-bold text-sm tracking-tight">運動島管理中心</div>
     </div>
-    <nav class="flex-grow">
-      <button onclick="switchTab('courses')" id="btn-courses" class="sidebar-item active">📚 課程規格管理</button>
-      <button onclick="switchTab('settings')" id="btn-settings" class="sidebar-item">⚙️ 全局參數設定</button>
+    <nav class="flex-grow pt-4">
+      <button onclick="switchTab('courses')" id="btn-courses" class="sidebar-item active">課程規格管理</button>
+      <button onclick="switchTab('settings')" id="btn-settings" class="sidebar-item">全局參數設定</button>
     </nav>
   </aside>
 
-  <main class="flex-grow ml-[260px] p-12">
-    <section id="section-courses">
-      <div class="flex justify-between items-center mb-12">
-        <div>
-          <h2 class="text-5xl font-black text-black uppercase tracking-tighter">Courses</h2>
-          <p class="text-blue-700 font-black mt-2 text-lg">營運規格管理中心</p>
-        </div>
-        <button onclick="openNewCourse()" class="bg-blue-700 text-white px-16 py-6 font-black shadow-2xl hover:bg-black transition-all text-2xl">
-          + 新增課程規格
-        </button>
+  <!-- 主內容區 -->
+  <main class="flex-grow ml-[220px]">
+    <div class="top-bar">
+      <div class="flex items-center space-x-2">
+        <span class="text-gray-400">主頁</span>
+        <span class="text-gray-400">/</span>
+        <span class="font-bold" id="page-title">課程規格管理</span>
       </div>
-
-      <div class="bg-white">
-        <table>
-          <thead>
-            <tr>
-              <th class="w-40">編號 / 類別</th>
-              <th>正式名稱 / 負責教練</th>
-              <th class="w-56">單價 / 總額</th>
-              <th class="w-64">營運期間</th>
-              <th class="text-right w-40">操作</th>
-            </tr>
-          </thead>
-          <tbody id="courseTableBody"></tbody>
-        </table>
+      <div class="flex items-center space-x-4">
+        <span class="text-sm font-medium">管理員：SI Admin</span>
       </div>
-    </section>
+    </div>
 
-    <!-- 系統設定區 -->
-    <section id="section-settings" class="hidden">
-      <h2 class="text-4xl font-black text-black mb-12 uppercase italic">Settings</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        <div class="bg-white p-12 border-[6px] border-black">
-          <div class="flex justify-between items-center mb-10 border-b-4 border-black pb-4">
-            <h3 class="font-black text-3xl text-blue-800 uppercase">設備租用範本</h3>
-            <button onclick="addGlobalEquip()" class="bg-green-700 text-white px-6 py-2 font-black">+ 新增</button>
+    <div class="p-10">
+      <section id="section-courses">
+        <div class="flex justify-between items-end mb-8">
+          <div>
+            <h2 class="text-2xl font-bold">所有課程清單</h2>
+            <p class="text-gray-500 text-sm mt-1">管理與編修年度所有的運動課程規格及報名參數。</p>
           </div>
-          <div id="global-equip-list" class="space-y-4"></div>
-          <button onclick="saveGlobalSettings()" class="w-full mt-12 bg-black text-white py-6 font-black uppercase text-2xl">同步全域參數</button>
+          <button onclick="openNewCourse()" class="btn-primary">+ 新增課程規格</button>
         </div>
-        <div class="bg-white p-12 border-[6px] border-black">
-          <h3 class="font-black text-3xl text-blue-800 uppercase mb-10 border-b-4 border-black pb-4">預設匯款帳號</h3>
-          <textarea id="global-payment" rows="10" class="form-input font-black text-2xl leading-relaxed"></textarea>
+
+        <div class="table-container shadow-sm">
+          <table>
+            <thead>
+              <tr>
+                <th class="w-32">編號</th>
+                <th class="w-32">類別</th>
+                <th>課程名稱 / 梯次</th>
+                <th class="w-48">每日單價 / 總價</th>
+                <th class="w-48">營運期間</th>
+                <th class="text-right w-32">操作</th>
+              </tr>
+            </thead>
+            <tbody id="courseTableBody"></tbody>
+          </table>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <!-- 系統設定區 -->
+      <section id="section-settings" class="hidden">
+        <h2 class="text-2xl font-bold mb-8">全局參數設定</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="form-section">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-lg font-bold">預設設備租用範本</h3>
+              <button onclick="addGlobalEquip()" class="text-sm font-bold text-green-600 hover:underline">+ 新增項目</button>
+            </div>
+            <div id="global-equip-list" class="space-y-4"></div>
+            <button onclick="saveGlobalSettings()" class="w-full mt-10 btn-primary py-3">同步全域參數</button>
+          </div>
+          <div class="form-section">
+            <h3 class="text-lg font-bold mb-6">預設匯款資訊</h3>
+            <textarea id="global-payment" rows="8" class="form-input" placeholder="請輸入預設銀行代碼與帳號..."></textarea>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <!-- 全螢幕沉浸式編輯器 -->
   <div id="full-editor">
-    <div class="max-w-7xl mx-auto py-20 px-10">
-      <div class="flex justify-between items-center mb-16 border-b-[12px] border-black pb-10">
-        <div>
-          <h2 id="editorTitle" class="text-7xl font-black text-black uppercase italic tracking-tighter">Edit Specification</h2>
-          <p class="text-blue-800 font-black mt-4 text-2xl tracking-widest">V6.5.3 版 | 完全解耦架構</p>
+    <div class="editor-header">
+      <div class="flex items-center">
+        <div class="bg-green-100 p-2 rounded-lg mr-4">
+          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
         </div>
-        <button onclick="closeEditor()" class="bg-red-700 text-white px-16 py-6 font-black text-3xl shadow-2xl hover:bg-black">放棄編輯</button>
+        <h2 id="editorTitle" class="text-xl font-bold">編輯規格</h2>
+      </div>
+      <div class="space-x-4">
+        <button onclick="closeEditor()" class="btn-secondary">取消並返回</button>
+        <button onclick="submitCourseForm()" id="saveBtn" class="btn-primary">儲存並同步雲端</button>
+      </div>
+    </div>
+
+    <div class="max-w-5xl mx-auto py-12 px-6">
+      <!-- 01 身分 -->
+      <div class="form-section">
+        <h3 class="section-label">01 課程基礎資料</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div><label class="input-label">課程 ID</label><input type="text" id="f-id" readonly class="form-input font-mono"></div>
+          <div>
+            <label class="input-label">課程類別</label>
+            <select id="f-category" class="form-input">
+              <option value="梯次">梯次課程</option><option value="單日">單日課程</option><option value="營隊">營隊專區</option><option value="課後">課後班</option>
+            </select>
+          </div>
+          <div class="md:col-span-2"><label class="input-label">課程全名 (模板名稱)</label><input type="text" id="f-name" class="form-input"></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div><label class="input-label">梯次代號 (如: 第一梯次)</label><input type="text" id="f-batch" class="form-input"></div>
+          <div><label class="input-label">負責教練</label><input type="text" id="f-coach" class="form-input"></div>
+        </div>
       </div>
 
-      <div class="space-y-16 pb-96">
-        <!-- 01 身分 -->
-        <div class="form-card">
-          <h3 class="text-4xl font-black mb-12 border-l-[16px] border-blue-700 pl-8 uppercase">01 核心識別資料</h3>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div><label class="form-label">課程 ID (自動)</label><input type="text" id="f-id" readonly class="form-input font-mono font-black text-blue-800"></div>
-            <div><label class="form-label">類別</label><select id="f-category" class="form-input font-black"><option value="梯次">梯次課程</option><option value="單日">單日課程</option><option value="營隊">營隊專區</option><option value="課後">課後班</option></select></div>
-            <div class="md:col-span-2"><label class="form-label">正式名稱 (模板名稱)</label><input type="text" id="f-name" class="form-input font-black text-2xl"></div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12">
-            <div><label class="form-label">梯次班別代號 (例如：2026 夏季 A 梯)</label><input type="text" id="f-batch" class="form-input font-black text-xl"></div>
-            <div><label class="form-label">主責教練</label><input type="text" id="f-coach" class="form-input font-black text-xl"></div>
-          </div>
+      <!-- 02 計費 -->
+      <div class="form-section">
+        <h3 class="section-label">02 計費邏輯與營運日期</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div><label class="input-label text-green-600">每日出席單價</label><input type="number" id="f-baseUnit" class="form-input font-bold"></div>
+          <div><label class="input-label">全梯次總定價</label><input type="number" id="f-fullPrice" class="form-input font-bold"></div>
+          <div><label class="input-label">開始日期</label><input type="date" id="f-start" class="form-input"></div>
+          <div><label class="input-label">結束日期</label><input type="date" id="f-end" class="form-input"></div>
         </div>
-
-        <!-- 02 計費 -->
-        <div class="form-card">
-          <h3 class="text-4xl font-black mb-12 border-l-[16px] border-blue-700 pl-8 uppercase">02 財務計費與日期</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-            <div><label class="form-label text-red-700">每日出席單價</label><input type="number" id="f-baseUnit" class="form-input font-black text-red-700 text-3xl"></div>
-            <div><label class="form-label">全梯次完整總價</label><input type="number" id="f-fullPrice" class="form-input font-black text-black text-3xl"></div>
-            <div><label class="form-label">開始日期</label><input type="date" id="f-start" class="form-input font-black"></div>
-            <div><label class="form-label">結束日期</label><input type="date" id="f-end" class="form-input font-black"></div>
-          </div>
-          <div class="mt-12 p-12 bg-rose-50 border-[6px] border-rose-600 grid grid-cols-1 md:grid-cols-2 gap-12">
-             <div><label class="form-label text-rose-800 font-black text-xl">早鳥截止日期</label><input type="date" id="f-earlyDeadline" class="form-input border-rose-800 text-xl"></div>
-             <div><label class="form-label text-rose-800 font-black text-xl">早鳥全額優惠總價</label><input type="number" id="f-earlyPrice" class="form-input border-rose-800 font-black text-rose-800 text-3xl"></div>
-          </div>
-        </div>
-
-        <!-- 03 設備 -->
-        <div class="form-card">
-          <div class="flex justify-between items-center mb-12 border-b-8 border-black pb-4">
-            <h3 class="text-4xl font-black border-l-[16px] border-blue-700 pl-8 uppercase">03 設備加購清單</h3>
-            <button type="button" onclick="addCourseEquip()" class="bg-black text-white px-10 py-4 font-black text-xl">+ 增加自定義項目</button>
-          </div>
-          <div id="course-equip-list" class="space-y-8"></div>
-        </div>
-
-        <!-- 04 狀態 -->
-        <div class="form-card">
-          <h3 class="text-4xl font-black mb-12 border-l-[16px] border-blue-700 pl-8 uppercase">04 發布與說明</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
-            <div><label class="form-label">匯款資訊 (留空套用預設)</label><textarea id="f-paymentInfo" rows="5" class="form-input font-black text-xl"></textarea></div>
-            <div><label class="form-label">詳細說明 / 攜帶物品</label><textarea id="f-desc" rows="5" class="form-input font-black text-xl"></textarea></div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12">
-            <div><label class="form-label">封面圖片 HTTPS 網址</label><input type="text" id="f-img" class="form-input font-mono text-base"></div>
-            <div class="grid grid-cols-2 gap-10">
-              <div><label class="form-label">人數上限</label><input type="number" id="f-limit" class="form-input font-black text-3xl"></div>
-              <div><label class="form-label">目前發布狀態</label><select id="f-status" class="form-input font-black text-green-800 text-3xl border-green-700"><option value="報名中">報名中</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option></select></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 儲存按鈕：固定在視窗底部 -->
-        <div class="fixed bottom-0 left-[260px] right-0 p-12 bg-white border-t-[12px] border-black shadow-2xl flex justify-center z-[1100]">
-          <button type="button" onclick="submitCourseForm()" class="bg-blue-700 text-white px-80 py-10 font-black text-5xl uppercase tracking-[0.5em] hover:bg-black transition-all active:scale-95">儲存並同步雲端</button>
+        <div class="mt-8 p-6 bg-green-50 border border-green-100 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-8">
+           <div><label class="input-label text-green-700">早鳥截止日期</label><input type="date" id="f-earlyDeadline" class="form-input"></div>
+           <div><label class="input-label text-green-700">早鳥優惠總價</label><input type="number" id="f-earlyPrice" class="form-input font-bold"></div>
         </div>
       </div>
+
+      <!-- 03 設備 -->
+      <div class="form-section">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="section-label mb-0">03 設備加購選項</h3>
+          <button type="button" onclick="addCourseEquip()" class="text-sm font-bold text-green-600">+ 自定義項目</button>
+        </div>
+        <div id="course-equip-list" class="space-y-4"></div>
+      </div>
+
+      <!-- 04 詳細 -->
+      <div class="form-section">
+        <h3 class="section-label">04 詳細說明與狀態</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div><label class="input-label">專屬匯款資訊</label><textarea id="f-paymentInfo" rows="4" class="form-input"></textarea></div>
+          <div><label class="input-label">課程詳細說明</label><textarea id="f-desc" rows="4" class="form-input"></textarea></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+          <div><label class="input-label">封面圖網址 (HTTPS)</label><input type="text" id="f-img" class="form-input"></div>
+          <div class="grid grid-cols-2 gap-4">
+            <div><label class="input-label">招生人數上限</label><input type="number" id="f-limit" class="form-input"></div>
+            <div><label class="input-label">目前狀態</label><select id="f-status" class="form-input font-bold text-green-600"><option value="報名中">報名中</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option></select></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 底部預留空間 -->
+      <div class="h-32"></div>
     </div>
   </div>
 
@@ -194,6 +344,7 @@
 
     async function init() {
       try {
+        showLoading(true);
         const res = await fetch(API_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
@@ -203,32 +354,35 @@
         courseList = data.課程 || [];
         globalConfig = data.設定 || { 設備範本: [], 預設匯款: "" };
         renderTable();
-      } catch(e) { alert("讀取資料失敗，請檢查 Worker 設定。"); }
+      } catch(e) { alert("連線失敗！"); }
+      finally { showLoading(false); }
     }
 
     function renderTable() {
-      document.getElementById('courseTableBody').innerHTML = courseList.map((c, i) => `
-        <tr class="hover:bg-blue-50 transition-all font-black">
-          <td><div class="font-mono text-blue-800 text-lg mb-2">${c.id}</div><span class="tag tag-${c.category.substring(0,2)}">${c.category}</span></td>
-          <td><div class="text-3xl text-black">${c.name}</div><div class="text-lg text-blue-700 uppercase mt-2">${c.batch || '-'} | 教練: ${c.coach}</div></td>
-          <td><div class="price-heavy">$${c.baseUnit}</div><div class="text-sm text-black font-black uppercase mt-1">Full: $${c.fullPrice}</div></td>
-          <td class="text-base text-black font-mono tracking-tighter">${c.start} ~ ${c.end}</td>
+      const tbody = document.getElementById('courseTableBody');
+      tbody.innerHTML = courseList.map((c, i) => `
+        <tr>
+          <td><span class="font-mono text-xs text-gray-500">${c.id}</span></td>
+          <td><span class="tag tag-${c.category.substring(0,2)}">${c.category}</span></td>
+          <td>
+            <div class="font-bold">${c.name}</div>
+            <div class="text-xs text-gray-400 mt-1">${c.batch || '-'} | 教練: ${c.coach}</div>
+          </td>
+          <td>
+            <div class="text-red-500 font-bold">$${c.baseUnit} / 日</div>
+            <div class="text-xs text-gray-400">總價: $${c.fullPrice}</div>
+          </td>
+          <td><span class="text-xs font-medium text-gray-600">${c.start} ~ ${c.end}</span></td>
           <td class="text-right">
-            <button onclick="editCourse(${i})" class="bg-blue-700 text-white px-8 py-3 font-black mb-3 block w-full text-xl shadow-lg">編輯</button>
-            <button onclick="cloneCourse(${i})" class="bg-black text-white px-8 py-3 font-black block w-full text-xl shadow-lg">複製</button>
+            <button onclick="editCourse(${i})" class="text-green-600 font-bold hover:underline">編輯</button>
+            <button onclick="cloneCourse(${i})" class="text-gray-400 font-bold hover:underline ml-4">複製</button>
           </td>
         </tr>`).join('');
     }
 
     function openNewCourse() {
       document.getElementById('f-id').value = "C" + Math.floor(Date.now() / 1000);
-      document.getElementById('f-category').value = "梯次";
       document.getElementById('f-name').value = "";
-      document.getElementById('f-batch').value = "";
-      document.getElementById('f-coach').value = "";
-      document.getElementById('f-baseUnit').value = 0;
-      document.getElementById('f-fullPrice').value = 0;
-      document.getElementById('f-earlyPrice').value = 0;
       document.getElementById('course-equip-list').innerHTML = "";
       globalConfig.設備範本.forEach(e => createEquipRow(document.getElementById('course-equip-list'), e.項目, e.金額, e.計費類型, "f-equip-item"));
       document.getElementById('full-editor').classList.add('active');
@@ -252,16 +406,17 @@
 
     function createEquipRow(container, name = "", price = "", type = "按天計費", className = "") {
       const div = document.createElement('div');
-      div.className = `flex items-center space-x-8 p-8 border-[6px] border-slate-100 ${className}`;
-      div.innerHTML = `<input type="text" placeholder="項目" value="${name}" class="flex-grow form-input font-black"><input type="number" placeholder="單價" value="${price}" class="w-48 form-input font-black text-red-700 text-2xl"><select class="w-64 form-input font-black text-blue-800"><option value="按天計費" ${type==='按天計費'?'selected':''}>按天計費</option><option value="單次固定" ${type==='單次固定'?'selected':''}>單次固定</option></select><button type="button" onclick="this.parentElement.remove()" class="bg-red-700 text-white px-10 py-3 font-black text-xl shadow-xl">移除</button>`;
+      div.className = `flex items-center space-x-4 p-4 bg-gray-50 border border-gray-200 rounded ${className}`;
+      div.innerHTML = `
+        <input type="text" placeholder="項目" value="${name}" class="flex-grow form-input font-bold">
+        <input type="number" placeholder="單價" value="${price}" class="w-32 form-input font-bold text-green-600">
+        <select class="w-40 form-input font-medium text-gray-500"><option value="按天計費" ${type==='按天計費'?'selected':''}>按出席天數</option><option value="單次固定" ${type==='單次固定'?'selected':''}>單次固定</option></select>
+        <button type="button" onclick="this.parentElement.remove()" class="text-red-500 font-bold px-2">移除</button>`;
       container.appendChild(div);
     }
 
-    // 關鍵修正：改用手動函數，徹底排除表單跳轉
     async function submitCourseForm() {
-      const overlay = document.getElementById('loading-overlay');
-      overlay.style.display = 'flex';
-
+      showLoading(true);
       const equips = [];
       document.querySelectorAll('.f-equip-item').forEach(el => {
         const ins = el.querySelectorAll('input'); const sel = el.querySelector('select');
@@ -281,24 +436,12 @@
       };
 
       try {
-        const res = await fetch(API_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data) 
-        });
+        const res = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
         const result = await res.json();
-        if(result.success) {
-          alert("雲端同步成功！");
-          await init();
-          closeEditor();
-        } else {
-          throw new Error(result.msg);
-        }
-      } catch(err) {
-        alert("儲存失敗：" + err.message);
-      } finally {
-        overlay.style.display = 'none';
-      }
+        if(result.success) { alert("儲存完成！"); await init(); closeEditor(); } 
+        else { throw new Error(result.msg); }
+      } catch(err) { alert("儲存失敗：" + err.message); }
+      finally { showLoading(false); }
     }
 
     function switchTab(tab) {
@@ -306,6 +449,7 @@
       document.getElementById('section-settings').classList.toggle('hidden', tab !== 'settings');
       document.getElementById('btn-courses').classList.toggle('active', tab === 'courses');
       document.getElementById('btn-settings').classList.toggle('active', tab === 'settings');
+      document.getElementById('page-title').innerText = (tab === 'courses' ? '課程規格管理' : '全局參數設定');
       if(tab === 'settings') renderSettings();
     }
     function renderSettings() {
@@ -314,7 +458,7 @@
       globalConfig.設備範本.forEach(e => createEquipRow(list, e.項目, e.金額, e.計費類型, "g-equip-item"));
     }
     async function saveGlobalSettings() {
-      document.getElementById('loading-overlay').style.display = 'flex';
+      showLoading(true);
       const template = [];
       document.querySelectorAll('.g-equip-item').forEach(el => {
         const ins = el.querySelectorAll('input'); const sel = el.querySelector('select');
@@ -322,11 +466,13 @@
       });
       try {
         await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'adminSaveSettings', 設備範本: JSON.stringify(template), 預設匯款: document.getElementById('global-payment').value }) });
-        alert("設定更新成功。"); init();
+        alert("全域設定已同步。"); await init();
       } catch(e) { alert("同步失敗"); }
-      finally { document.getElementById('loading-overlay').style.display = 'none'; }
+      finally { showLoading(false); }
     }
+
     function closeEditor() { document.getElementById('full-editor').classList.remove('active'); }
+    function showLoading(show) { document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none'; }
     function addGlobalEquip() { createEquipRow(document.getElementById('global-equip-list'), "新設備項目", 0, "按天計費", "g-equip-item"); }
     function addCourseEquip() { createEquipRow(document.getElementById('course-equip-list'), "", 0, "按天計費", "f-equip-item"); }
     window.onload = init;
