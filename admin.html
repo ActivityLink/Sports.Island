@@ -1,4 +1,4 @@
-<!-- 檔案名稱：admin.html (LINE OA 專業版 V6.6.4 - JSON 解析與元素保護修復) -->
+<!-- 檔案名稱：admin.html (LINE OA 專業版 V6.6.5 - 完整元素保護版) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -12,7 +12,7 @@
     
     /* 側欄 (LINE OA 標準) */
     .sidebar { width: 220px; background: #FFF; border-right: 1px solid var(--border-color); height: 100vh; position: fixed; z-index: 50; }
-    .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border-color); font-weight: 900; color: var(--line-green); letter-spacing: -1px; }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border-color); font-weight: 900; color: var(--line-green); font-size: 18px; }
     .sidebar-item { padding: 16px 24px; display: block; width: 100%; text-align: left; font-weight: 500; color: #333; }
     .sidebar-item.active { background: #F0FBF5; color: var(--line-green); border-right: 4px solid var(--line-green); font-weight: 700; }
 
@@ -33,14 +33,14 @@
     .section-title::before { content: ''; width: 4px; height: 18px; background: var(--line-green); margin-right: 12px; }
 
     .input-label { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: block; }
-    .form-input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 16px; outline: none; transition: border 0.2s; }
+    .form-input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 16px; outline: none; transition: border 0.2s; color: #000; }
     .form-input:focus { border-color: var(--line-green); }
     .form-input[readonly] { background: #F3F4F6; cursor: not-allowed; }
 
     .btn-primary { background: var(--line-green); color: #FFF; padding: 10px 32px; border-radius: 4px; font-weight: 700; }
     .btn-secondary { background: #FFF; border: 1px solid #D1D5DB; padding: 10px 32px; border-radius: 4px; }
     
-    #loading-mask { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; flex-direction: column; items-center justify-center; z-index: 9999; }
+    #loading-mask { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: none; flex-direction: column; items-center justify-center; z-index: 9999; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--line-green); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -51,19 +51,22 @@
 </head>
 <body class="flex">
 
+  <!-- 讀取中遮罩 -->
   <div id="loading-mask" class="flex flex-col items-center justify-center">
     <div class="spinner"></div>
-    <p class="mt-4 font-bold">同步資料庫中...</p>
+    <p class="mt-4 font-bold text-gray-600">正在處理請求中...</p>
   </div>
 
+  <!-- 側邊導覽 -->
   <aside class="sidebar">
-    <div class="sidebar-header">LINE OA MANAGER</div>
+    <div class="sidebar-header">SI MANAGER</div>
     <nav class="mt-4">
       <button onclick="switchTab('courses')" id="btn-courses" class="sidebar-item active">課程規格管理</button>
       <button onclick="switchTab('settings')" id="btn-settings" class="sidebar-item">全局參數設定</button>
     </nav>
   </aside>
 
+  <!-- 主內容區 -->
   <main class="flex-grow ml-[220px]">
     <div class="bg-white px-10 py-4 border-b border-gray-200 font-bold text-sm">主頁面 / 課程規格管理</div>
     
@@ -90,6 +93,7 @@
     </div>
   </main>
 
+  <!-- 全螢幕編輯器 -->
   <div id="full-editor">
     <div class="editor-header shadow-sm">
       <h2 class="text-xl font-bold">編修規格數據</h2>
@@ -100,6 +104,7 @@
     </div>
 
     <div class="max-w-5xl mx-auto py-10 px-6">
+      
       <!-- 01 基礎 -->
       <div class="spec-card">
         <h3 class="section-title">01 課程基礎資料 (Templates)</h3>
@@ -158,18 +163,24 @@
         <div id="course-equip-list" class="space-y-4"></div>
       </div>
 
-      <!-- 04 營運細節 -->
+      <!-- 04 營運發布細節 -->
       <div class="spec-card">
         <h3 class="section-title">04 營運狀態與發布詳情</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div><label class="input-label">專屬匯款帳號</label><textarea id="f-paymentInfo" placeholder="請輸入帳號資訊..." rows="3" class="form-input"></textarea></div>
-          <div><label class="input-label">課程介紹與物品清單</label><textarea id="f-desc" placeholder="詳細說明..." rows="3" class="form-input"></textarea></div>
+          <div><label class="input-label">專屬匯款帳號</label><textarea id="f-paymentInfo" placeholder="銀行代碼與帳號資訊" rows="3" class="form-input"></textarea></div>
+          <div><label class="input-label">課程介紹與物品清單</label><textarea id="f-desc" placeholder="詳細課程內容說明" rows="3" class="form-input"></textarea></div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
           <div><label class="input-label">活動封面圖網址 (HTTPS)</label><input type="text" id="f-img" placeholder="https://..." class="form-input"></div>
           <div class="grid grid-cols-2 gap-4">
             <div><label class="input-label">招生人數上限</label><input type="number" id="f-limit" placeholder="名額" class="form-input font-bold"></div>
-            <div><label class="input-label">發布狀態</label><select id="f-status" class="form-input font-bold text-green-600"><option value="報名中">報名中</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option></select></div>
+            <div><label class="input-label">發布狀態</label>
+              <select id="f-status" class="form-input font-bold text-green-600">
+                <option value="報名中">報名中</option>
+                <option value="已額滿">已額滿</option>
+                <option value="停辦">停辦</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -206,11 +217,8 @@
     function renderTable() {
       document.getElementById('courseTableBody').innerHTML = courseList.map((c, i) => {
         const cat = c.category || '梯次';
-        const price = Number(c.fullPrice) || 0;
-        const early = Number(c.earlyPrice) || 0;
-        const deduction = Number(c.baseUnit) || 0;
         return `
-        <tr class="hover:bg-gray-50 transition-all font-medium">
+        <tr class="hover:bg-gray-50 transition-all font-medium border-b border-gray-100">
           <td class="px-6 py-4 font-mono text-xs text-gray-400">${c.id || 'N/A'}</td>
           <td><span class="tag tag-${cat.substring(0,2)}">${cat}</span></td>
           <td class="px-6 py-4">
@@ -218,8 +226,8 @@
             <div class="text-xs text-gray-400">${c.batch || '-'} | 教練: ${c.coach || '無'}</div>
           </td>
           <td class="px-6 py-4">
-            <div class="text-red-600 font-black">定價 $${price.toLocaleString()}</div>
-            <div class="text-[10px] text-gray-400 font-bold uppercase">早鳥 $${early.toLocaleString()} | 扣 $${deduction} / 日</div>
+            <div class="text-red-600 font-black">定價 $${(Number(c.fullPrice) || 0).toLocaleString()}</div>
+            <div class="text-[10px] text-gray-400 font-bold uppercase">早鳥 $${(Number(c.earlyPrice) || 0).toLocaleString()} | 扣 $${(Number(c.baseUnit) || 0)} / 日</div>
           </td>
           <td class="px-6 py-4 text-right">
             <button onclick="editCourse(${i})" class="text-green-600 font-bold hover:underline">編輯規格</button>
@@ -244,17 +252,27 @@
       document.getElementById('full-editor').classList.add('active'); 
     }
 
+    /**
+     * 已修復：防禦性填充表單
+     * 增加 safeSet 檢查機制，確保 ID 存在才進行賦值
+     */
     function fillForm(c) {
       const safeSet = (id, val) => {
         const el = document.getElementById(id);
-        if (el) el.value = val === undefined || val === null ? "" : val;
+        if (el) {
+          el.value = (val === undefined || val === null) ? "" : val;
+        } else {
+          console.error(`ERROR: HTML 缺少 ID 為 [${id}] 的元素，請檢查 HTML 結構。`);
+        }
       };
 
+      // 01 基礎
       safeSet('f-id', c.id); 
       safeSet('f-category', c.category || "梯次");
       safeSet('f-name', c.name); 
       safeSet('f-coach', c.coach);
       safeSet('f-batch', c.batch);
+      // 02 財務與日期
       safeSet('f-start', c.start); 
       safeSet('f-end', c.end);
       safeSet('f-baseUnit', c.baseUnit || 0); 
@@ -262,28 +280,27 @@
       safeSet('f-discountPrice', c.discountPrice || 0);
       safeSet('f-earlyPrice', c.earlyPrice || 0);
       safeSet('f-earlyDeadline', c.earlyBirdEnd);
+      // 04 營運與細節
       safeSet('f-paymentInfo', c.paymentInfo); 
       safeSet('f-desc', c.desc);
-      safeSet('f-img', c.img);
+      safeSet('f-img', c.img); // 關鍵：已在 HTML 補回
       safeSet('f-limit', c.limit || 0); 
       safeSet('f-status', c.status || "報名中");
 
+      // 03 設備加購處理
       const list = document.getElementById('course-equip-list'); 
-      list.innerHTML = "";
-      
-      // 修復：增加 JSON 格式判定保護，防止誤讀非 JSON 字串導致崩潰
-      let equipStr = c.equips || "[]";
-      if (typeof equipStr === 'string' && !equipStr.trim().startsWith('[')) {
-        console.warn("Equips field is not a JSON array. Resetting to empty list.");
-        equipStr = "[]";
+      if (list) {
+        list.innerHTML = "";
+        let equipStr = c.equips || "[]";
+        // 防止誤讀非 JSON 字串導致崩潰
+        if (typeof equipStr === 'string' && !equipStr.trim().startsWith('[')) equipStr = "[]";
+        try { 
+          const equips = JSON.parse(equipStr);
+          if (Array.isArray(equips)) {
+            equips.forEach(e => createEquipRow(list, e.項目, e.金額, e.計費類型, "f-equip-item")); 
+          }
+        } catch(err) { console.error("Equip JSON 解析失敗:", err); }
       }
-
-      try { 
-        const equips = JSON.parse(equipStr);
-        if (Array.isArray(equips)) {
-          equips.forEach(e => createEquipRow(list, e.項目, e.金額, e.計費類型, "f-equip-item")); 
-        }
-      } catch(err) { console.error("Equip Parse Error:", err); }
     }
 
     function createEquipRow(container, name = "", price = "", type = "按天計費", className = "") {
@@ -300,6 +317,12 @@
       container.appendChild(div);
     }
 
+    /** 獲取輸入值的安全函式 */
+    function safeGet(id) {
+      const el = document.getElementById(id);
+      return el ? el.value : "";
+    }
+
     async function submitCourseForm() {
       try {
         showLoading(true);
@@ -307,23 +330,29 @@
         document.querySelectorAll('.f-equip-item').forEach(el => {
           const ins = el.querySelectorAll('input'); 
           const sel = el.querySelector('select');
-          if(ins[0].value) equips.push({項目: ins[0].value, 金額: Number(ins[1].value) || 0, 計費類型: sel.value});
+          if(ins[0] && ins[0].value) equips.push({項目: ins[0].value, 金額: Number(ins[1].value) || 0, 計費類型: sel.value});
         });
 
         const data = { 
-          action: 'adminSaveCourse', id: document.getElementById('f-id').value, 
-          category: document.getElementById('f-category').value, name: document.getElementById('f-name').value, 
-          coach: document.getElementById('f-coach').value, batch: document.getElementById('f-batch').value,
-          start: document.getElementById('f-start').value, end: document.getElementById('f-end').value, 
-          baseUnit: Number(document.getElementById('f-baseUnit').value) || 0, 
-          fullPrice: Number(document.getElementById('f-fullPrice').value) || 0, 
-          discountPrice: Number(document.getElementById('f-discountPrice').value) || 0, 
-          earlyPrice: Number(document.getElementById('f-earlyPrice').value) || 0, 
-          earlyBirdEnd: document.getElementById('f-earlyDeadline').value, 
-          limit: Number(document.getElementById('f-limit').value) || 0, 
-          status: document.getElementById('f-status').value, img: document.getElementById('f-img').value, 
-          desc: document.getElementById('f-desc').value, equips: JSON.stringify(equips), 
-          paymentInfo: document.getElementById('f-paymentInfo').value 
+          action: 'adminSaveCourse', 
+          id: safeGet('f-id'), 
+          category: safeGet('f-category'), 
+          name: safeGet('f-name'), 
+          coach: safeGet('f-coach'), 
+          batch: safeGet('f-batch'),
+          start: safeGet('f-start'), 
+          end: safeGet('f-end'), 
+          baseUnit: Number(safeGet('f-baseUnit')) || 0, 
+          fullPrice: Number(safeGet('f-fullPrice')) || 0, 
+          discountPrice: Number(safeGet('f-discountPrice')) || 0, 
+          earlyPrice: Number(safeGet('f-earlyPrice')) || 0, 
+          earlyBirdEnd: safeGet('f-earlyDeadline'), 
+          limit: Number(safeGet('f-limit')) || 0, 
+          status: safeGet('f-status'), 
+          img: safeGet('f-img'), 
+          desc: safeGet('f-desc'), 
+          equips: JSON.stringify(equips), 
+          paymentInfo: safeGet('f-paymentInfo') 
         };
 
         const res = await fetch(WORKER_URL, { 
@@ -333,27 +362,42 @@
         });
         
         const result = await res.json();
-        if(result.success) { alert("儲存成功！"); await init(); closeEditor(); } 
-        else { alert("儲存失敗：" + (result.msg || "伺服器錯誤")); }
-      } catch(err) { alert("連線異常"); }
+        if(result.success) { 
+          alert("儲存成功！資料已同步至雲端。"); 
+          await init(); 
+          closeEditor(); 
+        } else {
+          alert("儲存失敗：" + (result.msg || "伺服器拒絕請求"));
+        }
+      } catch(err) { 
+        console.error("Submit Error:", err);
+        alert("通訊異常：無法連接至 API 伺服器。"); 
+      }
       finally { showLoading(false); }
     }
 
     function switchTab(tab) {
-      document.getElementById('section-courses').classList.toggle('hidden', tab !== 'courses');
-      document.getElementById('section-settings').classList.toggle('hidden', tab !== 'settings');
-      document.getElementById('btn-courses').classList.toggle('active', tab === 'courses');
-      document.getElementById('btn-settings').classList.toggle('active', tab === 'settings');
-      document.getElementById('breadcrumb').innerText = (tab === 'courses' ? '課程規格管理' : '全局參數設定');
+      const sections = ['courses', 'settings'];
+      sections.forEach(s => {
+        const el = document.getElementById('section-' + s);
+        if(el) el.classList.toggle('hidden', s !== tab);
+        const btn = document.getElementById('btn-' + s);
+        if(btn) btn.classList.toggle('active', s === tab);
+      });
+      const bread = document.getElementById('breadcrumb');
+      if(bread) bread.innerText = (tab === 'courses' ? '課程規格管理' : '全局參數設定');
       if(tab === 'settings') renderSettings();
     }
 
     function renderSettings() {
-      document.getElementById('global-payment').value = globalConfig.預設匯款 || "";
+      const payEl = document.getElementById('global-payment');
+      if(payEl) payEl.value = globalConfig.預設匯款 || "";
       const list = document.getElementById('global-equip-list'); 
-      list.innerHTML = "";
-      if (globalConfig.設備範本) {
-        globalConfig.設備範本.forEach(e => createEquipRow(list, e.項目, e.金額, e.計費類型, "g-equip-item"));
+      if (list) {
+        list.innerHTML = "";
+        if (globalConfig.設備範本) {
+          globalConfig.設備範本.forEach(e => createEquipRow(list, e.項目, e.金額, e.計費類型, "g-equip-item"));
+        }
       }
     }
 
@@ -364,21 +408,27 @@
         document.querySelectorAll('.g-equip-item').forEach(el => {
           const ins = el.querySelectorAll('input'); 
           const sel = el.querySelector('select');
-          if(ins[0].value) template.push({項目: ins[0].value, 金額: Number(ins[1].value) || 0, 計費類型: sel.value});
+          if(ins[0] && ins[0].value) template.push({項目: ins[0].value, 金額: Number(ins[1].value) || 0, 計費類型: sel.value});
         });
         const res = await fetch(WORKER_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'adminSaveSettings', 設備範本: JSON.stringify(template), 預設匯款: document.getElementById('global-payment').value }) 
+          body: JSON.stringify({ action: 'adminSaveSettings', 設備範本: JSON.stringify(template), 預設匯款: safeGet('global-payment') }) 
         });
         const result = await res.json();
-        if(result.success) { alert("全局設定已同步。"); await init(); }
-      } catch(e) { alert("同步異常"); }
+        if(result.success) { alert("全局設定已成功同步。"); await init(); }
+      } catch(e) { alert("同步異常：連線失敗"); }
       finally { showLoading(false); }
     }
 
-    function closeEditor() { document.getElementById('full-editor').classList.remove('active'); }
-    function showLoading(show) { document.getElementById('loading-mask').style.display = show ? 'flex' : 'none'; }
+    function closeEditor() { 
+      const el = document.getElementById('full-editor');
+      if(el) el.classList.remove('active'); 
+    }
+    function showLoading(show) { 
+      const el = document.getElementById('loading-mask');
+      if(el) el.style.display = show ? 'flex' : 'none'; 
+    }
     function addGlobalEquip() { createEquipRow(document.getElementById('global-equip-list'), "新設備項目", 0, "按天計費", "g-equip-item"); }
     function addCourseEquip() { createEquipRow(document.getElementById('course-equip-list'), "", 0, "按天計費", "f-equip-item"); }
     window.onload = init;
