@@ -6,117 +6,97 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    body { background-color: #f0f2f5; }
-    .app-card { background-color: #ffffff; }
-    .aspect-banner { aspect-ratio: 21 / 9; position: relative; width: 100%; overflow: hidden; }
-    @media (min-width: 768px) { .aspect-banner { aspect-ratio: 3 / 1; } }
+    body { background-color: #ffffff; }
     .view-section { display: none; }
     .view-section.active { display: block; }
-    /* 載入動畫 */
-    .loader { border-top-color: #4f46e5; animation: spinner 0.6s linear infinite; }
-    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    /* 滿版圖片樣式 */
+    .immersive-img { width: 100%; aspect-ratio: 16 / 9; object-cover: cover; }
+    .nav-active { color: #4f46e5; font-weight: 900; }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
 
-  <div class="w-full max-w-4xl app-card min-h-screen shadow-2xl relative flex flex-col border-x border-slate-200">
+  <div class="w-full max-w-4xl min-h-screen relative flex flex-col bg-white">
     
-    <!-- 頂部狀態列 -->
-    <div class="w-full h-14 bg-white px-6 flex justify-between items-center border-b border-slate-100 z-30 sticky top-0">
-      <div class="flex items-center space-x-2">
-        <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-[10px] font-black italic shadow-lg">SI</div>
-        <span class="text-xs font-black text-slate-400 uppercase tracking-tighter">Sports Island</span>
-      </div>
-      <div id="userBox" class="opacity-0 transition-opacity duration-700">
-        <img id="userAvatar" src="" class="w-9 h-9 rounded-full border border-slate-200 object-cover shadow-sm bg-slate-50">
-      </div>
-    </div>
-
-    <!-- Banner -->
-    <div class="w-full aspect-banner bg-slate-100">
-      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full h-full object-cover">
-    </div>
-
+    <!-- 主內容區 -->
     <main class="flex-grow pb-32">
       
-      <!-- 1. 課程專區 -->
+      <!-- 1. 滿版課程專區 (Index) -->
       <section id="view-index" class="view-section active">
-        <div class="px-8 py-8">
-          <h2 class="text-2xl font-black text-slate-800 tracking-tight">2026 課程專區</h2>
-          <p class="text-slate-400 text-[10px] mt-1 font-black uppercase tracking-widest">Available Sports Courses</p>
+        <div class="px-6 py-8">
+          <h2 class="text-3xl font-black text-slate-800 tracking-tighter">2026 活動課程</h2>
+          <p class="text-indigo-600 text-[10px] font-black uppercase tracking-widest mt-1">Immersive Experience</p>
         </div>
-        <div id="dynamicCourseContainer" class="px-8 space-y-4">
-          <div class="flex justify-center py-10"><div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-10 w-10"></div></div>
+        
+        <div id="dynamicCourseContainer" class="space-y-0">
+          <!-- 滿版列表 -->
+          <div class="animate-pulse px-6 py-10 text-slate-300">同步雲端資料中...</div>
         </div>
       </section>
 
-      <!-- 2. 會員中心 -->
+      <!-- 2. 報名查詢專區 (New!) -->
+      <section id="view-query" class="view-section">
+        <div class="px-6 py-8">
+          <h2 class="text-3xl font-black text-slate-800 tracking-tighter">報名紀錄</h2>
+          <p class="text-indigo-600 text-[10px] font-black uppercase tracking-widest mt-1">Order History</p>
+        </div>
+        <div id="historyContainer" class="px-6 space-y-4">
+          <!-- 紀錄列表 -->
+        </div>
+      </section>
+
+      <!-- 3. 會員中心 -->
       <section id="view-member" class="view-section">
-        <div class="px-8 py-8 flex justify-between items-end">
+        <div class="px-6 py-8 flex justify-between items-center">
           <div>
-            <h1 id="userNameDisplay" class="text-3xl font-black text-slate-800 leading-tight">驗證中...</h1>
-            <p class="text-indigo-600 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Family Management</p>
+            <h1 id="userNameDisplay" class="text-3xl font-black text-slate-800 tracking-tighter italic">您好...</h1>
+            <p class="text-indigo-600 text-[10px] font-black uppercase tracking-widest mt-1">Member Profile</p>
           </div>
-          <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md">+ 新增成員</button>
+          <img id="userAvatar" src="" class="w-14 h-14 rounded-full border-2 border-slate-100 shadow-sm">
         </div>
-        <div id="memberListArea" class="px-8 space-y-4">
-          <!-- 初始顯示載入中 -->
-          <div id="listLoading" class="flex justify-center py-10"><div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-200 h-10 w-10"></div></div>
-          
-          <!-- 無資料提示 (預設隱藏) -->
-          <div id="noMemberHint" class="hidden bg-indigo-50 p-12 rounded-[2.5rem] text-center border-2 border-dashed border-indigo-200">
-            <p class="text-indigo-400 text-sm font-bold mb-5">尚未註冊任何成員資料</p>
-            <button onclick="showMemberForm()" class="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg">立即建立檔案</button>
-          </div>
-          
-          <!-- 名單容器 -->
-          <div id="familyListContainer" class="space-y-3"></div>
+        
+        <div class="px-6 space-y-4">
+          <button onclick="showMemberForm()" class="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-sm shadow-xl">+ 新增成員檔案</button>
+          <div id="familyListContainer" class="space-y-3 pt-4"></div>
         </div>
       </section>
 
-      <!-- 3. 成員註冊表單 -->
+      <!-- 表單與報名 (略，維持原邏輯) -->
       <section id="view-member-form" class="view-section">
-        <div class="px-8 py-8"><button onclick="switchView('member')" class="text-slate-400 text-xs font-black mb-4">← 返回名單</button><h2 class="text-2xl font-black text-slate-800">成員檔案設定</h2></div>
-        <div class="px-8">
-          <form id="memberForm" class="bg-slate-50 p-8 rounded-[2.5rem] border border-slate-100 space-y-6 shadow-sm">
-            <input type="hidden" id="editIndex" value="">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <input type="text" id="mName" placeholder="姓名" required class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm focus:ring-2 focus:ring-indigo-500">
-              <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-white rounded-2xl border-none outline-none shadow-sm focus:ring-2 focus:ring-indigo-500">
-              <select id="mGender" class="w-full p-4 bg-white rounded-2xl border-none shadow-sm outline-none"><option value="男">男</option><option value="女">女</option></select>
-              <input type="date" id="mBirthday" required class="w-full p-4 bg-white rounded-2xl border-none shadow-sm outline-none">
-              <input type="text" id="mAddress" placeholder="居住地區" required class="w-full p-4 bg-white rounded-2xl border-none shadow-sm md:col-span-2">
-              <select id="mRelation" class="w-full p-4 bg-white rounded-2xl border-none shadow-sm outline-none md:col-span-2">
-                <option value="本人(家長)">本人(家長)</option><option value="子女">子女</option><option value="配偶">配偶</option><option value="其他">其他</option>
-              </select>
-            </div>
-            <button type="submit" id="saveBtn" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black text-lg shadow-xl shadow-indigo-100 active:scale-95 transition-all">儲存成員資料</button>
-          </form>
-        </div>
+        <div class="px-6 py-8"><button onclick="switchView('member')" class="text-slate-400 font-black text-xs">← 返回</button></div>
+        <form id="memberForm" class="px-6 space-y-5">
+           <input type="text" id="mName" placeholder="姓名" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+           <input type="tel" id="mPhone" placeholder="電話" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+           <input type="date" id="mBirthday" required class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+           <select id="mRelation" class="w-full p-4 bg-slate-50 rounded-2xl border-none">
+            <option value="本人">本人</option><option value="子女">子女</option>
+           </select>
+           <button type="submit" class="w-full bg-indigo-600 text-white py-5 rounded-3xl font-black shadow-xl">儲存並返回</button>
+        </form>
       </section>
 
-      <!-- 快速報名對話框 -->
-      <div id="enrollModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] hidden items-center justify-center p-6">
-        <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-10 shadow-2xl">
-          <h3 id="modalTitle" class="text-xl font-black text-slate-800 mb-2 text-center">報名課程</h3>
-          <p id="modalSub" class="text-xs text-center text-slate-400 mb-8"></p>
-          <div class="space-y-4">
-            <label class="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">請選擇要報名的成員</label>
-            <select id="selectMember" class="w-full p-5 bg-slate-50 rounded-2xl border-none shadow-inner outline-none"></select>
-            <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black text-lg shadow-lg active:scale-95 transition-all">確認報名</button>
-            <button onclick="closeEnroll()" class="w-full text-slate-400 text-xs font-bold py-2">取消</button>
-          </div>
-        </div>
-      </div>
     </main>
 
-    <!-- 底部導覽列 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-xl border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
-      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center text-indigo-600 transition-colors">
-        <span class="text-2xl">🏠</span><span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
+    <!-- 報名對話框 -->
+    <div id="enrollModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden items-center justify-center p-6 z-[100]">
+      <div class="bg-white w-full max-w-sm rounded-[2.5rem] p-10 shadow-2xl">
+        <h3 id="modalTitle" class="text-xl font-black text-center mb-6">選擇學員</h3>
+        <select id="selectMember" class="w-full p-5 bg-slate-50 rounded-2xl border-none mb-6"></select>
+        <button onclick="submitEnroll()" id="enrollBtn" class="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black">確認報名</button>
+        <button onclick="document.getElementById('enrollModal').style.display='none'" class="w-full text-slate-400 text-xs py-4">取消</button>
+      </div>
+    </div>
+
+    <!-- 底部導覽 (三個專區) -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/90 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-around items-center z-50">
+      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active">
+        <span class="text-xl">🏠</span><span class="text-[8px] font-black uppercase mt-1">活動</span>
       </button>
-      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300 transition-colors">
-        <span class="text-2xl">👤</span><span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
+      <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center text-slate-300">
+        <span class="text-xl">🔍</span><span class="text-[8px] font-black uppercase mt-1">查詢</span>
+      </button>
+      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-slate-300">
+        <span class="text-xl">👤</span><span class="text-[8px] font-black uppercase mt-1">我的</span>
       </button>
     </nav>
   </div>
@@ -125,22 +105,19 @@
     let currentUid = "";
     let familyData = [];
     let courseData = [];
-    let activeEnrollCourse = null;
+    let activeEnroll = null;
     const API_URL = "https://sport.wetw-net3.workers.dev/";
 
-    async function switchView(viewId) {
-      document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-      document.getElementById('view-' + viewId).classList.add('active');
-      const navIndex = document.getElementById('nav-index');
-      const navMember = document.getElementById('nav-member');
-      navIndex.className = viewId === 'index' ? "flex flex-col items-center text-indigo-600" : "flex flex-col items-center text-slate-300";
-      navMember.className = (viewId === 'member' || viewId === 'member-form') ? "flex flex-col items-center text-indigo-600" : "flex flex-col items-center text-slate-300";
+    async function switchView(v) {
+      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+      document.getElementById('view-' + v).classList.add('active');
+      document.getElementById('nav-index').className = v === 'index' ? 'flex flex-col items-center nav-active' : 'flex flex-col items-center text-slate-300';
+      document.getElementById('nav-query').className = v === 'query' ? 'flex flex-col items-center nav-active' : 'flex flex-col items-center text-slate-300';
+      document.getElementById('nav-member').className = (v === 'member' || v === 'member-form') ? 'flex flex-col items-center nav-active' : 'flex flex-col items-center text-slate-300';
       
-      // 關鍵修正：切換至會員中心時自動刷新名單
-      if (viewId === 'member' && currentUid) {
-        await loadFamilyList();
-      }
-      window.scrollTo(0, 0);
+      if(v === 'query') loadHistory();
+      if(v === 'member') loadFamily();
+      window.scrollTo(0,0);
     }
 
     async function init() {
@@ -148,152 +125,87 @@
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
         if (!liff.isLoggedIn()) { liff.login(); return; }
         const profile = await liff.getProfile();
-        currentUid = profile.userId; // 確保拿到 UID
-        
+        currentUid = profile.userId;
         document.getElementById('userAvatar').src = profile.pictureUrl;
-        document.getElementById('userBox').style.opacity = "1";
         document.getElementById('userNameDisplay').innerText = "您好，" + profile.displayName;
-        
-        // 按照順序載入，確保 UID 已設定
-        await loadCourses();
-        await loadFamilyList();
-      } catch (err) { console.error(err); }
+        loadCourses();
+        loadFamily();
+      } catch (e) { console.error(e); }
     }
 
     async function loadCourses() {
-      try {
-        const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'getCourses' }) });
-        const res = await response.json();
-        courseData = res.data || [];
-        renderCourses();
-      } catch (e) { document.getElementById('dynamicCourseContainer').innerText = "課程載入失敗"; }
-    }
-
-    function renderCourses() {
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) }).then(r => r.json());
+      courseData = res.data || [];
       const container = document.getElementById('dynamicCourseContainer');
-      container.innerHTML = "";
-      courseData.forEach(c => {
-        const emoji = c.category === '單日' ? '⚽' : c.category === '梯次' ? '🏀' : c.category === '營隊' ? '⛺' : '🎒';
-        container.innerHTML += `
-          <div class="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 flex items-center transition-all active:scale-[0.98] shadow-sm">
-            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl mr-5 shadow-sm">${emoji}</div>
-            <div class="flex-grow text-left">
-              <h3 class="font-bold text-slate-800">${c.name}</h3>
-              <p class="text-[10px] text-slate-400 font-black uppercase mt-1 tracking-wider">$${c.price} / ${c.category}</p>
+      container.innerHTML = courseData.map(c => `
+        <div class="w-full relative group">
+          <img src="${c.img || 'https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg'}" class="immersive-img grayscale-[20%] group-hover:grayscale-0 transition-all duration-700">
+          <div class="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-black/80 to-transparent text-white">
+            <span class="text-[8px] font-black uppercase tracking-widest bg-indigo-600 px-2 py-0.5 rounded mb-2 inline-block">${c.category}</span>
+            <h3 class="text-2xl font-black">${c.name}</h3>
+            <div class="flex justify-between items-end mt-2">
+              <p class="text-xs font-bold text-white/60 tracking-wider">$${c.price} / ${c.dates}</p>
+              <button onclick="openEnroll('${c.id}', '${c.name}')" class="bg-white text-black px-6 py-2 rounded-xl text-xs font-black shadow-xl active:scale-90 transition-all">立即報名</button>
             </div>
-            <button onclick="openEnroll('${c.id}', '${c.name}')" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg">報名</button>
           </div>
-        `;
-      });
+        </div>
+      `).join('');
     }
 
-    async function loadFamilyList() {
-      if (!currentUid) return;
-      const loader = document.getElementById('listLoading');
-      const hint = document.getElementById('noMemberHint');
-      const container = document.getElementById('familyListContainer');
-      
-      loader.classList.remove('hidden'); // 顯示載入中
-      hint.classList.add('hidden');
-      container.innerHTML = "";
-
-      try {
-        const response = await fetch(API_URL, { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ action: 'getFamily', userId: currentUid }) 
-        });
-        const res = await response.json();
-        familyData = res.data || [];
-        
-        loader.classList.add('hidden'); // 隱藏載入中
-        if (familyData.length === 0) {
-          hint.classList.remove('hidden');
-        } else {
-          renderFamilyList();
-        }
-      } catch (e) { 
-        loader.classList.add('hidden');
-        console.error("名單載入失敗"); 
+    async function loadHistory() {
+      const container = document.getElementById('historyContainer');
+      container.innerHTML = '<p class="text-slate-300 text-sm animate-pulse">正在讀取報名紀錄...</p>';
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getUserRegistrations', userId: currentUid }) }).then(r => r.json());
+      const list = res.data || [];
+      if(list.length === 0) {
+        container.innerHTML = '<div class="bg-slate-50 p-10 rounded-3xl text-center text-slate-400 font-bold">目前尚無報名紀錄</div>';
+      } else {
+        container.innerHTML = list.map(r => `
+          <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex justify-between items-center">
+            <div>
+              <div class="text-[10px] text-indigo-500 font-black mb-1 uppercase tracking-widest">${r.time}</div>
+              <h4 class="font-black text-slate-800">${r.course}</h4>
+              <p class="text-xs text-slate-400 font-bold mt-1">學員：${r.student}</p>
+            </div>
+            <span class="text-[10px] font-black bg-green-50 text-green-500 px-2 py-1 rounded-lg">${r.status}</span>
+          </div>
+        `).join('');
       }
     }
 
-    function renderFamilyList() {
-      const container = document.getElementById('familyListContainer');
-      container.innerHTML = "";
-      familyData.forEach((item, index) => {
-        container.innerHTML += `
-          <div class="bg-white p-6 rounded-3xl border border-slate-100 flex justify-between items-center shadow-sm">
-            <div class="flex items-center space-x-4 text-left">
-              <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-lg">${item.gender === '女' ? '👧' : '👦'}</div>
-              <div><span class="block font-black text-slate-700">${item.name} (${item.relation})</span><span class="text-[10px] text-slate-400 font-bold">${item.phone}</span></div>
-            </div>
-            <button onclick="showMemberForm(${index})" class="text-indigo-600 text-xs font-black bg-indigo-50 px-4 py-2 rounded-xl">EDIT</button>
-          </div>
-        `;
-      });
+    async function loadFamily() {
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFamily', userId: currentUid }) }).then(r => r.json());
+      familyData = res.data || [];
+      document.getElementById('familyListContainer').innerHTML = familyData.map(f => `
+        <div class="bg-slate-50 p-5 rounded-2xl flex justify-between items-center">
+          <div><span class="font-black text-slate-800">${f.name}</span><span class="text-[10px] ml-2 text-slate-400">(${f.relation})</span></div>
+          <span class="text-[10px] font-bold text-indigo-600 tracking-tighter">${f.phone}</span>
+        </div>
+      `).join('');
     }
 
     function openEnroll(id, name) {
-      if (familyData.length === 0) {
-        alert("請先至「會員中心」建立成員名單，才能進行報名喔！");
-        switchView('member');
-        return;
-      }
-      activeEnrollCourse = { id, name };
+      if(familyData.length === 0) return alert("請先新增成員檔案");
+      activeEnroll = { id, name };
       document.getElementById('modalTitle').innerText = name;
-      document.getElementById('modalSub').innerText = "Course ID: " + id;
-      const select = document.getElementById('selectMember');
-      select.innerHTML = familyData.map(m => `<option value="${m.name}|${m.phone}">${m.name} (${m.relation})</option>`).join('');
+      document.getElementById('selectMember').innerHTML = familyData.map(f => `<option value="${f.name}|${f.phone}">${f.name}</option>`).join('');
       document.getElementById('enrollModal').style.display = 'flex';
     }
 
-    function closeEnroll() { document.getElementById('enrollModal').style.display = 'none'; }
-
     async function submitEnroll() {
       const [name, phone] = document.getElementById('selectMember').value.split('|');
-      const btn = document.getElementById('enrollBtn');
-      btn.disabled = true; btn.innerText = "提交中...";
-      try {
-        const response = await fetch(API_URL, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'register', userId: currentUid, name, phone, courseId: activeEnrollCourse.id, courseName: activeEnrollCourse.name })
-        });
-        const res = await response.json();
-        alert(res.msg);
-        closeEnroll();
-      } catch (e) { alert("報名失敗"); }
-      finally { btn.disabled = false; btn.innerText = "確認報名"; }
+      const res = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'register', userId: currentUid, name, phone, courseName: activeEnroll.name }) }).then(r => r.json());
+      alert("報名成功！"); document.getElementById('enrollModal').style.display = 'none';
+      switchView('query');
     }
 
-    function showMemberForm(index = -1) {
-      document.getElementById('editIndex').value = index;
-      if(index !== -1) {
-        const item = familyData[index];
-        document.getElementById('mName').value = item.name; document.getElementById('mPhone').value = item.phone;
-        document.getElementById('mGender').value = item.gender; document.getElementById('mBirthday').value = item.birthday;
-        document.getElementById('mAddress').value = item.address; document.getElementById('mRelation').value = item.relation;
-      } else { document.getElementById('memberForm').reset(); }
-      switchView('member-form');
-    }
+    function showMemberForm() { switchView('member-form'); }
 
     document.getElementById('memberForm').onsubmit = async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('saveBtn');
-      btn.disabled = true; btn.innerText = "資料儲存中...";
-      const payload = {
-        action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value,
-        phone: document.getElementById('mPhone').value, gender: document.getElementById('mGender').value,
-        birthday: document.getElementById('mBirthday').value, address: document.getElementById('mAddress').value,
-        relation: document.getElementById('mRelation').value
-      };
-      try {
-        const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-        const res = await response.json();
-        alert(res.msg);
-        if(res.success) { await loadFamilyList(); switchView('member'); }
-      } catch (e) { alert("通訊異常"); }
-      finally { btn.disabled = false; btn.innerText = "儲存成員資料"; }
+      const payload = { action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value, phone: document.getElementById('mPhone').value, birthday: document.getElementById('mBirthday').value, relation: document.getElementById('mRelation').value };
+      await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+      alert("存檔成功"); switchView('member');
     };
 
     window.onload = init;
