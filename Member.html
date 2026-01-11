@@ -1,4 +1,4 @@
-<!-- 檔案名稱：Member.html (V6.8.1 - 報名金額與資料結構完整修復) -->
+<!-- 檔案名稱：Member.html (V6.8.2 - 修復動線問題完整版) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -152,12 +152,18 @@
         document.getElementById('userAvatar').src = profile.pictureUrl;
         document.getElementById('userNameDisplay').innerText = "您好, " + profile.displayName;
         
+        // ✅ 先載入課程資料
+        await loadCourses();
+        
         const urlParams = new URLSearchParams(window.location.search);
         const view = urlParams.get('view') || 'index';
-        switchView(view);
+        if (view !== 'index') {
+          switchView(view);
+        }
       } catch (err) { 
         console.error("LIFF 失敗", err);
-        switchView('index'); 
+        // ✅ 即使 LIFF 失敗也載入課程
+        await loadCourses();
       }
     }
 
@@ -171,7 +177,7 @@
       const activeNav = document.getElementById('nav-' + navKey);
       if(activeNav) activeNav.classList.add('nav-active');
 
-      if(v === 'index') loadCourses();
+      // ✅ 只有在非首次載入且是特定頁面時才重新載入資料
       if(v === 'query') loadHistory();
       if(v === 'member') loadFamily();
       window.scrollTo(0,0);
