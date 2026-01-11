@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>運動島 Sports Island</title>
 
-  <!-- Tailwind（開發用） -->
+  <!-- Tailwind（前期可接受） -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- LIFF -->
@@ -15,31 +15,12 @@
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont; }
     .nav-btn { color:#94a3b8 }
     .nav-active { color:#16a34a; font-weight:900 }
-    .debug-panel {
-      position: fixed;
-      bottom: 90px;
-      right: 12px;
-      width: 320px;
-      max-height: 50vh;
-      background: #020617;
-      color: #e5e7eb;
-      font-size: 11px;
-      border-radius: 12px;
-      padding: 12px;
-      overflow-y: auto;
-      z-index: 9999;
-      box-shadow: 0 20px 40px rgba(0,0,0,.4);
-    }
-    .debug-panel h3 { font-weight:900; margin-bottom:6px; color:#38bdf8 }
-    .debug-line { border-bottom:1px dashed #334155; padding:2px 0 }
+    .course-card { background:#fff; border-radius:16px; padding:16px; border:1px solid #e5e7eb }
   </style>
 </head>
 
 <body class="bg-slate-100 min-h-screen flex justify-center">
 
-<!-- ===================================================
-  主容器
-=================================================== -->
 <div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-xl">
 
   <!-- Header -->
@@ -50,31 +31,28 @@
     </div>
   </header>
 
-  <!-- 主內容 -->
-  <main class="flex-1 overflow-y-auto pb-32">
+  <!-- Main -->
+  <main class="flex-1 overflow-y-auto pb-28">
 
-    <!-- 課程 -->
-    <section id="view-index">
-      <div id="courseContainer" class="p-4 space-y-4 text-sm text-slate-400">
+    <!-- 活動 -->
+    <section id="view-index" class="p-4 space-y-4">
+      <div id="courseContainer" class="text-slate-400 text-sm">
         載入課程中…
       </div>
     </section>
 
     <!-- 紀錄 -->
-    <section id="view-query" class="hidden">
-      <div id="historyContainer" class="p-4 text-sm text-slate-400">
-        尚未讀取紀錄
+    <section id="view-query" class="hidden p-4 space-y-3">
+      <div id="historyContainer" class="text-slate-400 text-sm">
+        尚無紀錄
       </div>
     </section>
 
     <!-- 會員 -->
-    <section id="view-member" class="hidden">
-      <div class="p-4">
-        <button onclick="loadFamily()" class="w-full py-4 bg-black text-white rounded-xl font-bold">
-          讀取會員資料（Debug）
-        </button>
+    <section id="view-member" class="hidden p-4 space-y-3">
+      <div id="familyList" class="text-slate-400 text-sm">
+        載入會員資料中…
       </div>
-      <div id="familyList" class="p-4 space-y-3 text-sm text-slate-500"></div>
     </section>
 
   </main>
@@ -85,129 +63,42 @@
     <button id="nav-query" class="nav-btn" onclick="switchView('query')">紀錄</button>
     <button id="nav-member" class="nav-btn" onclick="switchView('member')">會員</button>
   </nav>
-</div>
 
-<!-- ===================================================
-  Debug Panel（不靠 F12）
-=================================================== -->
-<div class="debug-panel" id="debugPanel">
-  <h3>DEBUG PANEL</h3>
-  <div id="debugLog"></div>
 </div>
 
 <script>
-/* ===================================================
- * 🔒 API 設定（已鎖死 Worker）
- * =================================================== */
+/* ===============================
+ * API（鎖死 Worker）
+ * =============================== */
 const API_URL = "https://sport.wetw-net3.workers.dev/";
 
-/* ===================================================
- * Debug 工具
- * =================================================== */
-function log(msg) {
-  const el = document.getElementById('debugLog');
-  const div = document.createElement('div');
-  div.className = 'debug-line';
-  div.textContent = new Date().toLocaleTimeString() + '｜' + msg;
-  el.prepend(div);
-}
-
-/* ===================================================
- * 全域狀態
- * =================================================== */
+/* ===============================
+ * 狀態
+ * =============================== */
 let currentUid = "";
 let familyData = [];
 
-/* ===================================================
- * LIFF 初始化
- * =================================================== */
+/* ===============================
+ * 初始化
+ * =============================== */
 async function init() {
-  log("INIT START");
-  log("API_URL = " + API_URL);
+  await liff.init({ liffId: "2008792551-CzPJtVB1" });
 
-  try {
-    await liff.init({ liffId: "2008792551-CzPJtVB1" });
-    log("LIFF init OK");
-
-    if (!liff.isLoggedIn()) {
-      log("LIFF not login → redirect");
-      liff.login();
-      return;
-    }
-
-    const profile = await liff.getProfile();
-    currentUid = profile.userId;
-    document.getElementById('userAvatar').src = profile.pictureUrl;
-    log("USER = " + profile.displayName);
-
-    loadCourses();
-  } catch (e) {
-    log("LIFF ERROR: " + e.message);
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;
   }
+
+  const profile = await liff.getProfile();
+  currentUid = profile.userId;
+  document.getElementById('userAvatar').src = profile.pictureUrl;
+
+  loadCourses();
 }
 
-/* ===================================================
- * 課程
- * =================================================== */
-async function loadCourses() {
-  log("LOAD COURSES");
-
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "getCourses" })
-    });
-
-    const json = await res.json();
-    log("COURSES RESPONSE OK");
-
-    document.getElementById('courseContainer').innerHTML =
-      JSON.stringify(json.data || [], null, 2);
-  } catch (e) {
-    log("COURSES ERROR: " + e.message);
-  }
-}
-
-/* ===================================================
- * 會員（Debug 重點）
- * =================================================== */
-async function loadFamily() {
-  log("LOAD FAMILY userId=" + currentUid);
-
-  try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "getFamily",
-        userId: currentUid
-      })
-    });
-
-    const json = await res.json();
-    log("FAMILY RESPONSE = " + JSON.stringify(json));
-
-    const box = document.getElementById('familyList');
-    if (!json.data || json.data.length === 0) {
-      box.innerHTML = "<div>（無會員資料）</div>";
-      return;
-    }
-
-    box.innerHTML = json.data.map(f => `
-      <div class="border rounded p-3">
-        <div class="font-bold">${f.name}</div>
-        <div class="text-xs">${f.phone}｜${f.relation}</div>
-      </div>
-    `).join("");
-  } catch (e) {
-    log("FAMILY ERROR: " + e.message);
-  }
-}
-
-/* ===================================================
+/* ===============================
  * 切換頁面
- * =================================================== */
+ * =============================== */
 function switchView(v) {
   ["index","query","member"].forEach(k=>{
     document.getElementById("view-"+k).classList.add("hidden");
@@ -215,12 +106,97 @@ function switchView(v) {
   });
   document.getElementById("view-"+v).classList.remove("hidden");
   document.getElementById("nav-"+v).classList.add("nav-active");
-  log("SWITCH VIEW → " + v);
+
+  if (v === "member") loadFamily();
+  if (v === "query") loadHistory();
 }
 
-/* ===================================================
- * 啟動
- * =================================================== */
+/* ===============================
+ * 課程
+ * =============================== */
+async function loadCourses() {
+  const box = document.getElementById('courseContainer');
+  const res = await fetch(API_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ action:"getCourses" })
+  });
+  const json = await res.json();
+
+  if (!json.data || json.data.length === 0) {
+    box.innerHTML = "目前尚無課程";
+    return;
+  }
+
+  box.innerHTML = json.data.map(c => `
+    <div class="course-card">
+      <div class="font-black text-lg">${c.名稱}</div>
+      <div class="text-xs text-slate-400 mt-1">${c.開始} ～ ${c.結束}</div>
+      <div class="text-green-600 font-black text-xl mt-2">$${Number(c.價格 || 0)}</div>
+      <button class="mt-4 w-full py-3 bg-green-600 text-white rounded-xl font-bold">
+        報名
+      </button>
+    </div>
+  `).join("");
+}
+
+/* ===============================
+ * 會員
+ * =============================== */
+async function loadFamily() {
+  const box = document.getElementById('familyList');
+  const res = await fetch(API_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      action:"getFamily",
+      userId: currentUid
+    })
+  });
+  const json = await res.json();
+
+  if (!json.data || json.data.length === 0) {
+    box.innerHTML = "尚未建立學員資料";
+    return;
+  }
+
+  box.innerHTML = json.data.map(f => `
+    <div class="border rounded-xl p-4">
+      <div class="font-bold">${f.name}</div>
+      <div class="text-xs text-slate-400">${f.phone}｜${f.relation}</div>
+    </div>
+  `).join("");
+}
+
+/* ===============================
+ * 紀錄
+ * =============================== */
+async function loadHistory() {
+  const box = document.getElementById('historyContainer');
+  const res = await fetch(API_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      action:"getUserRegistrations",
+      userId: currentUid
+    })
+  });
+  const json = await res.json();
+
+  if (!json.data || json.data.length === 0) {
+    box.innerHTML = "尚無報名紀錄";
+    return;
+  }
+
+  box.innerHTML = json.data.map(r => `
+    <div class="border rounded-xl p-4">
+      <div class="font-bold">${r.課程}</div>
+      <div class="text-xs text-slate-400">${r.日期}</div>
+      <div class="text-right font-black">$${Number(r.金額 || 0)}</div>
+    </div>
+  `).join("");
+}
+
 window.onload = init;
 </script>
 
