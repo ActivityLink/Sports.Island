@@ -1,4 +1,4 @@
-<!-- 檔案名稱：Member.html (V6.7.9 - 報名邏輯、詳情視窗與導覽全修復) -->
+<!-- 檔案名稱：Member.html (V6.8.0 - 導覽邏輯與詳情功能全修復) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -36,22 +36,25 @@
     <!-- 讀取遮罩 -->
     <div id="loading-mask" class="fixed inset-0 bg-white/95 z-[2000] hidden flex-col items-center justify-center">
       <div class="spinner !w-10 !h-10"></div>
-      <p class="mt-4 font-bold text-gray-500 text-sm">正在同步運動島雲端資料...</p>
+      <p class="mt-4 font-bold text-gray-500 text-sm">同步資料中...</p>
     </div>
 
     <main class="flex-grow pb-32">
       
-      <!-- 1. 課程專區 (預設頁) -->
+      <!-- 1. 課程專區 -->
       <section id="view-index" class="view-section active">
         <div class="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-20 shadow-sm">
           <div class="flex items-center space-x-2">
             <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" class="w-6 h-6">
-            <h1 class="text-xl font-black tracking-tight">2026 課程報名</h1>
+            <h1 class="text-xl font-black">2026 課程報名</h1>
           </div>
-          <img id="userAvatar" class="w-10 h-10 rounded-full border shadow-sm" src="https://via.placeholder.com/40">
+          <!-- 修正：改用內嵌 SVG 避免載入失敗 -->
+          <div class="w-10 h-10 rounded-full border bg-slate-100 flex items-center justify-center overflow-hidden">
+            <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-full h-full object-cover">
+          </div>
         </div>
         <div id="courseContainer" class="p-5 space-y-4">
-           <div class="text-center py-20"><div class="spinner"></div><p class="text-slate-300 mt-2 font-bold">載入中...</p></div>
+           <div class="text-center py-20"><div class="spinner"></div><p class="text-slate-300 mt-2 font-bold uppercase">Fetching Courses...</p></div>
         </div>
       </section>
 
@@ -65,11 +68,9 @@
 
       <!-- 3. 會員中心 (學員名冊) -->
       <section id="view-member" class="view-section">
-        <div class="p-10 border-b bg-white flex justify-between items-center">
-          <div>
-            <h1 id="userNameDisplay" class="text-2xl font-black italic">您好...</h1>
-            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Profile Center</p>
-          </div>
+        <div class="p-10 border-b bg-white">
+          <h1 id="userNameDisplay" class="text-2xl font-black italic">您好...</h1>
+          <p class="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Personal Account</p>
         </div>
         <div class="p-6">
           <button onclick="showMemberForm()" class="w-full py-4 bg-black text-white rounded-xl font-bold shadow-lg">+ 建立新學員檔案</button>
@@ -79,28 +80,28 @@
 
       <!-- 4. 學員表單 -->
       <section id="view-member-form" class="view-section">
-        <div class="p-6 border-b flex items-center bg-white">
+        <div class="p-6 border-b bg-white sticky top-0 z-20 flex items-center">
           <button onclick="switchView('member')" class="text-slate-300 mr-4 font-bold text-xl">←</button>
           <h2 class="font-bold">新增學員資料</h2>
         </div>
         <form id="memberForm" class="p-8 space-y-6">
-           <input type="text" id="mName" placeholder="學員姓名" required class="w-full p-4 bg-slate-50 rounded-xl outline-none focus:border-green-500 border border-transparent">
+           <input type="text" id="mName" placeholder="學員姓名" required class="w-full p-4 bg-slate-50 rounded-xl outline-none focus:border-green-500 border border-transparent font-bold">
            <div class="grid grid-cols-2 gap-4">
-             <select id="mGender" class="p-4 bg-slate-50 rounded-xl"><option value="男">男</option><option value="女">女</option></select>
-             <input type="date" id="mBirthday" required class="p-4 bg-slate-50 rounded-xl">
+             <select id="mGender" class="w-full p-4 bg-slate-50 rounded-xl font-bold"><option value="男">男</option><option value="女">女</option></select>
+             <input type="date" id="mBirthday" required class="w-full p-4 bg-slate-50 rounded-xl font-bold">
            </div>
-           <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-slate-50 rounded-xl">
-           <select id="mRelation" class="w-full p-4 bg-slate-50 rounded-xl"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
-           <button type="submit" class="w-full py-5 bg-green-600 text-white rounded-2xl font-black shadow-lg">儲存並同步</button>
+           <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-slate-50 rounded-xl font-bold">
+           <select id="mRelation" class="w-full p-4 bg-slate-50 rounded-xl font-bold"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
+           <button type="submit" class="w-full py-5 bg-green-600 text-white rounded-2xl font-black shadow-xl">儲存學員資料</button>
         </form>
       </section>
     </main>
 
     <!-- 下方導覽列 -->
     <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 border-t border-slate-100 px-2 py-3 flex justify-around items-center z-50 shadow-2xl backdrop-blur-md">
-      <button onclick="switchView('index')" id="nav-index" class="nav-btn nav-active"><span class="text-2xl">🏠</span><span class="text-[10px] mt-1 font-bold uppercase">活動</span></button>
-      <button onclick="switchView('query')" id="nav-query" class="nav-btn"><span class="text-2xl">🔍</span><span class="text-[10px] mt-1 font-bold uppercase">紀錄</span></button>
-      <button onclick="switchView('member')" id="nav-member" class="nav-btn"><span class="text-2xl">👤</span><span class="text-[10px] mt-1 font-bold uppercase">會員</span></button>
+      <button onclick="switchView('index')" id="nav-index" class="nav-btn nav-active"><span class="text-2xl">🏠</span><span class="text-[10px] mt-1 font-bold">活動</span></button>
+      <button onclick="switchView('query')" id="nav-query" class="nav-btn"><span class="text-2xl">🔍</span><span class="text-[10px] mt-1 font-bold">紀錄</span></button>
+      <button onclick="switchView('member')" id="nav-member" class="nav-btn"><span class="text-2xl">👤</span><span class="text-[10px] mt-1 font-bold">會員</span></button>
     </nav>
 
     <!-- 報名試算彈窗 -->
@@ -110,7 +111,7 @@
           <h3 id="modalTitle" class="text-xl font-black">報名確認</h3>
           <button onclick="closeModal('enrollModal')" class="text-slate-300 text-3xl">&times;</button>
         </div>
-        <div class="space-y-6 text-sm">
+        <div class="space-y-6">
           <div><label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">1. 選擇報名學員</label><select id="selectMember" class="w-full p-4 bg-slate-50 rounded-xl border-b-2 border-green-500 font-bold"></select></div>
           <div><label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">2. 勾選【不出席】日期 (依日扣款)</label><div id="absenceBox" class="space-y-1"></div></div>
           <div class="p-6 bg-slate-900 text-white rounded-2xl">
@@ -130,7 +131,7 @@
           <button onclick="closeModal('detailModal')" class="text-slate-300 text-3xl">&times;</button>
         </div>
         <div id="detailContent" class="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap"></div>
-        <button onclick="closeModal('detailModal')" class="w-full mt-8 py-4 border rounded-xl font-bold text-slate-400">關閉</button>
+        <button onclick="closeModal('detailModal')" class="w-full mt-8 py-4 bg-slate-100 rounded-xl font-bold text-slate-500">關閉視窗</button>
       </div>
     </div>
 
@@ -152,10 +153,14 @@
         document.getElementById('userAvatar').src = profile.pictureUrl;
         document.getElementById('userNameDisplay').innerText = "您好, " + profile.displayName;
         
+        // --- 核心修正：判斷 URL 視圖參數，解決會員跳課程問題 ---
         const urlParams = new URLSearchParams(window.location.search);
         const view = urlParams.get('view') || 'index';
         switchView(view);
-      } catch (err) { switchView('index'); }
+      } catch (err) { 
+        console.error("LIFF 失敗", err);
+        switchView('index'); 
+      }
     }
 
     function switchView(v) {
@@ -168,6 +173,7 @@
       const activeNav = document.getElementById('nav-' + navKey);
       if(activeNav) activeNav.classList.add('nav-active');
 
+      // 載入資料
       if(v === 'index') loadCourses();
       if(v === 'query') loadHistory();
       if(v === 'member') loadFamily();
@@ -180,38 +186,46 @@
         const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) });
         const res = await response.json();
         courseList = res.data || [];
+        // --- 補回按鈕功能與詳情按鈕 ---
         container.innerHTML = courseList.map((c, i) => `
-          <div class="course-card p-6">
-            <span class="bg-green-50 text-green-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">${c.類別}</span>
-            <h3 class="text-lg font-black text-slate-800 mt-2">${c.名稱}</h3>
-            <p class="text-xs text-slate-400 font-medium mt-1">${c.梯次 || '-'}</p>
+          <div class="course-card p-6 border border-white">
+            <div class="flex justify-between items-start">
+               <div>
+                 <span class="bg-green-50 text-green-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">${c.類別}</span>
+                 <h3 class="text-lg font-black text-slate-800 mt-2">${c.名稱}</h3>
+                 <p class="text-xs text-slate-400 font-medium mt-1">${c.梯次 || '-'}</p>
+               </div>
+               <div class="text-right">
+                 <p class="text-[#f43f5e] font-black text-xl italic">$${(Number(c.全梯次總價) || 0).toLocaleString()}</p>
+               </div>
+            </div>
             <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-50">
-              <div class="text-[#f43f5e] font-black text-xl italic">$${(Number(c.全梯次總價) || 0).toLocaleString()}</div>
-              <div class="flex space-x-2">
-                <button onclick="openDetails(${i})" class="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl text-xs font-black">詳情</button>
-                <button onclick="openEnroll(${i})" class="bg-green-600 text-white px-6 py-2 rounded-xl text-xs font-black shadow-md active:opacity-80">報名</button>
-              </div>
+               <span class="text-[10px] text-slate-400 font-bold">📅 ${c.開始} ~ ${c.結束}</span>
+               <div class="flex space-x-2">
+                 <button onclick="openDetails(${i})" class="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl text-xs font-black">詳情</button>
+                 <button onclick="openEnroll(${i})" class="bg-green-600 text-white px-6 py-2 rounded-xl text-xs font-black shadow-md">報名</button>
+               </div>
             </div>
           </div>`).join('');
-      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">載入失敗</p>'; }
+      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">連線中心失敗</p>'; }
     }
 
     function openDetails(idx) {
       const c = courseList[idx];
       document.getElementById('detailTitle').innerText = c.名稱;
-      document.getElementById('detailContent').innerText = c.說明 || "尚無詳細介紹內容。";
+      document.getElementById('detailContent').innerText = c.說明 || "暫無詳細說明。";
       document.getElementById('detailModal').classList.add('modal-active');
     }
 
     function openEnroll(idx) {
-      if(!familyData.length) { alert("請先建立學員檔案！"); switchView('member'); return; }
+      if(!familyData.length) { alert("請先至會員中心建立學員檔案！"); switchView('member'); return; }
       activeCourse = courseList[idx];
       document.getElementById('modalTitle').innerText = activeCourse.名稱;
       document.getElementById('earlyHint').classList.toggle('hidden', !activeCourse.是否早鳥);
       
       const dates = generateDateArray(activeCourse.開始, activeCourse.結束);
       document.getElementById('absenceBox').innerHTML = dates.map((d, i) => `
-        <label class="flex items-center justify-between p-4 bg-slate-50 border rounded-xl cursor-pointer" id="abs-item-${i}">
+        <label class="flex items-center justify-between p-4 bg-slate-50 border rounded-xl cursor-pointer mb-1" id="abs-item-${i}">
           <span class="text-sm font-bold font-mono">${d}</span>
           <div class="flex items-center space-x-2">
             <span class="text-[9px] text-slate-300 font-bold">不出席</span>
@@ -228,10 +242,13 @@
       const checks = document.querySelectorAll('.abs-check');
       const absentCount = Array.from(checks).filter(c => c.checked).length;
       const totalDays = generateDateArray(activeCourse.開始, activeCourse.結束).length;
-      const attDays = totalDays - absentCount;
-      checks.forEach((c, i) => document.getElementById(`abs-item-${i}`).classList.toggle('absent-row', c.checked));
+      const attDays = Math.max(0, totalDays - absentCount);
+      
+      checks.forEach((c, i) => {
+        const item = document.getElementById(`abs-item-${i}`);
+        if(item) item.classList.toggle('absent-row', c.checked);
+      });
 
-      // 公式：總價 - (缺席天數 * 每日扣除額)
       const baseFinal = Number(activeCourse.全梯次總價) - (absentCount * Number(activeCourse.每日扣除額 || 0));
       document.getElementById('totalPrice').innerText = "$" + Math.max(0, baseFinal).toLocaleString();
       document.getElementById('attCount').innerText = attDays;
@@ -242,7 +259,7 @@
       const attDays = Number(document.getElementById('attCount').innerText);
       if(attDays <= 0) return alert("出席天數不可為 0");
       
-      btn.disabled = true; btn.innerText = "傳送中...";
+      btn.disabled = true; btn.innerText = "正在傳送...";
       const [name, phone] = document.getElementById('selectMember').value.split('|');
       const absentDates = Array.from(document.querySelectorAll('.abs-check:checked')).map(c => c.value).join(',') || "無";
 
@@ -256,8 +273,8 @@
         };
         const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
         const res = await response.json();
-        if(res.success) { alert("報名成功！"); closeModal('enrollModal'); switchView('query'); }
-      } catch(e) { alert("系統忙碌中，請稍後再試。"); }
+        if(res.success) { alert("報名已成功送出！"); closeModal('enrollModal'); switchView('query'); }
+      } catch(e) { alert("系統連線異常"); }
       finally { btn.disabled = false; btn.innerText = "確認報名並送出"; }
     }
 
@@ -276,8 +293,8 @@
               <div class="text-[10px] text-slate-400 font-bold uppercase">${f.phone} | ${f.relation}</div>
             </div>
             <span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span>
-          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">尚未建立成員</p>';
-      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">成員讀取失敗</p>'; }
+          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">目前無成員，請點擊上方按鈕建立。</p>';
+      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">載入成員失敗</p>'; }
     }
 
     async function loadHistory() {
@@ -296,8 +313,8 @@
               <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">${r.狀態}</span>
               <span class="text-lg font-black text-slate-800">$${(Number(r.金額) || 0).toLocaleString()}</span>
             </div>
-          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">目前尚無報名紀錄</p>';
-      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">紀錄讀取失敗</p>'; }
+          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">尚無任何歷史紀錄</p>';
+      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">讀取紀錄失敗</p>'; }
     }
 
     function generateDateArray(s, e) {
@@ -313,8 +330,10 @@
       e.preventDefault();
       showLoading(true);
       const payload = { action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value, gender: document.getElementById('mGender').value, phone: document.getElementById('mPhone').value, birthday: document.getElementById('mBirthday').value, relation: document.getElementById('mRelation').value };
-      await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-      showLoading(false); alert("儲存成功！"); switchView('member');
+      try {
+        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        showLoading(false); alert("學員資料儲存成功！"); switchView('member');
+      } catch(err) { showLoading(false); alert("系統忙碌中"); }
     };
 
     window.onload = init;
