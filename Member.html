@@ -144,26 +144,41 @@
     let activeCourse = null;
 
     async function init() {
+      // ✅ 先顯示載入畫面
+      showLoading(true);
+      
       try {
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        if (!liff.isLoggedIn()) { liff.login(); return; }
+        
+        // ✅ 如果未登入，立即導向登入頁面
+        if (!liff.isLoggedIn()) { 
+          showLoading(false);
+          liff.login(); 
+          return; 
+        }
+        
+        // ✅ 取得使用者資料
         const profile = await liff.getProfile();
         currentUid = profile.userId;
         document.getElementById('userAvatar').src = profile.pictureUrl;
         document.getElementById('userNameDisplay').innerText = "您好, " + profile.displayName;
         
-        // ✅ 先載入課程資料
+        // ✅ 載入課程資料
         await loadCourses();
         
+        // ✅ 隱藏載入畫面
+        showLoading(false);
+        
+        // ✅ 處理 URL 參數切換頁面
         const urlParams = new URLSearchParams(window.location.search);
         const view = urlParams.get('view') || 'index';
         if (view !== 'index') {
           switchView(view);
         }
       } catch (err) { 
-        console.error("LIFF 失敗", err);
-        // ✅ 即使 LIFF 失敗也載入課程
-        await loadCourses();
+        console.error("LIFF 初始化失敗", err);
+        showLoading(false);
+        alert("系統初始化失敗，請重新整理頁面");
       }
     }
 
@@ -368,7 +383,14 @@
     
     function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
     function showMemberForm() { document.getElementById('memberForm').reset(); switchView('member-form'); }
-    function showLoading(s) { document.getElementById('loading-mask').style.display = s ? 'flex' : 'none'; }
+    function showLoading(s) { 
+      const mask = document.getElementById('loading-mask');
+      if (s) {
+        mask.style.display = 'flex';
+      } else {
+        mask.style.display = 'none';
+      }
+    }
     
     document.getElementById('memberForm').onsubmit = async (e) => {
       e.preventDefault();
