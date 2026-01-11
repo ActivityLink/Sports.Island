@@ -5,16 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>運動島 Sports Island</title>
 
-  <!-- Tailwind（目前可用，警告可忽略） -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- LIFF -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    body { background:#f5f6f8; }
+    body { background:#f4f5f7; }
     .view { display:none; }
     .view.active { display:block; }
+    .modal { display:none; }
+    .modal.active { display:flex; }
   </style>
 </head>
 
@@ -28,12 +27,12 @@
     <img id="userAvatar" class="w-8 h-8 rounded-full" />
   </header>
 
-  <!-- Views -->
+  <!-- Main -->
   <main class="flex-grow pb-24">
 
     <!-- 活動 -->
     <section id="view-index" class="view active p-4 space-y-4">
-      <div id="courseContainer" class="space-y-4 text-center text-slate-400">
+      <div id="courseContainer" class="text-center text-slate-400">
         載入中…
       </div>
     </section>
@@ -62,17 +61,39 @@
 
 </div>
 
+<!-- 報名 Modal -->
+<div id="enrollModal" class="modal fixed inset-0 bg-black/60 items-center justify-center z-50">
+  <div class="bg-white w-full max-w-sm rounded-2xl p-6 space-y-5">
+    <h3 id="modalTitle" class="font-black text-lg">報名確認</h3>
+
+    <select id="selectMember" class="w-full p-3 rounded-xl bg-slate-100 font-bold"></select>
+
+    <div class="bg-slate-900 text-white rounded-xl p-4 text-center">
+      <div class="text-xs opacity-60 mb-1">應繳金額（由系統計算）</div>
+      <div id="modalPrice" class="text-2xl font-black">$0</div>
+    </div>
+
+    <button id="confirmBtn"
+      class="w-full bg-green-600 text-white py-3 rounded-xl font-black">
+      確認送出
+    </button>
+
+    <button onclick="closeModal()"
+      class="w-full py-2 text-slate-400 font-bold">
+      取消
+    </button>
+  </div>
+</div>
+
 <script>
 /* =====================================================
- * 全域設定（只宣告一次，避免衝突）
+ * 全域設定（只此一份）
  * ===================================================== */
 const API_URL = "https://sport.wetw-net3.workers.dev/";
-
-/* =====================================================
- * 狀態
- * ===================================================== */
 let currentUid = "";
 let courseList = [];
+let familyData = [];
+let activeCourse = null;
 
 /* =====================================================
  * 初始化
@@ -91,48 +112,42 @@ async function init() {
   document.getElementById("userAvatar").src = profile.pictureUrl;
   document.getElementById("userName").innerText = "您好，" + profile.displayName;
 
-  loadCourses();
+  await loadFamily();
+  await loadCourses();
 }
 
 /* =====================================================
- * 切換畫面
+ * View 切換
  * ===================================================== */
 function switchView(v) {
   document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
   document.getElementById("view-" + v).classList.add("active");
 
   if (v === "query") loadHistory();
-  if (v === "member") loadFamily();
 }
 
 /* =====================================================
- * 載入課程（🔥 價格已修正）
+ * 課程
  * ===================================================== */
 async function loadCourses() {
   const box = document.getElementById("courseContainer");
-  box.innerHTML = "";
 
   const res = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ action: "getCourses" })
-  }).then(r => r.json());
+    method:"POST",
+    body:JSON.stringify({ action:"getCourses" })
+  }).then(r=>r.json());
 
   courseList = res.data || [];
 
-  if (!courseList.length) {
-    box.innerHTML = "目前無課程";
-    return;
-  }
-
-  box.innerHTML = courseList.map((c, i) => `
-    <div class="p-4 rounded-xl border bg-slate-50">
+  box.innerHTML = courseList.map((c,i)=>`
+    <div class="p-4 border rounded-xl bg-slate-50">
       <div class="font-black">${c.名稱}</div>
       <div class="text-xs text-slate-400">${c.開始} ～ ${c.結束}</div>
       <div class="text-green-600 font-black mt-2">
-        $${Number(c.價格 || 0).toLocaleString()}
+        $${Number(c.價格||0).toLocaleString()}
       </div>
       <button class="mt-3 w-full bg-green-600 text-white py-2 rounded-xl font-bold"
-        onclick="alert('下一步接報名流程')">
+        onclick="openEnroll(${i})">
         報名
       </button>
     </div>
@@ -140,58 +155,97 @@ async function loadCourses() {
 }
 
 /* =====================================================
- * 歷史紀錄
+ * 報名 Modal（🔥 價格由後端回傳）
  * ===================================================== */
-async function loadHistory() {
-  const box = document.getElementById("historyContainer");
-  box.innerHTML = "載入中…";
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ action: "getUserRegistrations", userId: currentUid })
-  }).then(r => r.json());
-
-  const list = res.data || [];
-  if (!list.length) {
-    box.innerHTML = "尚無紀錄";
+function openEnroll(idx){
+  if(!familyData.length){
+    alert("請先建立學員資料");
+    switchView("member");
     return;
   }
 
-  box.innerHTML = list.map(r => `
-    <div class="p-4 border rounded-xl">
-      <div class="font-bold">${r.課程}</div>
-      <div class="text-xs text-slate-400">${r.日期}</div>
-      <div class="font-black mt-1">$${Number(r.金額 || 0).toLocaleString()}</div>
-    </div>
-  `).join("");
+  activeCourse = courseList[idx];
+  document.getElementById("modalTitle").innerText = activeCourse.名稱;
+
+  document.getElementById("selectMember").innerHTML =
+    familyData.map(f=>`<option value="${f.name}|${f.phone}">${f.name}</option>`).join("");
+
+  document.getElementById("modalPrice").innerText = "計算中…";
+  document.getElementById("enrollModal").classList.add("active");
+
+  // 🔥 向後端要最終價格
+  fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"registerPreview",
+      courseId: activeCourse.id
+    })
+  }).then(r=>r.json())
+    .then(res=>{
+      document.getElementById("modalPrice").innerText =
+        "$" + Number(res.finalPrice||0).toLocaleString();
+    });
+
+  document.getElementById("confirmBtn").onclick = submitEnroll;
+}
+
+function closeModal(){
+  document.getElementById("enrollModal").classList.remove("active");
 }
 
 /* =====================================================
- * 家庭成員
+ * 送出報名（🔥 完全由後端算價）
  * ===================================================== */
-async function loadFamily() {
-  const box = document.getElementById("familyList");
-  box.innerHTML = "載入中…";
+async function submitEnroll(){
+  const [name, phone] =
+    document.getElementById("selectMember").value.split("|");
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ action: "getFamily", userId: currentUid })
-  }).then(r => r.json());
+  const res = await fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({
+      action:"register",
+      userId: currentUid,
+      name,
+      phone,
+      courseId: activeCourse.id
+    })
+  }).then(r=>r.json());
 
-  const list = res.data || [];
-  if (!list.length) {
-    box.innerHTML = "尚無學員";
-    return;
+  if(res.success){
+    alert("報名成功\n金額 $" + res.data.paidAmount.toLocaleString());
+    closeModal();
+    switchView("query");
+  }else{
+    alert("失敗：" + res.msg);
   }
+}
 
-  box.innerHTML = list.map(f => `
-    <div class="p-3 border rounded-xl flex justify-between">
-      <div>
-        <div class="font-bold">${f.name}</div>
-        <div class="text-xs text-slate-400">${f.relation}</div>
-      </div>
+/* =====================================================
+ * 家庭 & 紀錄
+ * ===================================================== */
+async function loadFamily(){
+  const res = await fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({ action:"getFamily", userId:currentUid })
+  }).then(r=>r.json());
+  familyData = res.data || [];
+}
+
+async function loadHistory(){
+  const box = document.getElementById("historyContainer");
+
+  const res = await fetch(API_URL,{
+    method:"POST",
+    body:JSON.stringify({ action:"getUserRegistrations", userId:currentUid })
+  }).then(r=>r.json());
+
+  box.innerHTML = (res.data||[]).map(r=>`
+    <div class="p-4 border rounded-xl">
+      <div class="font-bold">${r.課程}</div>
+      <div class="text-xs text-slate-400">${r.日期}</div>
+      <div class="font-black">$${Number(r.金額).toLocaleString()}</div>
     </div>
-  `).join("");
+  `).join("") || "尚無紀錄";
 }
 
 window.onload = init;
