@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>運動島 Sports Island</title>
 
-  <!-- Tailwind（前期可接受） -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- LIFF -->
@@ -16,6 +16,8 @@
     .nav-btn { color:#94a3b8 }
     .nav-active { color:#16a34a; font-weight:900 }
     .course-card { background:#fff; border-radius:16px; padding:16px; border:1px solid #e5e7eb }
+    .member-card { border:1px solid #e5e7eb; border-radius:14px; padding:14px; cursor:pointer }
+    .member-active { border-color:#16a34a; background:#f0fdf4 }
   </style>
 </head>
 
@@ -30,6 +32,15 @@
       <img id="userAvatar" class="w-full h-full object-cover">
     </div>
   </header>
+
+  <!-- ✅ BANNER -->
+  <div class="w-full">
+    <img
+      src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
+      class="w-full object-cover"
+      alt="運動島 Banner"
+    >
+  </div>
 
   <!-- Main -->
   <main class="flex-1 overflow-y-auto pb-28">
@@ -50,7 +61,8 @@
 
     <!-- 會員 -->
     <section id="view-member" class="hidden p-4 space-y-3">
-      <div id="familyList" class="text-slate-400 text-sm">
+      <p class="text-xs text-slate-400 font-bold uppercase">選擇學員</p>
+      <div id="familyList" class="space-y-3">
         載入會員資料中…
       </div>
     </section>
@@ -76,7 +88,7 @@ const API_URL = "https://sport.wetw-net3.workers.dev/";
  * 狀態
  * =============================== */
 let currentUid = "";
-let familyData = [];
+let selectedMemberIndex = null;
 
 /* ===============================
  * 初始化
@@ -141,10 +153,12 @@ async function loadCourses() {
 }
 
 /* ===============================
- * 會員
+ * 會員（可點擊）
  * =============================== */
 async function loadFamily() {
   const box = document.getElementById('familyList');
+  box.innerHTML = "讀取中…";
+
   const res = await fetch(API_URL, {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -160,12 +174,29 @@ async function loadFamily() {
     return;
   }
 
-  box.innerHTML = json.data.map(f => `
-    <div class="border rounded-xl p-4">
+  selectedMemberIndex = null;
+
+  box.innerHTML = json.data.map((f, i) => `
+    <div
+      class="member-card"
+      id="member-${i}"
+      onclick="selectMember(${i})"
+    >
       <div class="font-bold">${f.name}</div>
       <div class="text-xs text-slate-400">${f.phone}｜${f.relation}</div>
     </div>
   `).join("");
+}
+
+function selectMember(idx) {
+  document.querySelectorAll('.member-card').forEach(el => {
+    el.classList.remove('member-active');
+  });
+  const target = document.getElementById('member-' + idx);
+  if (target) {
+    target.classList.add('member-active');
+    selectedMemberIndex = idx;
+  }
 }
 
 /* ===============================
