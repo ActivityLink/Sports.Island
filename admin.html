@@ -1,92 +1,118 @@
-<!-- 檔案名稱：admin.html (V6.7.0 修復版) -->
+<!-- 檔案名稱：admin.html (V6.7.1 - 編輯與複製按鈕修復) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
-  <title>LINE OA Manager | 運動島</title>
+  <title>LINE OA Manager | 運動島管理中心</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-    :root { --line-green: #06C755; --bg: #F4F5F7; }
+    :root { --line-green: #06C755; --bg: #F4F5F7; --border: #E7E9ED; }
     body { background-color: var(--bg); font-family: 'Noto Sans TC', sans-serif; color: #000; margin: 0; }
-    .sidebar { width: 220px; background: #FFF; border-right: 1px solid #E7E9ED; height: 100vh; position: fixed; }
+    
+    .sidebar { width: 220px; background: #FFF; border-right: 1px solid var(--border); height: 100vh; position: fixed; z-index: 50; }
     .sidebar-item { padding: 16px 24px; display: block; width: 100%; text-align: left; font-weight: 500; }
     .sidebar-item.active { background: #F0FBF5; color: var(--line-green); border-right: 4px solid var(--line-green); font-weight: 700; }
+
     #full-editor { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 1000; overflow-y: auto; }
     #full-editor.active { display: block; }
-    .spec-card { background: #FFF; border: 1px solid #E7E9ED; border-radius: 8px; padding: 40px; margin: 30px auto; max-width: 1000px; }
-    .input-label { font-size: 14px; font-weight: 700; margin-bottom: 8px; display: block; }
-    .form-input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 4px; font-size: 16px; outline: none; color: #000; }
+    .spec-card { background: #FFF; border: 1px solid var(--border); border-radius: 8px; padding: 40px; margin: 30px auto; max-width: 1000px; }
+    
     .btn-primary { background: var(--line-green); color: #FFF; padding: 10px 32px; border-radius: 4px; font-weight: 700; }
-    #loading-mask { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: none; flex-direction: column; items-center justify-center; z-index: 9999; }
+    .btn-copy { background: #000; color: #FFF; padding: 5px 12px; border-radius: 4px; font-size: 12px; }
+    .btn-edit { border: 1px solid var(--line-green); color: var(--line-green); padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; }
+
+    #loading-mask { position: fixed; inset: 0; background: rgba(255,255,255,0.85); display: none; flex-direction: column; items-center justify-center; z-index: 9999; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--line-green); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="flex">
+
   <div id="loading-mask" class="flex flex-col items-center justify-center"><div class="spinner"></div></div>
+
   <aside class="sidebar">
-    <div class="p-6 border-b font-black text-line-green">LINE OA MANAGER</div>
+    <div class="p-6 border-b font-black text-sm text-green-600">LINE OA MANAGER</div>
     <nav class="mt-4">
       <button onclick="switchTab('courses')" id="btn-courses" class="sidebar-item active">課程規格管理</button>
       <button onclick="switchTab('settings')" id="btn-settings" class="sidebar-item">全局參數設定</button>
     </nav>
   </aside>
+
   <main class="flex-grow ml-[220px] p-10">
     <div class="flex justify-between items-end mb-8">
-      <h2 class="text-2xl font-bold">課程規格列表</h2>
+      <div><h2 class="text-2xl font-bold">所有課程清單</h2><p class="text-gray-400 text-sm">管理營運規格、複製範本與同步資料。</p></div>
       <button onclick="openNewCourse()" class="btn-primary">+ 新增規格</button>
     </div>
-    <div class="bg-white rounded-lg border overflow-hidden">
+
+    <div class="bg-white rounded-lg border overflow-hidden shadow-sm">
       <table class="w-full text-left">
         <thead class="bg-gray-50 border-b">
-          <tr><th class="p-4">編號</th><th class="p-4">類別</th><th class="p-4">名稱 / 梯次</th><th class="p-4 text-right">管理</th></tr>
+          <tr>
+            <th class="p-4 text-xs font-bold text-gray-500 uppercase">編號</th>
+            <th class="p-4 text-xs font-bold text-gray-500 uppercase">名稱 / 梯次</th>
+            <th class="p-4 text-xs font-bold text-gray-500 uppercase">財務設定</th>
+            <th class="p-4 text-right">操作</th>
+          </tr>
         </thead>
         <tbody id="courseTableBody"></tbody>
       </table>
     </div>
   </main>
 
+  <!-- 全螢幕編輯器 -->
   <div id="full-editor">
-    <div class="bg-white p-6 border-b flex justify-between sticky top-0 z-10">
-      <h2 class="text-xl font-bold">編修規格數據</h2>
-      <div class="space-x-4"><button onclick="closeEditor()" class="px-6 py-2 border rounded">取消</button><button onclick="submitCourseForm()" class="btn-primary">儲存同步</button></div>
+    <div class="bg-white p-6 border-b flex justify-between items-center sticky top-0 z-10 shadow-sm">
+      <h2 class="text-xl font-black">編修規格核心數據</h2>
+      <div class="space-x-4">
+        <button onclick="closeEditor()" class="px-6 py-2 border rounded-md font-bold text-gray-400">取消並返回</button>
+        <button onclick="submitCourseForm()" class="btn-primary">儲存並同步</button>
+      </div>
     </div>
     <div class="max-w-5xl mx-auto py-10 px-6">
-      <div class="spec-card">
-        <h3 class="font-bold mb-6 border-l-4 border-green-500 pl-4">01 基礎資料</h3>
+      <div class="spec-card shadow-sm">
+        <h3 class="font-bold mb-8 border-l-4 border-green-500 pl-4">01 基礎資料與分類</h3>
         <div class="grid grid-cols-4 gap-6">
-          <input type="hidden" id="f-id">
-          <div class="col-span-1"><label class="input-label">類別</label><select id="f-category" class="form-input"><option value="梯次">梯次</option><option value="單日">單日</option><option value="營隊">營隊</option><option value="課後">課後班</option></select></div>
-          <div class="col-span-3"><label class="input-label">課程全名</label><input type="text" id="f-name" class="form-input font-bold"></div>
+          <div><label class="input-label font-bold text-xs">編號 (自動)</label><input type="text" id="f-id" readonly class="form-input font-mono bg-gray-50"></div>
+          <div><label class="input-label font-bold text-xs">類別</label>
+            <select id="f-category" class="form-input">
+              <option value="梯次">梯次課程</option><option value="單日">單日課程</option><option value="營隊">營隊專區</option><option value="課後">課後班</option>
+            </select>
+          </div>
+          <div class="col-span-2"><label class="input-label font-bold text-xs">課程全名</label><input type="text" id="f-name" class="form-input font-bold text-lg"></div>
+        </div>
+        <div class="grid grid-cols-2 gap-6 mt-8">
+           <input type="text" id="f-coach" placeholder="負責教練" class="form-input">
+           <input type="text" id="f-batch" placeholder="梯次代號 (例如：A 梯)" class="form-input">
         </div>
       </div>
-      <div class="spec-card">
-        <h3 class="font-bold mb-6 border-l-4 border-green-500 pl-4">02 財務收費</h3>
+
+      <div class="spec-card shadow-sm">
+        <h3 class="font-bold mb-8 border-l-4 border-green-500 pl-4">02 財務與日期參數</h3>
         <div class="grid grid-cols-4 gap-6">
-          <div><label class="input-label">課程費用</label><input type="number" id="f-fullPrice" class="form-input"></div>
-          <div><label class="input-label">優惠價</label><input type="number" id="f-discountPrice" class="form-input"></div>
-          <div><label class="input-label">早鳥價</label><input type="number" id="f-earlyPrice" class="form-input"></div>
-          <div><label class="input-label text-red-500">請假預扣金/日</label><input type="number" id="f-baseUnit" class="form-input"></div>
+          <div><label class="input-label text-xs">課程費用</label><input type="number" id="f-fullPrice" class="form-input font-bold"></div>
+          <div><label class="input-label text-xs">優惠價</label><input type="number" id="f-discountPrice" class="form-input"></div>
+          <div><label class="input-label text-xs">早鳥價</label><input type="number" id="f-earlyPrice" class="form-input text-green-600 font-bold"></div>
+          <div><label class="input-label text-xs text-red-500">請假預扣金/日</label><input type="number" id="f-baseUnit" class="form-input border-red-200"></div>
         </div>
-        <div class="grid grid-cols-3 gap-6 mt-6">
-          <div><label class="input-label">早鳥截止</label><input type="date" id="f-earlyDeadline" class="form-input"></div>
-          <div><label class="input-label">開始日期</label><input type="date" id="f-start" class="form-input"></div>
-          <div><label class="input-label">結束日期</label><input type="date" id="f-end" class="form-input"></div>
+        <div class="grid grid-cols-3 gap-6 mt-8">
+           <div><label class="input-label text-xs">早鳥截止</label><input type="date" id="f-earlyDeadline" class="form-input"></div>
+           <div><label class="input-label text-xs">開始日期</label><input type="date" id="f-start" class="form-input"></div>
+           <div><label class="input-label text-xs">結束日期</label><input type="date" id="f-end" class="form-input"></div>
         </div>
       </div>
-      <div id="course-equip-list" class="spec-card space-y-4"></div>
-      <div class="spec-card">
-        <h3 class="font-bold mb-6 border-l-4 border-green-500 pl-4">04 營運發布</h3>
-        <div class="grid grid-cols-2 gap-6">
-          <textarea id="f-paymentInfo" placeholder="匯款帳號" rows="3" class="form-input"></textarea>
-          <textarea id="f-desc" placeholder="詳細說明" rows="3" class="form-input"></textarea>
+
+      <div class="spec-card shadow-sm">
+        <h3 class="font-bold mb-8 border-l-4 border-green-500 pl-4">03 營運發布詳情</h3>
+        <div class="grid grid-cols-2 gap-8">
+           <textarea id="f-paymentInfo" placeholder="匯款帳號" rows="3" class="form-input text-sm"></textarea>
+           <textarea id="f-desc" placeholder="詳細說明與攜帶物品" rows="3" class="form-input text-sm"></textarea>
         </div>
-        <div class="grid grid-cols-3 gap-6 mt-6">
-          <div class="col-span-2"><label class="input-label">封面網址</label><input type="text" id="f-img" class="form-input"></div>
-          <div><label class="input-label">狀態</label><select id="f-status" class="form-input text-green-600 font-bold"><option value="報名中">報名中</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option></select></div>
+        <div class="grid grid-cols-3 gap-6 mt-8">
+           <div class="col-span-2"><label class="input-label text-xs">封面圖網址</label><input type="text" id="f-img" class="form-input text-xs font-mono"></div>
+           <div><label class="input-label text-xs">招生狀態</label><select id="f-status" class="form-input font-bold text-green-600"><option value="報名中">報名中</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option></select></div>
         </div>
-        <input type="hidden" id="f-limit" value="50">
+        <input type="hidden" id="f-equips" value="[]">
       </div>
     </div>
   </div>
@@ -94,27 +120,63 @@
   <script>
     const API = "https://sport.wetw-net3.workers.dev/";
     let courseList = [];
+
     async function init() {
       showLoading(true);
-      const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'adminGetData' }) }).then(r => r.json());
-      courseList = res.課程 || [];
-      render();
-      showLoading(false);
+      try {
+        const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'adminGetData' }) }).then(r => r.json());
+        courseList = res.課程 || [];
+        renderTable();
+      } catch(e) { alert("連線失敗"); }
+      finally { showLoading(false); }
     }
-    function render() {
+
+    function renderTable() {
       document.getElementById('courseTableBody').innerHTML = courseList.map((c, i) => `
-        <tr class="border-b hover:bg-gray-50 transition-all">
-          <td class="p-4 font-mono text-xs text-gray-400">${c.id}</td>
-          <td class="p-4"><span class="px-2 py-1 bg-gray-100 rounded text-xs">${c.category}</span></td>
-          <td class="p-4"><div class="font-bold">${c.name}</div><div class="text-xs text-gray-400">${c.batch || '-'}</div></td>
-          <td class="p-4 text-right"><button onclick="editCourse(${i})" class="text-green-600 font-bold">編輯規格</button></td>
+        <tr class="border-b hover:bg-gray-50 transition-all font-medium">
+          <td class="p-4 font-mono text-[10px] text-gray-400">${c.id}</td>
+          <td class="p-4">
+            <div class="font-bold text-black">${c.name}</div>
+            <div class="text-[10px] text-gray-400 mt-0.5">${c.batch || '-'} | 教練: ${c.coach}</div>
+          </td>
+          <td class="p-4">
+            <div class="text-red-500 font-bold">$${(Number(c.fullPrice)||0).toLocaleString()}</div>
+            <div class="text-[9px] text-gray-400">扣除: $${c.baseUnit}/日</div>
+          </td>
+          <td class="p-4 text-right space-x-2">
+            <button onclick="editCourse(${i})" class="btn-edit">編輯</button>
+            <button onclick="cloneCourse(${i})" class="btn-copy">複製</button>
+          </td>
         </tr>`).join('');
     }
+
+    function openNewCourse() {
+      document.getElementById('f-id').value = "C" + Date.now();
+      document.getElementById('f-name').value = "";
+      document.getElementById('f-fullPrice').value = 0;
+      document.getElementById('full-editor').classList.add('active');
+    }
+
     function editCourse(idx) {
       const c = courseList[idx];
-      document.getElementById('f-id').value = c.id;
+      fillForm(c);
+      document.getElementById('full-editor').classList.add('active');
+    }
+
+    function cloneCourse(idx) {
+      const c = Object.assign({}, courseList[idx]); // 淺拷貝
+      c.id = "C" + Date.now(); // 產生新 ID
+      c.name = c.name + " (複製)";
+      fillForm(c);
+      document.getElementById('full-editor').classList.add('active');
+    }
+
+    function fillForm(c) {
+      document.getElementById('f-id').value = c.id || "";
       document.getElementById('f-category').value = c.category || "梯次";
       document.getElementById('f-name').value = c.name || "";
+      document.getElementById('f-coach').value = c.coach || "";
+      document.getElementById('f-batch').value = c.batch || "";
       document.getElementById('f-fullPrice').value = c.fullPrice || 0;
       document.getElementById('f-discountPrice').value = c.discountPrice || 0;
       document.getElementById('f-earlyPrice').value = c.earlyPrice || 0;
@@ -126,27 +188,38 @@
       document.getElementById('f-desc').value = c.desc || "";
       document.getElementById('f-img').value = c.img || "";
       document.getElementById('f-status').value = c.status || "報名中";
-      document.getElementById('full-editor').classList.add('active');
+      document.getElementById('f-equips').value = c.equips || "[]";
     }
+
     async function submitCourseForm() {
       showLoading(true);
       const data = {
-        action: 'adminSaveCourse', id: document.getElementById('f-id').value,
-        category: document.getElementById('f-category').value, name: document.getElementById('f-name').value,
-        fullPrice: document.getElementById('f-fullPrice').value, discountPrice: document.getElementById('f-discountPrice').value,
-        earlyPrice: document.getElementById('f-earlyPrice').value, baseUnit: document.getElementById('f-baseUnit').value,
-        earlyBirdEnd: document.getElementById('f-earlyDeadline').value, start: document.getElementById('f-start').value,
-        end: document.getElementById('f-end').value, status: document.getElementById('f-status').value,
-        img: document.getElementById('f-img').value, desc: document.getElementById('f-desc').value,
-        paymentInfo: document.getElementById('f-paymentInfo').value, limit: 50, equips: "[]"
+        action: 'adminSaveCourse',
+        id: document.getElementById('f-id').value,
+        category: document.getElementById('f-category').value,
+        name: document.getElementById('f-name').value,
+        coach: document.getElementById('f-coach').value,
+        batch: document.getElementById('f-batch').value,
+        fullPrice: document.getElementById('f-fullPrice').value,
+        discountPrice: document.getElementById('f-discountPrice').value,
+        earlyPrice: document.getElementById('f-earlyPrice').value,
+        baseUnit: document.getElementById('f-baseUnit').value,
+        earlyBirdEnd: document.getElementById('f-earlyDeadline').value,
+        start: document.getElementById('f-start').value,
+        end: document.getElementById('f-end').value,
+        paymentInfo: document.getElementById('f-paymentInfo').value,
+        desc: document.getElementById('f-desc').value,
+        img: document.getElementById('f-img').value,
+        status: document.getElementById('f-status').value,
+        limit: 50,
+        equips: document.getElementById('f-equips').value
       };
       await fetch(API, { method: 'POST', body: JSON.stringify(data) });
-      alert("儲存成功！"); init(); closeEditor();
+      alert("資料已同步至雲端。");
+      init();
+      closeEditor();
     }
-    function openNewCourse() {
-      document.getElementById('f-id').value = "C" + Date.now();
-      document.getElementById('full-editor').classList.add('active');
-    }
+
     function closeEditor() { document.getElementById('full-editor').classList.remove('active'); }
     function showLoading(s) { document.getElementById('loading-mask').style.display = s ? 'flex' : 'none'; }
     window.onload = init;
