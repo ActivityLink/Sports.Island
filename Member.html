@@ -1,69 +1,76 @@
-<!-- 檔案名稱：web/Member.html (V6.7.1 - 導覽切換邏輯修復) -->
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">a<!-- 檔案名稱：web/Member.html (V6.7.7 - 修正編譯錯誤與函式定義) -->
+<!-- 檔案名稱：web/Member.html (V6.7.8 - 解決重複宣告與連線異常) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>運動島 Sports Island</title>
+  <!-- 導入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 導入 LINE SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
     :root { --line-green: #06C755; --bg-gray: #F4F5F7; }
     body { background-color: var(--bg-gray); font-family: 'Noto Sans TC', sans-serif; color: #333; margin: 0; }
+    
     .view-section { display: none; }
     .view-section.active { display: block; }
-    .nav-btn { color: #94a3b8; transition: color 0.2s; border: none; background: none; cursor: pointer; }
+    
+    .nav-btn { color: #94a3b8; transition: color 0.2s; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     .nav-active { color: var(--line-green) !important; font-weight: 900; }
+    
+    .course-card { background: white; border-radius: 20px; border: 1px solid #E7E9ED; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
     .absent-row { background-color: #fff1f2; color: #e11d48; text-decoration: line-through; opacity: 0.7; }
-    .course-card { background: white; border-radius: 20px; border: 1px solid #E7E9ED; overflow: hidden; }
+    
+    /* 圓角進度動畫 */
+    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--line-green); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="min-h-screen flex justify-center">
 
   <div class="w-full max-w-md bg-white min-h-screen relative flex flex-col shadow-xl">
     
-    <!-- 讀取遮罩 -->
+    <!-- 讀取遮罩 (僅全域載入時顯示) -->
     <div id="loading-mask" class="fixed inset-0 bg-white/95 z-[2000] hidden flex-col items-center justify-center">
-      <div class="w-10 h-10 border-4 border-gray-100 border-t-green-500 rounded-full animate-spin"></div>
-      <p class="mt-4 font-bold text-gray-500 text-sm text-center">同步雲端資料中...</p>
+      <div class="spinner !w-10 !h-10"></div>
+      <p class="mt-4 font-bold text-gray-500 text-sm">正在同步運動島雲端資料...</p>
     </div>
 
     <main class="flex-grow pb-32">
-      <!-- 1. 活動列表 (課程區) -->
+      
+      <!-- 1. 活動列表 (預設首頁) -->
       <section id="view-index" class="view-section active">
         <div class="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-20">
           <div class="flex items-center space-x-2">
             <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" class="w-6 h-6" alt="LINE">
-            <h1 class="text-xl font-black">2026 課程報名</h1>
+            <h1 class="text-xl font-black tracking-tight text-slate-800">2026 課程報名</h1>
           </div>
-          <img id="userAvatar" class="w-10 h-10 rounded-full border shadow-sm" src="https://via.placeholder.com/40" alt="Avatar">
+          <img id="userAvatar" class="w-10 h-10 rounded-full border shadow-sm" src="https://via.placeholder.com/40">
         </div>
         <div id="courseContainer" class="p-5 space-y-4">
-           <p class="text-center py-20 text-slate-300 animate-pulse font-bold">載入課程中...</p>
+           <div class="text-center py-20"><div class="spinner"></div><p class="text-slate-300 mt-2 font-bold">載入課程中...</p></div>
         </div>
       </section>
 
-      <!-- 2. 報名紀錄 (紀錄區) -->
+      <!-- 2. 報名紀錄 -->
       <section id="view-query" class="view-section">
         <div class="p-6 border-b bg-white sticky top-0 z-20">
           <h2 class="text-xl font-black">歷史報名查詢</h2>
-          <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Enrollment History</p>
+          <p class="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">Registration Records</p>
         </div>
         <div id="historyContainer" class="p-5 space-y-4">
-           <p class="text-center py-20 text-slate-300 font-medium">正在取得紀錄...</p>
+           <div class="text-center py-20 text-slate-300 font-medium">正在取得紀錄...</div>
         </div>
       </section>
 
-      <!-- 3. 會員中心 (成員區) -->
+      <!-- 3. 會員中心 (學員名冊) -->
       <section id="view-member" class="view-section">
         <div class="p-10 border-b bg-white flex justify-between items-center">
           <div>
-            <h1 id="userName" class="text-2xl font-black italic text-slate-800">您好...</h1>
-            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Personal Center</p>
+            <h1 id="userNameDisplay" class="text-2xl font-black italic text-slate-800">您好...</h1>
+            <p class="text-xs text-slate-400 font-bold uppercase mt-1">Profile Center</p>
           </div>
         </div>
         <div class="p-6">
@@ -76,76 +83,101 @@
       <section id="view-member-form" class="view-section">
         <div class="p-6 border-b flex items-center bg-white">
           <button onclick="switchView('member')" class="text-slate-300 mr-4 font-bold text-xl">←</button>
-          <h2 class="font-bold">新增學員資料</h2>
+          <h2 class="font-bold text-slate-800">新增學員資料</h2>
         </div>
         <form id="memberForm" class="p-8 space-y-6">
-           <input type="text" id="mName" placeholder="學員姓名" required class="w-full p-4 bg-slate-50 rounded-xl outline-none border focus:border-green-500">
-           <div class="grid grid-cols-2 gap-4">
-             <select id="mGender" class="p-4 bg-slate-50 rounded-xl outline-none"><option value="男">男</option><option value="女">女</option></select>
-             <input type="date" id="mBirthday" required class="p-4 bg-slate-50 rounded-xl outline-none">
+           <div>
+             <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">學員本名</label>
+             <input type="text" id="mName" placeholder="學生姓名" required class="w-full p-4 bg-slate-50 rounded-xl outline-none border border-transparent focus:border-green-500">
            </div>
-           <input type="tel" id="mPhone" placeholder="家長電話" required class="w-full p-4 bg-slate-50 rounded-xl outline-none">
-           <select id="mRelation" class="w-full p-4 bg-slate-50 rounded-xl outline-none"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
-           <button type="submit" class="w-full py-5 bg-green-600 text-white rounded-2xl font-black shadow-lg">儲存並同步</button>
+           <div class="grid grid-cols-2 gap-4">
+             <div>
+               <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">性別</label>
+               <select id="mGender" class="w-full p-4 bg-slate-50 rounded-xl outline-none"><option value="男">男</option><option value="女">女</option></select>
+             </div>
+             <div>
+               <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">生日</label>
+               <input type="date" id="mBirthday" required class="w-full p-4 bg-slate-50 rounded-xl">
+             </div>
+           </div>
+           <div>
+             <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">聯絡電話</label>
+             <input type="tel" id="mPhone" placeholder="家長/學生電話" required class="w-full p-4 bg-slate-50 rounded-xl">
+           </div>
+           <div>
+             <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">與您的關係</label>
+             <select id="mRelation" class="w-full p-4 bg-slate-50 rounded-xl outline-none"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
+           </div>
+           <button type="submit" class="w-full py-5 bg-green-600 text-white rounded-2xl font-black shadow-xl">儲存並同步雲端</button>
         </form>
       </section>
     </main>
 
     <!-- 底部導覽列 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 border-t border-slate-100 px-2 py-3 flex justify-around items-center z-50 shadow-2xl">
-      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-btn nav-active">
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 border-t border-slate-100 px-2 py-3 flex justify-around items-center z-50 shadow-2xl backdrop-blur-md">
+      <button onclick="switchView('index')" id="nav-index" class="nav-btn nav-active">
         <span class="text-2xl">🏠</span>
-        <span class="text-[10px] mt-1 font-bold uppercase tracking-tight">活動</span>
+        <span class="text-[10px] mt-1 font-bold uppercase">活動</span>
       </button>
-      <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center nav-btn">
+      <button onclick="switchView('query')" id="nav-query" class="nav-btn">
         <span class="text-2xl">🔍</span>
-        <span class="text-[10px] mt-1 font-bold uppercase tracking-tight">紀錄</span>
+        <span class="text-[10px] mt-1 font-bold uppercase">紀錄</span>
       </button>
-      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center nav-btn">
+      <button onclick="switchView('member')" id="nav-member" class="nav-btn">
         <span class="text-2xl">👤</span>
-        <span class="text-[10px] mt-1 font-bold uppercase tracking-tight">會員</span>
+        <span class="text-[10px] mt-1 font-bold uppercase">會員</span>
       </button>
     </nav>
   </div>
 
   <script>
-    let uid = "";
-    const API = "https://sport.wetw-net3.workers.dev/";
+    // --- 重要：API 變數僅宣告一次，避免 SyntaxError ---
+    const API_URL = "https://sport.wetw-net3.workers.dev/";
+    let currentUid = "";
 
+    /** 初始化 LIFF 流程 */
     async function init() {
       try {
         await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        if (!liff.isLoggedIn()) { liff.login(); return; }
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
         const profile = await liff.getProfile();
-        uid = profile.userId;
-        document.getElementById('userAvatar').src = profile.pictureUrl;
-        document.getElementById('userName').innerText = "您好, " + profile.displayName;
+        currentUid = profile.userId;
         
-        // 初始導覽判定
+        // 更新 UI 使用者資訊
+        const avatarEl = document.getElementById('userAvatar');
+        const nameEl = document.getElementById('userNameDisplay');
+        if(avatarEl) avatarEl.src = profile.pictureUrl;
+        if(nameEl) nameEl.innerText = "您好, " + profile.displayName;
+        
+        // 判定初始顯示的分頁
         const urlParams = new URLSearchParams(window.location.search);
         const view = urlParams.get('view') || 'index';
         switchView(view);
-      } catch (e) { 
-        console.error("LIFF Init Error", e);
-        // 如果 LIFF 失敗，仍嘗試顯示首頁（開發測試用）
+        
+      } catch (err) {
+        console.error("LIFF 初始化異常:", err);
+        // 如果是在瀏覽器直接測試且無 LIFF，顯示活動頁
         switchView('index');
       }
     }
 
-    /** 核心修復：switchView 並確保資料載入函式存在 */
+    /** 核心導覽與資料加載邏輯 */
     function switchView(v) {
-      // 1. 切換畫面顯示
+      // 1. 切換畫面區塊
       document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-      const target = document.getElementById('view-' + v);
-      if(target) target.classList.add('active');
+      const targetSection = document.getElementById('view-' + v);
+      if(targetSection) targetSection.classList.add('active');
 
-      // 2. 切換導覽列顏色
-      document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active'));
+      // 2. 切換導覽按鈕顏色
+      document.querySelectorAll('nav .nav-btn').forEach(b => b.classList.remove('nav-active'));
       const navKey = v.includes('member') ? 'member' : v;
       const activeNav = document.getElementById('nav-' + navKey);
       if(activeNav) activeNav.classList.add('nav-active');
 
-      // 3. 觸發資料載入
+      // 3. 資料加載路由
       if(v === 'index') loadCourses();
       if(v === 'query') loadHistory();
       if(v === 'member') loadFamily();
@@ -153,79 +185,84 @@
       window.scrollTo(0,0);
     }
 
-    /** 讀取課程列表 */
+    /** 讀取開放報名的課程列表 */
     async function loadCourses() {
       const container = document.getElementById('courseContainer');
       try {
-        const res = await fetch(API, { 
+        const response = await fetch(API_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'getCourses' }) 
-        }).then(r => r.json());
-        
+        });
+        const res = await response.json();
         const data = res.data || [];
+        
         container.innerHTML = data.length ? data.map(c => `
           <div class="course-card p-6 border border-white">
-            <span class="bg-green-50 text-green-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase">${c.類別}</span>
+            <span class="bg-green-50 text-green-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">${c.類別}</span>
             <h3 class="text-lg font-black text-slate-800 mt-2">${c.名稱}</h3>
             <p class="text-xs text-slate-400 font-medium mt-1">${c.梯次 || '-'}</p>
             <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-50">
               <div class="text-[#f43f5e] font-black text-xl italic">$${(Number(c.全梯次總價) || 0).toLocaleString()}</div>
-              <button class="bg-green-600 text-white px-6 py-2 rounded-xl text-xs font-black shadow-md active:opacity-80">報名</button>
+              <button class="bg-green-600 text-white px-6 py-2 rounded-xl text-xs font-black shadow-md active:opacity-80">立即報名</button>
             </div>
           </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">目前尚無開放報名的課程</p>';
-      } catch(e) { 
-        container.innerHTML = '<p class="text-center py-20 text-red-400 font-bold">無法連線 API 伺服器</p>';
+      } catch(e) {
+        container.innerHTML = '<p class="text-center py-20 text-red-400 font-bold">無法連線 API 中心</p>';
       }
     }
 
-    /** 已修復：loadHistory 函式定義 (解決 ReferenceError) */
+    /** 讀取使用者歷史紀錄 (已修復 loadHistory 缺失問題) */
     async function loadHistory() {
       const container = document.getElementById('historyContainer');
-      if(!uid) {
-        container.innerHTML = '<p class="text-center py-20 text-slate-300 font-bold">請先完成 LINE 登入</p>';
+      if(!currentUid) {
+        container.innerHTML = '<p class="text-center py-20 text-slate-300 font-bold">請先完成身分驗證</p>';
         return;
       }
-      container.innerHTML = '<div class="py-20 text-center text-slate-300 font-medium animate-pulse">紀錄抓取中...</div>';
+      container.innerHTML = '<div class="text-center py-20"><div class="spinner"></div><p class="text-slate-300 mt-2 font-medium">抓取紀錄中...</p></div>';
+      
       try {
-        const res = await fetch(API, { 
+        const response = await fetch(API_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'getUserRegistrations', userId: uid }) 
-        }).then(r => r.json());
-        
+          body: JSON.stringify({ action: 'getUserRegistrations', userId: currentUid }) 
+        });
+        const res = await response.json();
         const data = res.data || [];
+        
         container.innerHTML = data.length ? data.map(r => `
           <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
             <div class="text-[10px] text-green-600 font-black mb-1">${r.日期}</div>
             <h4 class="font-black text-slate-800 leading-tight">${r.課程}</h4>
-            <p class="text-[10px] text-slate-400 font-bold mt-2 leading-relaxed">學員：${r.姓名}<br>詳情：${r.出席詳情}</p>
+            <p class="text-[10px] text-slate-400 font-bold mt-2 leading-relaxed">
+              學員：${r.姓名}<br>詳情：${r.出席詳情}
+            </p>
             <div class="mt-4 flex justify-between items-center pt-4 border-t border-slate-50">
               <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">${r.狀態}</span>
               <span class="text-lg font-black text-slate-800">$${(Number(r.金額) || 0).toLocaleString()}</span>
             </div>
-          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">尚無任何報名紀錄</p>';
-      } catch(e) { 
-        container.innerHTML = '<p class="text-center py-20 text-red-400 font-bold">歷史紀錄載入失敗</p>';
+          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">目前尚無報名紀錄</p>';
+      } catch(e) {
+        container.innerHTML = '<p class="text-center py-20 text-red-400 font-bold">連線失敗，請稍後再試</p>';
       }
     }
 
-    /** 讀取會員名冊 */
+    /** 讀取成員名冊 */
     async function loadFamily() {
       const container = document.getElementById('familyList');
-      if(!uid) {
-        container.innerHTML = '<p class="text-center py-20 text-slate-300 font-bold">請先登入 LINE 以讀取資料</p>';
-        return;
-      }
-      container.innerHTML = '<div class="py-10 text-center text-slate-300 font-bold">同步成員名單中...</div>';
+      if(!currentUid) return;
+      
+      container.innerHTML = '<div class="py-10 text-center text-slate-300 font-bold">資料同步中...</div>';
+      
       try {
-        const res = await fetch(API, { 
+        const response = await fetch(API_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'getFamily', userId: uid }) 
-        }).then(r => r.json());
-        
+          body: JSON.stringify({ action: 'getFamily', userId: currentUid }) 
+        });
+        const res = await response.json();
         const data = res.data || [];
+        
         container.innerHTML = data.length ? data.map(f => `
           <div class="bg-slate-50 p-5 rounded-2xl flex justify-between items-center border border-white">
             <div>
@@ -233,228 +270,54 @@
               <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight">${f.phone} | ${f.relation}</div>
             </div>
             <span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span>
-          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">尚未建立任何成員資料</p>';
-      } catch(e) { 
-        container.innerHTML = '<p class="text-center py-20 text-red-400 font-bold">成員資料讀取失敗</p>';
+          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">尚未建立任何成員檔案</p>';
+      } catch(e) {
+        container.innerHTML = '<p class="text-center py-20 text-red-400 font-bold">成員資料抓取失敗</p>';
       }
     }
 
-    function showMemberForm() { 
-      document.getElementById('memberForm').reset(); 
-      switchView('member-form'); 
+    /** 顯示學員表單 */
+    function showMemberForm() {
+      document.getElementById('memberForm').reset();
+      switchView('member-form');
     }
-    
+
+    /** 儲存學員資料 */
     document.getElementById('memberForm').onsubmit = async (e) => {
       e.preventDefault();
       showLoading(true);
       const payload = { 
         action: 'saveFamily', 
-        userId: uid, 
+        userId: currentUid, 
         name: document.getElementById('mName').value, 
         gender: document.getElementById('mGender').value, 
         phone: document.getElementById('mPhone').value, 
         birthday: document.getElementById('mBirthday').value, 
         relation: document.getElementById('mRelation').value 
       };
+      
       try {
-        await fetch(API, { 
+        await fetch(API_URL, { 
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload) 
         });
         showLoading(false);
-        alert("學員資料已儲存！");
+        alert("學員資料存檔成功！");
         switchView('member');
       } catch (err) {
         showLoading(false);
-        alert("存檔失敗，請確認網路連線。");
+        alert("資料傳送失敗，請檢查網路。");
       }
     };
 
-    function showLoading(s) { 
+    /** 遮罩控制 */
+    function showLoading(s) {
       const mask = document.getElementById('loading-mask');
-      if(mask) mask.style.display = s ? 'flex' : 'none'; 
-    }
-    
-    window.onload = init;
-  </script>
-</body>
-</html>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-    :root { --line-green: #06C755; }
-    body { background-color: #F4F5F7; font-family: 'Noto Sans TC', sans-serif; color: #334155; margin: 0; }
-    .view-section { display: none; }
-    .view-section.active { display: block; }
-    .nav-active { color: var(--line-green); font-weight: 700; border-top: 3px solid var(--line-green); }
-    .absent-row { background-color: #fff1f2; opacity: 0.7; color: #f43f5e; }
-  </style>
-</head>
-<body class="min-h-screen flex justify-center">
-
-  <div class="w-full max-w-md bg-white min-h-screen relative flex flex-col shadow-xl">
-    
-    <main class="flex-grow pb-32">
-      <!-- 1. 活動列表 -->
-      <section id="view-index" class="view-section active">
-        <div class="px-6 py-10 border-b border-gray-50 flex justify-between items-center">
-          <div>
-            <h2 class="text-2xl font-black italic uppercase">Courses</h2>
-            <p class="text-green-600 text-[9px] font-bold tracking-widest uppercase mt-1">Enrollment System</p>
-          </div>
-          <img id="userAvatarSmall" src="" class="w-10 h-10 rounded-full border shadow-sm">
-        </div>
-        <div id="dynamicCourseContainer" class="p-5 space-y-4">
-          <div class="text-center py-20 text-slate-300 font-medium">載入中...</div>
-        </div>
-      </section>
-
-      <!-- 2. 報名紀錄 -->
-      <section id="view-query" class="view-section">
-        <div class="px-6 py-10 border-b bg-white sticky top-0 z-10 shadow-sm">
-          <h2 class="text-xl font-bold">歷史報名紀錄</h2>
-        </div>
-        <div id="historyContainer" class="p-5 space-y-4"></div>
-      </section>
-
-      <!-- 3. 會員中心 (學員名冊) -->
-      <section id="view-member" class="view-section">
-        <div class="px-8 py-10 border-b bg-white flex justify-between items-center">
-          <div>
-            <h1 id="userNameDisplay" class="text-2xl font-black">您好...</h1>
-            <p class="text-xs text-gray-400 mt-1 uppercase tracking-widest">Personal Center</p>
-          </div>
-          <img id="userAvatar" src="" class="w-14 h-14 rounded-full border shadow-sm">
-        </div>
-        <div class="p-6">
-          <button onclick="showMemberForm()" class="w-full bg-black text-white py-4 rounded-xl font-bold">+ 新增學員檔案</button>
-        </div>
-        <div id="familyListContainer" class="px-6 space-y-3">
-           <p class="text-center py-10 text-gray-300">正在讀取成員...</p>
-        </div>
-      </section>
-
-      <!-- 4. 成員表單 -->
-      <section id="view-member-form" class="view-section">
-        <div class="px-6 py-10 flex items-center border-b bg-white">
-          <button onclick="switchView('member')" class="text-gray-400 font-bold mr-4">←</button>
-          <h2 class="text-lg font-bold">建立學員檔案</h2>
-        </div>
-        <form id="memberForm" class="p-8 space-y-6">
-           <input type="text" id="mName" placeholder="學員姓名" required class="w-full p-4 bg-gray-50 rounded-xl outline-none border focus:border-green-500">
-           <div class="grid grid-cols-2 gap-4">
-             <select id="mGender" class="p-4 bg-gray-50 rounded-xl outline-none"><option value="男">男</option><option value="女">女</option></select>
-             <input type="date" id="mBirthday" required class="p-4 bg-gray-50 rounded-xl outline-none">
-           </div>
-           <input type="tel" id="mPhone" placeholder="家長電話" required class="w-full p-4 bg-gray-50 rounded-xl outline-none">
-           <select id="mRelation" class="w-full p-4 bg-gray-50 rounded-xl outline-none"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
-           <button type="submit" class="w-full bg-green-600 text-white py-5 rounded-2xl font-black shadow-xl">儲存並同步</button>
-        </form>
-      </section>
-    </main>
-
-    <!-- 底部導覽 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 backdrop-blur-md border-t px-0 py-2 flex justify-around items-center z-50">
-      <button onclick="switchView('index')" id="nav-index" class="flex flex-col items-center nav-active w-1/3 py-2"><span class="text-xl">🏠</span><span class="text-[9px] mt-0.5 uppercase font-bold">活動</span></button>
-      <button onclick="switchView('query')" id="nav-query" class="flex flex-col items-center text-gray-300 w-1/3 py-2"><span class="text-xl">🔍</span><span class="text-[9px] mt-0.5 uppercase font-bold">紀錄</span></button>
-      <button onclick="switchView('member')" id="nav-member" class="flex flex-col items-center text-gray-300 w-1/3 py-2"><span class="text-xl">👤</span><span class="text-[9px] mt-0.5 uppercase font-bold">會員</span></button>
-    </nav>
-  </div>
-
-  <script>
-    let currentUid = "";
-    let familyData = [];
-    let sessionData = []; 
-    const API = "https://sport.wetw-net3.workers.dev/";
-
-    async function init() {
-      try {
-        await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        if (!liff.isLoggedIn()) { liff.login(); return; }
-        const profile = await liff.getProfile();
-        currentUid = profile.userId;
-        document.getElementById('userAvatar').src = profile.pictureUrl;
-        document.getElementById('userAvatarSmall').src = profile.pictureUrl;
-        document.getElementById('userNameDisplay').innerText = "您好, " + profile.displayName;
-        loadCourses(); // 預設首頁
-      } catch (e) { console.error("LIFF Error", e); }
+      if(mask) mask.style.display = s ? 'flex' : 'none';
     }
 
-    async function loadCourses() {
-      try {
-        const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) }).then(r => r.json());
-        sessionData = res.data || [];
-        document.getElementById('dynamicCourseContainer').innerHTML = sessionData.map((s, i) => `
-          <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative group active:scale-[0.98] transition-all">
-            <div class="flex justify-between items-start">
-              <div class="flex-grow">
-                <span class="px-2 py-0.5 bg-gray-100 text-gray-400 text-[9px] font-bold rounded uppercase mb-2">${s.類別}</span>
-                <h3 class="text-lg font-black text-slate-800 leading-tight">${s.名稱}</h3>
-                <p class="text-xs text-green-600 font-bold mt-1">${s.梯次 || '-'}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-red-500 font-black text-lg">$${Number(s.全梯次總價).toLocaleString()}</p>
-              </div>
-            </div>
-            <div class="mt-6 flex justify-between items-center">
-              <div class="text-[10px] text-gray-400 font-bold">${s.開始} ~ ${s.結束}</div>
-              <button class="bg-black text-white px-6 py-2 rounded-lg text-[10px] font-black shadow-md">報名</button>
-            </div>
-          </div>`).join('');
-      } catch(e) { console.error(e); }
-    }
-
-    async function loadFamily() {
-      if(!currentUid) return;
-      const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'getFamily', userId: currentUid }) }).then(r => r.json());
-      familyData = res.data || [];
-      const container = document.getElementById('familyListContainer');
-      container.innerHTML = familyData.length ? familyData.map((f, i) => `
-        <div class="bg-gray-50 p-5 rounded-2xl flex justify-between items-center border border-white">
-          <div><div class="font-black text-black text-lg">${f.name}</div><div class="text-[10px] text-gray-400 font-bold uppercase">${f.phone} | ${f.relation}</div></div>
-          <span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span>
-        </div>`).join('') : '<p class="text-center py-20 text-gray-300 font-bold">尚未建立任何成員資料</p>';
-    }
-
-    /** 核心修正：精確控制視圖切換與資料載入 */
-    function switchView(v) {
-      // 1. 隱藏所有區塊
-      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-      // 2. 顯示目標區塊
-      const target = document.getElementById('view-' + v);
-      if(target) target.classList.add('active');
-
-      // 3. 更新導覽按鈕狀態
-      document.querySelectorAll('nav button').forEach(b => b.classList.remove('nav-active', 'text-green-600', 'text-gray-300'));
-      document.querySelectorAll('nav button').forEach(b => b.classList.add('text-gray-300'));
-      
-      const navKey = v.includes('member') ? 'member' : v;
-      const activeNav = document.getElementById('nav-' + navKey);
-      if(activeNav) {
-        activeNav.classList.add('nav-active', 'text-green-600');
-        activeNav.classList.remove('text-gray-300');
-      }
-
-      // 4. 資料載入邏輯：嚴格對應按鈕與視圖
-      if(v === 'index') loadCourses();
-      if(v === 'member') loadFamily(); // 確保點擊「會員」立即執行讀取成員
-      if(v === 'query') loadHistory();
-      
-      window.scrollTo(0,0);
-    }
-
-    function showMemberForm() { document.getElementById('memberForm').reset(); switchView('member-form'); }
-
-    document.getElementById('memberForm').onsubmit = async (e) => {
-      e.preventDefault();
-      const payload = { action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value, gender: document.getElementById('mGender').value, phone: document.getElementById('mPhone').value, birthday: document.getElementById('mBirthday').value, relation: document.getElementById('mRelation').value, address: "" };
-      await fetch(API, { method: 'POST', body: JSON.stringify(payload) });
-      alert("存檔成功"); switchView('member');
-    };
-
+    // 當頁面載入完成後啟動 LIFF 初始化
     window.onload = init;
   </script>
 </body>
