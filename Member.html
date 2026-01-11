@@ -2,253 +2,186 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>運動島 Sports Island</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    body { background:#f4f5f7; }
-    .view { display:none; }
-    .view.active { display:block; }
-    .modal { display:none; }
-    .modal.active { display:flex; }
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont; }
+    #debugPanel {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      width: 280px;
+      max-height: 50vh;
+      overflow-y: auto;
+      background: rgba(0,0,0,.85);
+      color: #fff;
+      font-size: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      z-index: 9999;
+      line-height: 1.5;
+    }
+    #debugPanel h3 {
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: #4ade80;
+    }
+    #debugPanel .ok { color:#4ade80; }
+    #debugPanel .err { color:#f87171; }
+    #debugPanel .info { color:#93c5fd; }
   </style>
 </head>
 
-<body class="min-h-screen flex justify-center">
+<body class="bg-slate-100 min-h-screen flex justify-center">
 
-<div class="w-full max-w-md bg-white min-h-screen flex flex-col relative">
+<!-- ================= Debug Panel ================= -->
+<div id="debugPanel">
+  <h3>🛠 Debug Panel</h3>
+  <div id="dbg-js">JS：<span class="err">未啟動</span></div>
+  <div id="dbg-api">API：-</div>
+  <div id="dbg-liff">LIFF：-</div>
+  <div id="dbg-user">User：-</div>
+  <div id="dbg-log" class="mt-2 text-slate-300"></div>
+</div>
 
-  <!-- Header -->
+<!-- ================= App ================= -->
+<div class="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col">
+
   <header class="p-4 border-b flex justify-between items-center">
     <h1 class="font-black text-lg">運動島 2026</h1>
-    <img id="userAvatar" class="w-8 h-8 rounded-full" />
+    <span id="userName" class="text-sm text-slate-400">尚未登入</span>
   </header>
 
-  <!-- Main -->
-  <main class="flex-grow pb-24">
+  <main class="flex-grow p-4 space-y-4">
 
-    <!-- 活動 -->
-    <section id="view-index" class="view active p-4 space-y-4">
-      <div id="courseContainer" class="text-center text-slate-400">
-        載入中…
-      </div>
-    </section>
+    <button onclick="loadCourses()"
+      class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black">
+      讀取課程
+    </button>
 
-    <!-- 紀錄 -->
-    <section id="view-query" class="view p-4 space-y-4">
-      <div id="historyContainer" class="text-center text-slate-400">
-        尚無紀錄
-      </div>
-    </section>
+    <button onclick="loadFamily()"
+      class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black">
+      讀取會員
+    </button>
 
-    <!-- 會員 -->
-    <section id="view-member" class="view p-4 space-y-4">
-      <h2 id="userName" class="font-black text-lg"></h2>
-      <div id="familyList" class="space-y-3"></div>
-    </section>
+    <div id="output" class="text-sm bg-slate-50 p-3 rounded-xl"></div>
 
   </main>
 
-  <!-- Bottom Nav -->
-  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t flex justify-around py-2">
-    <button onclick="switchView('index')" class="font-bold">🏠 活動</button>
-    <button onclick="switchView('query')" class="font-bold">📄 紀錄</button>
-    <button onclick="switchView('member')" class="font-bold">👤 會員</button>
-  </nav>
-
-</div>
-
-<!-- 報名 Modal -->
-<div id="enrollModal" class="modal fixed inset-0 bg-black/60 items-center justify-center z-50">
-  <div class="bg-white w-full max-w-sm rounded-2xl p-6 space-y-5">
-    <h3 id="modalTitle" class="font-black text-lg">報名確認</h3>
-
-    <select id="selectMember" class="w-full p-3 rounded-xl bg-slate-100 font-bold"></select>
-
-    <div class="bg-slate-900 text-white rounded-xl p-4 text-center">
-      <div class="text-xs opacity-60 mb-1">應繳金額（由系統計算）</div>
-      <div id="modalPrice" class="text-2xl font-black">$0</div>
-    </div>
-
-    <button id="confirmBtn"
-      class="w-full bg-green-600 text-white py-3 rounded-xl font-black">
-      確認送出
-    </button>
-
-    <button onclick="closeModal()"
-      class="w-full py-2 text-slate-400 font-bold">
-      取消
-    </button>
-  </div>
 </div>
 
 <script>
 /* =====================================================
- * 全域設定（只此一份）
+ * ① 全域唯一 API_URL（⚠️只此一次）
  * ===================================================== */
-const API_URL = "https://sport.wetw-net3.workers.dev/";
-let currentUid = "";
-let courseList = [];
-let familyData = [];
-let activeCourse = null;
+const API_URL = window.location.origin + "/";
 
 /* =====================================================
- * 初始化
+ * ② Debug 工具
  * ===================================================== */
-async function init() {
-  await liff.init({ liffId: "2008792551-CzPJtVB1" });
-
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
+const dbg = {
+  log(msg, type='info') {
+    const el = document.getElementById('dbg-log');
+    const div = document.createElement('div');
+    div.className = type;
+    div.textContent = msg;
+    el.prepend(div);
+  },
+  set(id, text, ok=true) {
+    const el = document.getElementById(id);
+    el.innerHTML = el.innerHTML.split('：')[0] + '：' +
+      `<span class="${ok?'ok':'err'}">${text}</span>`;
   }
-
-  const profile = await liff.getProfile();
-  currentUid = profile.userId;
-
-  document.getElementById("userAvatar").src = profile.pictureUrl;
-  document.getElementById("userName").innerText = "您好，" + profile.displayName;
-
-  await loadFamily();
-  await loadCourses();
-}
+};
 
 /* =====================================================
- * View 切換
+ * ③ JS 啟動確認
  * ===================================================== */
-function switchView(v) {
-  document.querySelectorAll(".view").forEach(el => el.classList.remove("active"));
-  document.getElementById("view-" + v).classList.add("active");
+dbg.set('dbg-js', '已啟動');
+dbg.set('dbg-api', API_URL);
 
-  if (v === "query") loadHistory();
+/* =====================================================
+ * ④ LIFF 初始化
+ * ===================================================== */
+let currentUid = "";
+
+async function initLIFF() {
+  try {
+    dbg.log('LIFF init start');
+    await liff.init({ liffId: "2008792551-CzPJtVB1" });
+
+    if (!liff.isLoggedIn()) {
+      dbg.set('dbg-liff', '未登入', false);
+      liff.login();
+      return;
+    }
+
+    const profile = await liff.getProfile();
+    currentUid = profile.userId;
+
+    document.getElementById('userName').innerText = profile.displayName;
+    dbg.set('dbg-liff', 'OK');
+    dbg.set('dbg-user', profile.userId.slice(0,6)+'…');
+
+  } catch (e) {
+    dbg.set('dbg-liff', '失敗', false);
+    dbg.log('LIFF Error: '+e.message, 'err');
+  }
 }
 
 /* =====================================================
- * 課程
+ * ⑤ API 呼叫封裝
+ * ===================================================== */
+async function post(action, payload={}) {
+  dbg.log('POST '+action);
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ action, ...payload })
+  });
+  return res.json();
+}
+
+/* =====================================================
+ * ⑥ 功能：載入課程
  * ===================================================== */
 async function loadCourses() {
-  const box = document.getElementById("courseContainer");
-
-  const res = await fetch(API_URL, {
-    method:"POST",
-    body:JSON.stringify({ action:"getCourses" })
-  }).then(r=>r.json());
-
-  courseList = res.data || [];
-
-  box.innerHTML = courseList.map((c,i)=>`
-    <div class="p-4 border rounded-xl bg-slate-50">
-      <div class="font-black">${c.名稱}</div>
-      <div class="text-xs text-slate-400">${c.開始} ～ ${c.結束}</div>
-      <div class="text-green-600 font-black mt-2">
-        $${Number(c.價格||0).toLocaleString()}
-      </div>
-      <button class="mt-3 w-full bg-green-600 text-white py-2 rounded-xl font-bold"
-        onclick="openEnroll(${i})">
-        報名
-      </button>
-    </div>
-  `).join("");
+  try {
+    const res = await post('getCourses');
+    document.getElementById('output').innerText =
+      JSON.stringify(res, null, 2);
+    dbg.log('Courses loaded');
+  } catch (e) {
+    dbg.log('Courses error', 'err');
+  }
 }
 
 /* =====================================================
- * 報名 Modal（🔥 價格由後端回傳）
+ * ⑦ 功能：載入會員
  * ===================================================== */
-function openEnroll(idx){
-  if(!familyData.length){
-    alert("請先建立學員資料");
-    switchView("member");
+async function loadFamily() {
+  if (!currentUid) {
+    dbg.log('尚未取得 userId', 'err');
     return;
   }
-
-  activeCourse = courseList[idx];
-  document.getElementById("modalTitle").innerText = activeCourse.名稱;
-
-  document.getElementById("selectMember").innerHTML =
-    familyData.map(f=>`<option value="${f.name}|${f.phone}">${f.name}</option>`).join("");
-
-  document.getElementById("modalPrice").innerText = "計算中…";
-  document.getElementById("enrollModal").classList.add("active");
-
-  // 🔥 向後端要最終價格
-  fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"registerPreview",
-      courseId: activeCourse.id
-    })
-  }).then(r=>r.json())
-    .then(res=>{
-      document.getElementById("modalPrice").innerText =
-        "$" + Number(res.finalPrice||0).toLocaleString();
-    });
-
-  document.getElementById("confirmBtn").onclick = submitEnroll;
-}
-
-function closeModal(){
-  document.getElementById("enrollModal").classList.remove("active");
-}
-
-/* =====================================================
- * 送出報名（🔥 完全由後端算價）
- * ===================================================== */
-async function submitEnroll(){
-  const [name, phone] =
-    document.getElementById("selectMember").value.split("|");
-
-  const res = await fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({
-      action:"register",
-      userId: currentUid,
-      name,
-      phone,
-      courseId: activeCourse.id
-    })
-  }).then(r=>r.json());
-
-  if(res.success){
-    alert("報名成功\n金額 $" + res.data.paidAmount.toLocaleString());
-    closeModal();
-    switchView("query");
-  }else{
-    alert("失敗：" + res.msg);
+  try {
+    const res = await post('getFamily', { userId: currentUid });
+    document.getElementById('output').innerText =
+      JSON.stringify(res, null, 2);
+    dbg.log('Family loaded');
+  } catch (e) {
+    dbg.log('Family error', 'err');
   }
 }
 
 /* =====================================================
- * 家庭 & 紀錄
+ * ⑧ 啟動
  * ===================================================== */
-async function loadFamily(){
-  const res = await fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({ action:"getFamily", userId:currentUid })
-  }).then(r=>r.json());
-  familyData = res.data || [];
-}
-
-async function loadHistory(){
-  const box = document.getElementById("historyContainer");
-
-  const res = await fetch(API_URL,{
-    method:"POST",
-    body:JSON.stringify({ action:"getUserRegistrations", userId:currentUid })
-  }).then(r=>r.json());
-
-  box.innerHTML = (res.data||[]).map(r=>`
-    <div class="p-4 border rounded-xl">
-      <div class="font-bold">${r.課程}</div>
-      <div class="text-xs text-slate-400">${r.日期}</div>
-      <div class="font-black">$${Number(r.金額).toLocaleString()}</div>
-    </div>
-  `).join("") || "尚無紀錄";
-}
-
-window.onload = init;
+window.onload = initLIFF;
 </script>
 
 </body>
