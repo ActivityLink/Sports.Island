@@ -1,97 +1,86 @@
+<!-- 檔案名稱：index.html (V6.7.1 - 實時內容版) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>運動島 Sports Island</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <style>
-    /* 外部背景深灰色，模擬 FB 網頁版背景 */
-    body { background-color: #f0f2f5; }
-    /* 隱藏捲軸但保留功能 */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    /* 強制圖片維持比例 */
-    .aspect-banner { aspect-ratio: 21 / 9; }
-    @media (min-width: 768px) { .aspect-banner { aspect-ratio: 3 / 1; } }
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+    body { background-color: #F4F5F7; font-family: 'Noto Sans TC', sans-serif; }
+    .card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .btn-main { background: #000; color: #fff; border-radius: 12px; padding: 12px; font-weight: 700; text-align: center; display: block; }
   </style>
 </head>
-<body class="min-h-screen flex justify-center">
+<body class="pb-24">
 
-  <!-- 主容器 (FB 網頁版格式：桌面端限制寬度並置中) -->
-  <div class="w-full max-w-4xl bg-white min-h-screen shadow-lg relative flex flex-col">
-    
-    <!-- Banner 區域 (等比縮放容器) -->
-    <div class="relative w-full aspect-banner bg-slate-200 overflow-hidden">
-      <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" 
-           class="w-full h-full object-cover" alt="Banner">
-      
-      <!-- 右上方小 Logo (用戶頭像) - 相對定位於 Banner 內 -->
-      <div class="absolute top-3 right-3 md:top-6 md:right-6 z-20">
-        <div class="bg-black/20 backdrop-blur-md p-1 rounded-full border border-white/30 shadow-lg">
-          <img id="userAvatar" src="https://via.placeholder.com/100?text=..." 
-               class="w-8 h-8 md:w-12 md:h-12 rounded-full object-cover bg-white">
-        </div>
+  <div class="max-w-md mx-auto min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="p-8 bg-white border-b border-gray-100 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-black italic tracking-tighter uppercase">Sports Island</h1>
+        <p class="text-[10px] font-bold text-green-600 uppercase tracking-widest mt-1">2026 Season</p>
       </div>
-    </div>
+      <div class="w-10 h-10 bg-black rounded-full flex items-center justify-center text-white text-xs">SI</div>
+    </header>
 
-    <!-- 標題區域 -->
-    <div class="px-6 py-8">
-      <h2 class="text-2xl font-black text-slate-800 flex items-center">
-        <span class="w-1.5 h-6 bg-indigo-600 rounded-full mr-3"></span>
-        2026 課程專區
-      </h2>
-      <p class="text-slate-400 text-xs mt-1 font-bold uppercase tracking-widest">Available Courses</p>
-    </div>
-
-    <!-- 課程清單 (主要內容區) -->
-    <div class="px-6 space-y-4 flex-grow pb-32">
-      <!-- 課程卡片 1 -->
-      <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-center hover:bg-slate-100 transition-all active:scale-[0.98]">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-sm">⚽</div>
-        <div class="flex-grow">
-          <h3 class="font-bold text-slate-800 text-base">週末足球體驗課</h3>
-          <p class="text-[10px] text-slate-400 font-black uppercase">$600 / Session</p>
-        </div>
-        <a href="?p=Member" class="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-md hover:bg-indigo-700">報名</a>
+    <main class="p-6 space-y-6 flex-grow">
+      <div class="flex items-center space-x-2 mb-4">
+        <div class="w-1 h-6 bg-green-500 rounded-full"></div>
+        <h2 class="text-xl font-black">目前開放課程</h2>
       </div>
 
-      <!-- 課程卡片 2 -->
-      <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 flex items-center hover:bg-slate-100 transition-all active:scale-[0.98]">
-        <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl mr-4 shadow-sm">🏀</div>
-        <div class="flex-grow">
-          <h3 class="font-bold text-slate-800 text-base">籃球基礎訓練營</h3>
-          <p class="text-[10px] text-slate-400 font-black uppercase">$2500 / Term</p>
-        </div>
-        <a href="?p=Member" class="bg-indigo-600 text-white px-6 py-2.5 rounded-2xl text-xs font-bold shadow-md hover:bg-indigo-700">報名</a>
+      <div id="dynamicContainer" class="space-y-4">
+        <!-- 此處將由 JavaScript 動態填入 -->
+        <div class="text-center py-20 text-gray-300 font-medium animate-pulse">正在同步雲端資料...</div>
       </div>
-    </div>
+    </main>
 
-    <!-- 底部導覽列 (寬度跟隨主容器) -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-white/95 backdrop-blur-md border-t border-slate-100 px-12 py-5 flex justify-around items-center z-50">
-      <a href="?p=index" class="flex flex-col items-center text-indigo-600">
-        <span class="text-2xl">🏠</span>
-        <span class="text-[10px] font-black mt-1 uppercase">課程專區</span>
-      </a>
-      <a href="?p=Member" class="flex flex-col items-center text-slate-400 hover:text-indigo-500">
-        <span class="text-2xl">👤</span>
-        <span class="text-[10px] font-black mt-1 uppercase">會員中心</span>
-      </a>
+    <!-- Bottom Nav -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 backdrop-blur-md border-t px-8 py-4 flex justify-around items-center z-50">
+      <a href="?p=index" class="flex flex-col items-center text-green-600 font-bold"><span class="text-xl">🏠</span><span class="text-[10px] mt-1 uppercase">活動</span></a>
+      <a href="?p=Member" class="flex flex-col items-center text-gray-300"><span class="text-xl">👤</span><span class="text-[10px] mt-1 uppercase">會員</span></a>
     </nav>
   </div>
 
   <script>
-    async function init() {
+    const API = "https://sport.wetw-net3.workers.dev/";
+
+    async function loadDynamicContent() {
       try {
-        await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        if (!liff.isLoggedIn()) {
-          liff.login();
-        } else {
-          const profile = await liff.getProfile();
-          document.getElementById('userAvatar').src = profile.pictureUrl;
+        const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) }).then(r => r.json());
+        const data = res.data || [];
+        const container = document.getElementById('dynamicContainer');
+        
+        if (data.length === 0) {
+          container.innerHTML = `<div class="py-20 text-center text-gray-400">目前暫無開放中的課程</div>`;
+          return;
         }
-      } catch (e) { console.error("LIFF Init Error:", e); }
+
+        container.innerHTML = data.map(c => `
+          <div class="card p-6 border border-white">
+            <div class="flex justify-between items-start mb-4">
+               <div>
+                 <span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded text-[9px] font-bold uppercase">${c.類別}</span>
+                 <h3 class="text-lg font-black text-slate-800 mt-2">${c.名稱}</h3>
+                 <p class="text-xs text-green-600 font-bold">${c.梯次 || '-'}</p>
+               </div>
+               <div class="text-right">
+                 <p class="text-red-500 font-black text-lg">$${Number(c.全梯次總價).toLocaleString()}</p>
+               </div>
+            </div>
+            <div class="flex justify-between items-center mt-6">
+               <span class="text-[10px] text-gray-400 font-bold">${c.開始} ~ ${c.結束}</span>
+               <a href="?p=Member" class="bg-black text-white px-6 py-2 rounded-lg text-xs font-black shadow-md">立即報名</a>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('dynamicContainer').innerHTML = `<div class="py-20 text-center text-red-400">連線異常，請重新整理</div>`;
+      }
     }
-    window.onload = init;
+    window.onload = loadDynamicContent;
   </script>
 </body>
 </html>
