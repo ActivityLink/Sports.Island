@@ -1,128 +1,183 @@
 <!--
-=====================================================
-檔案名稱：Member.html
-版本：V6.9.0（完整覆蓋版）
-重點：
-- 前端不再自行算錢
-- 僅顯示後端試算結果
-- register 時不送金額
-=====================================================
+  檔案名稱：Member.html
+  版本：V6.8.3（Cloudflare Worker 標準版）
+  說明：
+  - API 永遠只走 Worker
+  - 解決 ERR_NAME_NOT_RESOLVED / Failed to fetch
 -->
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>運動島 Sports Island</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- LIFF -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont; }
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #06C755;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
 </head>
 
 <body class="bg-slate-100 min-h-screen flex justify-center">
 
-<div class="w-full max-w-md bg-white min-h-screen flex flex-col">
+<div class="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col">
+
+  <!-- Header -->
+  <header class="p-6 border-b flex justify-between items-center">
+    <h1 class="text-xl font-black">運動島 2026 課程</h1>
+    <div class="w-10 h-10 rounded-full overflow-hidden bg-slate-200">
+      <img id="userAvatar" class="w-full h-full object-cover">
+    </div>
+  </header>
 
   <!-- Loading -->
-  <div id="loading" class="fixed inset-0 bg-white/90 hidden z-50 flex items-center justify-center">
-    <div class="animate-spin w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full"></div>
+  <div id="loading" class="flex-1 flex flex-col items-center justify-center">
+    <div class="spinner"></div>
+    <p class="mt-4 text-slate-400 font-bold text-sm">系統初始化中...</p>
   </div>
 
-  <main class="flex-grow p-6 space-y-4">
-
-    <h1 class="text-xl font-black">2026 課程報名</h1>
-
-    <div id="courseList" class="space-y-4"></div>
-
-  </main>
+  <!-- Course List -->
+  <main id="courseView" class="hidden p-5 space-y-4"></main>
 
 </div>
 
 <script>
 /* =====================================================
- * 環境判斷（GitHub / GAS / LIFF 共用）
+ * ✅ 唯一正確 API 設定（不要再改）
  * ===================================================== */
-const API = location.hostname.includes('github')
-  ? 'https://你的GAS網址/exec'
-  : location.href;
-
-let uid = '';
-let courses = [];
-let activeCourse = null;
-let family = [];
+const API_URL = "https://sport.wetw-net3.workers.dev/";
 
 /* =====================================================
- * 初始化
+ * 狀態
+ * ===================================================== */
+let currentUid = "";
+let courses = [];
+
+/* =====================================================
+ * 初始化 LIFF
  * ===================================================== */
 async function init() {
-  showLoading(true);
-  await liff.init({ liffId: "2008792551-CzPJtVB1" });
-  if (!liff.isLoggedIn()) return liff.login();
+  try {
+    await liff.init({ liffId: "2008792551-CzPJtVB1" });
 
-  const profile = await liff.getProfile();
-  uid = profile.userId;
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
 
-  await loadCourses();
-  showLoading(false);
+    const profile = await liff.getProfile();
+    currentUid = profile.userId;
+    document.getElementById("userAvatar").src = profile.pictureUrl;
+
+    await loadCourses();
+
+    document.getElementById("loading").classList.add("hidden");
+    document.getElementById("courseView").classList.remove("hidden");
+
+  } catch (err) {
+    console.error(err);
+    alert("LIFF 初始化失敗，請重新開啟");
+  }
 }
 
 /* =====================================================
- * 課程
+ * 載入課程
  * ===================================================== */
 async function loadCourses() {
-  const res = await post({ action: 'getCourses' });
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "getCourses" })
+  }).then(r => r.json());
+
   courses = res.data || [];
-  document.getElementById('courseList').innerHTML =
-    courses.map((c,i)=>`
-      <div class="bg-white p-5 rounded-2xl shadow">
-        <div class="font-black">${c.名稱}</div>
-        <div class="text-sm text-slate-400">${c.開始} ~ ${c.結束}</div>
-        <button onclick="openEnroll(${i})"
-          class="mt-4 w-full py-3 bg-green-600 text-white rounded-xl font-bold">
-          報名
-        </button>
-      </div>
-    `).join('');
+  renderCourses();
 }
 
 /* =====================================================
- * 報名（不算錢）
+ * 顯示課程
  * ===================================================== */
-async function openEnroll(i) {
-  activeCourse = courses[i];
+function renderCourses() {
+  const container = document.getElementById("courseView");
+
+  if (!courses.length) {
+    container.innerHTML = `
+      <div class="text-center text-slate-400 font-bold py-20">
+        尚無可報名課程
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = courses.map((c, i) => `
+    <div class="border rounded-2xl p-6 bg-white">
+      <div class="flex justify-between">
+        <div>
+          <span class="text-xs font-bold text-green-600">${c.類別}</span>
+          <h3 class="text-lg font-black mt-1">${c.名稱}</h3>
+          <p class="text-xs text-slate-400">${c.梯次 || ""}</p>
+        </div>
+        <div class="text-right text-red-500 font-black text-xl">
+          $${(Number(c.價格) || 0).toLocaleString()}
+        </div>
+      </div>
+
+      <div class="mt-4 text-xs text-slate-500">
+        📅 ${c.開始} ～ ${c.結束}
+      </div>
+
+      <button
+        onclick="register(${i})"
+        class="mt-4 w-full py-3 bg-green-600 text-white rounded-xl font-bold">
+        我要報名
+      </button>
+    </div>
+  `).join("");
+}
+
+/* =====================================================
+ * 報名
+ * ===================================================== */
+async function register(idx) {
+  const c = courses[idx];
 
   const payload = {
-    action: 'register',
-    userId: uid,
-    name: '測試學員',
-    sessionId: activeCourse.id,
-    absence: [] // 之後再擴
+    action: "register",
+    userId: currentUid,
+    name: "測試學員",
+    phone: "0900000000",
+    sessionId: c.id
   };
 
-  const res = await post(payload);
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  }).then(r => r.json());
 
-  alert(
-    res.success
-      ? `報名成功\n金額：$${res.data.paidAmount}`
-      : res.msg
-  );
+  if (res.success) {
+    alert("報名成功！");
+  } else {
+    alert("報名失敗：" + res.msg);
+  }
 }
 
 /* =====================================================
- * 工具
+ * 啟動
  * ===================================================== */
-async function post(body) {
-  const r = await fetch(API, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
-  return r.json();
-}
-
-function showLoading(v){
-  document.getElementById('loading').style.display = v?'flex':'none';
-}
-
 window.onload = init;
 </script>
 
