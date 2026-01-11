@@ -5,183 +5,223 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>運動島 Sports Island</title>
 
+  <!-- Tailwind（開發用） -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- LIFF -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont; }
-    #debugPanel {
+    .nav-btn { color:#94a3b8 }
+    .nav-active { color:#16a34a; font-weight:900 }
+    .debug-panel {
       position: fixed;
+      bottom: 90px;
       right: 12px;
-      bottom: 12px;
-      width: 280px;
+      width: 320px;
       max-height: 50vh;
-      overflow-y: auto;
-      background: rgba(0,0,0,.85);
-      color: #fff;
-      font-size: 12px;
-      padding: 12px;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 11px;
       border-radius: 12px;
+      padding: 12px;
+      overflow-y: auto;
       z-index: 9999;
-      line-height: 1.5;
+      box-shadow: 0 20px 40px rgba(0,0,0,.4);
     }
-    #debugPanel h3 {
-      font-weight: 800;
-      margin-bottom: 6px;
-      color: #4ade80;
-    }
-    #debugPanel .ok { color:#4ade80; }
-    #debugPanel .err { color:#f87171; }
-    #debugPanel .info { color:#93c5fd; }
+    .debug-panel h3 { font-weight:900; margin-bottom:6px; color:#38bdf8 }
+    .debug-line { border-bottom:1px dashed #334155; padding:2px 0 }
   </style>
 </head>
 
 <body class="bg-slate-100 min-h-screen flex justify-center">
 
-<!-- ================= Debug Panel ================= -->
-<div id="debugPanel">
-  <h3>🛠 Debug Panel</h3>
-  <div id="dbg-js">JS：<span class="err">未啟動</span></div>
-  <div id="dbg-api">API：-</div>
-  <div id="dbg-liff">LIFF：-</div>
-  <div id="dbg-user">User：-</div>
-  <div id="dbg-log" class="mt-2 text-slate-300"></div>
-</div>
+<!-- ===================================================
+  主容器
+=================================================== -->
+<div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-xl">
 
-<!-- ================= App ================= -->
-<div class="w-full max-w-md bg-white min-h-screen shadow-xl flex flex-col">
-
-  <header class="p-4 border-b flex justify-between items-center">
-    <h1 class="font-black text-lg">運動島 2026</h1>
-    <span id="userName" class="text-sm text-slate-400">尚未登入</span>
+  <!-- Header -->
+  <header class="p-5 border-b flex justify-between items-center">
+    <h1 class="font-black text-xl">運動島 2026</h1>
+    <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
+      <img id="userAvatar" class="w-full h-full object-cover">
+    </div>
   </header>
 
-  <main class="flex-grow p-4 space-y-4">
+  <!-- 主內容 -->
+  <main class="flex-1 overflow-y-auto pb-32">
 
-    <button onclick="loadCourses()"
-      class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black">
-      讀取課程
-    </button>
+    <!-- 課程 -->
+    <section id="view-index">
+      <div id="courseContainer" class="p-4 space-y-4 text-sm text-slate-400">
+        載入課程中…
+      </div>
+    </section>
 
-    <button onclick="loadFamily()"
-      class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black">
-      讀取會員
-    </button>
+    <!-- 紀錄 -->
+    <section id="view-query" class="hidden">
+      <div id="historyContainer" class="p-4 text-sm text-slate-400">
+        尚未讀取紀錄
+      </div>
+    </section>
 
-    <div id="output" class="text-sm bg-slate-50 p-3 rounded-xl"></div>
+    <!-- 會員 -->
+    <section id="view-member" class="hidden">
+      <div class="p-4">
+        <button onclick="loadFamily()" class="w-full py-4 bg-black text-white rounded-xl font-bold">
+          讀取會員資料（Debug）
+        </button>
+      </div>
+      <div id="familyList" class="p-4 space-y-3 text-sm text-slate-500"></div>
+    </section>
 
   </main>
 
+  <!-- Bottom Nav -->
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t flex justify-around py-3">
+    <button id="nav-index" class="nav-btn nav-active" onclick="switchView('index')">活動</button>
+    <button id="nav-query" class="nav-btn" onclick="switchView('query')">紀錄</button>
+    <button id="nav-member" class="nav-btn" onclick="switchView('member')">會員</button>
+  </nav>
+</div>
+
+<!-- ===================================================
+  Debug Panel（不靠 F12）
+=================================================== -->
+<div class="debug-panel" id="debugPanel">
+  <h3>DEBUG PANEL</h3>
+  <div id="debugLog"></div>
 </div>
 
 <script>
-/* =====================================================
- * ① 全域唯一 API_URL（⚠️只此一次）
- * ===================================================== */
-const API_URL = window.location.origin + "/";
+/* ===================================================
+ * 🔒 API 設定（已鎖死 Worker）
+ * =================================================== */
+const API_URL = "https://sport.wetw-net3.workers.dev/";
 
-/* =====================================================
- * ② Debug 工具
- * ===================================================== */
-const dbg = {
-  log(msg, type='info') {
-    const el = document.getElementById('dbg-log');
-    const div = document.createElement('div');
-    div.className = type;
-    div.textContent = msg;
-    el.prepend(div);
-  },
-  set(id, text, ok=true) {
-    const el = document.getElementById(id);
-    el.innerHTML = el.innerHTML.split('：')[0] + '：' +
-      `<span class="${ok?'ok':'err'}">${text}</span>`;
-  }
-};
+/* ===================================================
+ * Debug 工具
+ * =================================================== */
+function log(msg) {
+  const el = document.getElementById('debugLog');
+  const div = document.createElement('div');
+  div.className = 'debug-line';
+  div.textContent = new Date().toLocaleTimeString() + '｜' + msg;
+  el.prepend(div);
+}
 
-/* =====================================================
- * ③ JS 啟動確認
- * ===================================================== */
-dbg.set('dbg-js', '已啟動');
-dbg.set('dbg-api', API_URL);
-
-/* =====================================================
- * ④ LIFF 初始化
- * ===================================================== */
+/* ===================================================
+ * 全域狀態
+ * =================================================== */
 let currentUid = "";
+let familyData = [];
 
-async function initLIFF() {
+/* ===================================================
+ * LIFF 初始化
+ * =================================================== */
+async function init() {
+  log("INIT START");
+  log("API_URL = " + API_URL);
+
   try {
-    dbg.log('LIFF init start');
     await liff.init({ liffId: "2008792551-CzPJtVB1" });
+    log("LIFF init OK");
 
     if (!liff.isLoggedIn()) {
-      dbg.set('dbg-liff', '未登入', false);
+      log("LIFF not login → redirect");
       liff.login();
       return;
     }
 
     const profile = await liff.getProfile();
     currentUid = profile.userId;
+    document.getElementById('userAvatar').src = profile.pictureUrl;
+    log("USER = " + profile.displayName);
 
-    document.getElementById('userName').innerText = profile.displayName;
-    dbg.set('dbg-liff', 'OK');
-    dbg.set('dbg-user', profile.userId.slice(0,6)+'…');
-
+    loadCourses();
   } catch (e) {
-    dbg.set('dbg-liff', '失敗', false);
-    dbg.log('LIFF Error: '+e.message, 'err');
+    log("LIFF ERROR: " + e.message);
   }
 }
 
-/* =====================================================
- * ⑤ API 呼叫封裝
- * ===================================================== */
-async function post(action, payload={}) {
-  dbg.log('POST '+action);
-  const res = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type':'application/json' },
-    body: JSON.stringify({ action, ...payload })
-  });
-  return res.json();
-}
-
-/* =====================================================
- * ⑥ 功能：載入課程
- * ===================================================== */
+/* ===================================================
+ * 課程
+ * =================================================== */
 async function loadCourses() {
+  log("LOAD COURSES");
+
   try {
-    const res = await post('getCourses');
-    document.getElementById('output').innerText =
-      JSON.stringify(res, null, 2);
-    dbg.log('Courses loaded');
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getCourses" })
+    });
+
+    const json = await res.json();
+    log("COURSES RESPONSE OK");
+
+    document.getElementById('courseContainer').innerHTML =
+      JSON.stringify(json.data || [], null, 2);
   } catch (e) {
-    dbg.log('Courses error', 'err');
+    log("COURSES ERROR: " + e.message);
   }
 }
 
-/* =====================================================
- * ⑦ 功能：載入會員
- * ===================================================== */
+/* ===================================================
+ * 會員（Debug 重點）
+ * =================================================== */
 async function loadFamily() {
-  if (!currentUid) {
-    dbg.log('尚未取得 userId', 'err');
-    return;
-  }
+  log("LOAD FAMILY userId=" + currentUid);
+
   try {
-    const res = await post('getFamily', { userId: currentUid });
-    document.getElementById('output').innerText =
-      JSON.stringify(res, null, 2);
-    dbg.log('Family loaded');
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "getFamily",
+        userId: currentUid
+      })
+    });
+
+    const json = await res.json();
+    log("FAMILY RESPONSE = " + JSON.stringify(json));
+
+    const box = document.getElementById('familyList');
+    if (!json.data || json.data.length === 0) {
+      box.innerHTML = "<div>（無會員資料）</div>";
+      return;
+    }
+
+    box.innerHTML = json.data.map(f => `
+      <div class="border rounded p-3">
+        <div class="font-bold">${f.name}</div>
+        <div class="text-xs">${f.phone}｜${f.relation}</div>
+      </div>
+    `).join("");
   } catch (e) {
-    dbg.log('Family error', 'err');
+    log("FAMILY ERROR: " + e.message);
   }
 }
 
-/* =====================================================
- * ⑧ 啟動
- * ===================================================== */
-window.onload = initLIFF;
+/* ===================================================
+ * 切換頁面
+ * =================================================== */
+function switchView(v) {
+  ["index","query","member"].forEach(k=>{
+    document.getElementById("view-"+k).classList.add("hidden");
+    document.getElementById("nav-"+k).classList.remove("nav-active");
+  });
+  document.getElementById("view-"+v).classList.remove("hidden");
+  document.getElementById("nav-"+v).classList.add("nav-active");
+  log("SWITCH VIEW → " + v);
+}
+
+/* ===================================================
+ * 啟動
+ * =================================================== */
+window.onload = init;
 </script>
 
 </body>
