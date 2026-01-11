@@ -1,4 +1,13 @@
-<!-- 檔案名稱：Member.html (V6.8.2 - 修復動線問題完整版) -->
+<!--
+=====================================================
+檔案名稱：Member.html
+版本：V6.9.0（完整覆蓋版）
+重點：
+- 前端不再自行算錢
+- 僅顯示後端試算結果
+- register 時不送金額
+=====================================================
+-->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -7,415 +16,115 @@
   <title>運動島 Sports Island</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
-    :root { --line-green: #06C755; --bg-gray: #F4F5F7; }
-    body { background-color: var(--bg-gray); font-family: 'Noto Sans TC', sans-serif; color: #333; margin: 0; }
-    
-    .view-section { display: none; }
-    .view-section.active { display: block; }
-    
-    .nav-btn { color: #94a3b8; transition: color 0.2s; border: none; background: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .nav-active { color: var(--line-green) !important; font-weight: 900; }
-    
-    .course-card { background: white; border-radius: 20px; border: 1px solid #E7E9ED; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .absent-row { background-color: #fff1f2; color: #e11d48; text-decoration: line-through; opacity: 0.7; }
-    
-    .spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--line-green); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-    /* 彈窗背景 */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-active { display: flex; }
-  </style>
 </head>
-<body class="min-h-screen flex justify-center">
 
-  <div class="w-full max-w-md bg-white min-h-screen relative flex flex-col shadow-xl">
-    
-    <!-- 讀取遮罩 -->
-    <div id="loading-mask" class="fixed inset-0 bg-white/95 z-[2000] hidden flex-col items-center justify-center">
-      <div class="spinner !w-10 !h-10"></div>
-      <p class="mt-4 font-bold text-gray-500 text-sm">同步資料中...</p>
-    </div>
+<body class="bg-slate-100 min-h-screen flex justify-center">
 
-    <main class="flex-grow pb-32">
-      
-      <!-- 1. 課程專區 -->
-      <section id="view-index" class="view-section active">
-        <div class="p-6 border-b flex justify-between items-center bg-white sticky top-0 z-20 shadow-sm">
-          <div class="flex items-center space-x-2">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" class="w-6 h-6">
-            <h1 class="text-xl font-black">2026 課程報名</h1>
-          </div>
-          <div class="w-10 h-10 rounded-full border bg-slate-100 flex items-center justify-center overflow-hidden">
-            <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-full h-full object-cover">
-          </div>
-        </div>
-        <div id="courseContainer" class="p-5 space-y-4">
-           <div class="text-center py-20"><div class="spinner"></div><p class="text-slate-300 mt-2 font-bold uppercase">Fetching Courses...</p></div>
-        </div>
-      </section>
+<div class="w-full max-w-md bg-white min-h-screen flex flex-col">
 
-      <!-- 2. 報名紀錄 -->
-      <section id="view-query" class="view-section">
-        <div class="p-6 border-b bg-white sticky top-0 z-20 shadow-sm">
-          <h2 class="text-xl font-black">歷史報名查詢</h2>
-        </div>
-        <div id="historyContainer" class="p-5 space-y-4"></div>
-      </section>
-
-      <!-- 3. 會員中心 (學員名冊) -->
-      <section id="view-member" class="view-section">
-        <div class="p-10 border-b bg-white">
-          <h1 id="userNameDisplay" class="text-2xl font-black italic">您好...</h1>
-          <p class="text-xs text-slate-400 font-bold uppercase mt-1 tracking-widest">Personal Account</p>
-        </div>
-        <div class="p-6">
-          <button onclick="showMemberForm()" class="w-full py-4 bg-black text-white rounded-xl font-bold shadow-lg">+ 建立新學員檔案</button>
-        </div>
-        <div id="familyList" class="px-6 space-y-3"></div>
-      </section>
-
-      <!-- 4. 學員表單 -->
-      <section id="view-member-form" class="view-section">
-        <div class="p-6 border-b bg-white sticky top-0 z-20 flex items-center">
-          <button onclick="switchView('member')" class="text-slate-300 mr-4 font-bold text-xl">←</button>
-          <h2 class="font-bold">新增學員資料</h2>
-        </div>
-        <form id="memberForm" class="p-8 space-y-6">
-           <input type="text" id="mName" placeholder="學員姓名" required class="w-full p-4 bg-slate-50 rounded-xl outline-none focus:border-green-500 border border-transparent font-bold">
-           <div class="grid grid-cols-2 gap-4">
-             <select id="mGender" class="w-full p-4 bg-slate-50 rounded-xl font-bold"><option value="男">男</option><option value="女">女</option></select>
-             <input type="date" id="mBirthday" required class="w-full p-4 bg-slate-50 rounded-xl font-bold">
-           </div>
-           <input type="tel" id="mPhone" placeholder="聯絡電話" required class="w-full p-4 bg-slate-50 rounded-xl font-bold">
-           <select id="mRelation" class="w-full p-4 bg-slate-50 rounded-xl font-bold"><option value="本人">本人</option><option value="子女">子女</option><option value="其他">其他</option></select>
-           <button type="submit" class="w-full py-5 bg-green-600 text-white rounded-2xl font-black shadow-xl">儲存學員資料</button>
-        </form>
-      </section>
-    </main>
-
-    <!-- 下方導覽列 -->
-    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 border-t border-slate-100 px-2 py-3 flex justify-around items-center z-50 shadow-2xl backdrop-blur-md">
-      <button onclick="switchView('index')" id="nav-index" class="nav-btn nav-active"><span class="text-2xl">🏠</span><span class="text-[10px] mt-1 font-bold">活動</span></button>
-      <button onclick="switchView('query')" id="nav-query" class="nav-btn"><span class="text-2xl">🔍</span><span class="text-[10px] mt-1 font-bold">紀錄</span></button>
-      <button onclick="switchView('member')" id="nav-member" class="nav-btn"><span class="text-2xl">👤</span><span class="text-[10px] mt-1 font-bold">會員</span></button>
-    </nav>
-
-    <!-- 報名試算彈窗 -->
-    <div id="enrollModal" class="modal-overlay">
-      <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
-        <div class="flex justify-between items-start mb-6">
-          <h3 id="modalTitle" class="text-xl font-black">報名確認</h3>
-          <button onclick="closeModal('enrollModal')" class="text-slate-300 text-3xl">&times;</button>
-        </div>
-        <div class="space-y-6">
-          <div><label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">1. 選擇報名學員</label><select id="selectMember" class="w-full p-4 bg-slate-50 rounded-xl border-b-2 border-green-500 font-bold"></select></div>
-          <div><label class="text-[10px] font-bold text-slate-400 block mb-2 uppercase">2. 勾選【不出席】日期 (依日扣款)</label><div id="absenceBox" class="space-y-1"></div></div>
-          <div class="p-6 bg-slate-900 text-white rounded-2xl">
-            <div class="flex justify-between text-[10px] opacity-60 font-bold mb-1"><span>出席：<span id="attCount">0</span> 天</span><span id="earlyHint" class="text-green-400 hidden">已套用早鳥</span></div>
-            <div class="flex justify-between items-center font-black"><span>應繳總計</span><span id="totalPrice" class="text-2xl text-yellow-400">$0</span></div>
-          </div>
-          <button onclick="submitRegistration()" id="enrollBtn" class="w-full py-5 bg-green-600 text-white rounded-2xl font-black shadow-xl">確認報名並送出</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 課程詳情彈窗 -->
-    <div id="detailModal" class="modal-overlay">
-      <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl overflow-y-auto max-h-[80vh]">
-        <div class="flex justify-between items-center mb-6 border-b pb-4">
-          <h3 id="detailTitle" class="text-xl font-black text-slate-800">活動詳情</h3>
-          <button onclick="closeModal('detailModal')" class="text-slate-300 text-3xl">&times;</button>
-        </div>
-        <div id="detailContent" class="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap"></div>
-        <button onclick="closeModal('detailModal')" class="w-full mt-8 py-4 bg-slate-100 rounded-xl font-bold text-slate-500">關閉視窗</button>
-      </div>
-    </div>
-
+  <!-- Loading -->
+  <div id="loading" class="fixed inset-0 bg-white/90 hidden z-50 flex items-center justify-center">
+    <div class="animate-spin w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full"></div>
   </div>
 
-  <script>
-    const API_URL = "https://sport.wetw-net3.workers.dev/";
-    let currentUid = "";
-    let familyData = [];
-    let courseList = [];
-    let activeCourse = null;
+  <main class="flex-grow p-6 space-y-4">
 
-    async function init() {
-      // ✅ 先顯示載入畫面
-      showLoading(true);
-      
-      try {
-        await liff.init({ liffId: "2008792551-CzPJtVB1" });
-        
-        // ✅ 如果未登入，立即導向登入頁面
-        if (!liff.isLoggedIn()) { 
-          showLoading(false);
-          liff.login(); 
-          return; 
-        }
-        
-        // ✅ 取得使用者資料
-        const profile = await liff.getProfile();
-        currentUid = profile.userId;
-        document.getElementById('userAvatar').src = profile.pictureUrl;
-        document.getElementById('userNameDisplay').innerText = "您好, " + profile.displayName;
-        
-        // ✅ 載入課程資料
-        await loadCourses();
-        
-        // ✅ 隱藏載入畫面
-        showLoading(false);
-        
-        // ✅ 處理 URL 參數切換頁面
-        const urlParams = new URLSearchParams(window.location.search);
-        const view = urlParams.get('view') || 'index';
-        if (view !== 'index') {
-          switchView(view);
-        }
-      } catch (err) { 
-        console.error("LIFF 初始化失敗", err);
-        showLoading(false);
-        alert("系統初始化失敗，請重新整理頁面");
-      }
-    }
+    <h1 class="text-xl font-black">2026 課程報名</h1>
 
-    function switchView(v) {
-      document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-      const target = document.getElementById('view-' + v);
-      if(target) target.classList.add('active');
+    <div id="courseList" class="space-y-4"></div>
 
-      document.querySelectorAll('nav .nav-btn').forEach(b => b.classList.remove('nav-active'));
-      const navKey = v.includes('member') ? 'member' : v;
-      const activeNav = document.getElementById('nav-' + navKey);
-      if(activeNav) activeNav.classList.add('nav-active');
+  </main>
 
-      // ✅ 只有在非首次載入且是特定頁面時才重新載入資料
-      if(v === 'query') loadHistory();
-      if(v === 'member') loadFamily();
-      window.scrollTo(0,0);
-    }
+</div>
 
-    async function loadCourses() {
-      const container = document.getElementById('courseContainer');
-      try {
-        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) });
-        const res = await response.json();
-        courseList = res.data || [];
-        container.innerHTML = courseList.map((c, i) => `
-          <div class="course-card p-6 border border-white">
-            <div class="flex justify-between items-start">
-               <div>
-                 <span class="bg-green-50 text-green-600 px-2 py-0.5 rounded text-[10px] font-black uppercase">${c.類別}</span>
-                 <h3 class="text-lg font-black text-slate-800 mt-2">${c.名稱}</h3>
-                 <p class="text-xs text-slate-400 font-medium mt-1">${c.梯次 || '-'}</p>
-               </div>
-               <div class="text-right">
-                 <p class="text-[#f43f5e] font-black text-xl italic">$${(Number(c.全梯次總價) || 0).toLocaleString()}</p>
-               </div>
-            </div>
-            <div class="mt-6 flex justify-between items-center pt-4 border-t border-slate-50">
-               <span class="text-[10px] text-slate-400 font-bold">📅 ${c.開始} ~ ${c.結束}</span>
-               <div class="flex space-x-2">
-                 <button onclick="openDetails(${i})" class="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl text-xs font-black">詳情</button>
-                 <button onclick="openEnroll(${i})" class="bg-green-600 text-white px-6 py-2 rounded-xl text-xs font-black shadow-md">報名</button>
-               </div>
-            </div>
-          </div>`).join('');
-      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">連線中心失敗</p>'; }
-    }
+<script>
+/* =====================================================
+ * 環境判斷（GitHub / GAS / LIFF 共用）
+ * ===================================================== */
+const API = location.hostname.includes('github')
+  ? 'https://你的GAS網址/exec'
+  : location.href;
 
-    function openDetails(idx) {
-      const c = courseList[idx];
-      document.getElementById('detailTitle').innerText = c.名稱;
-      document.getElementById('detailContent').innerText = c.說明 || "暫無詳細說明。";
-      document.getElementById('detailModal').classList.add('modal-active');
-    }
+let uid = '';
+let courses = [];
+let activeCourse = null;
+let family = [];
 
-    function openEnroll(idx) {
-      if(!familyData.length) { alert("請先至會員中心建立學員檔案！"); switchView('member'); return; }
-      activeCourse = courseList[idx];
-      document.getElementById('modalTitle').innerText = activeCourse.名稱;
-      document.getElementById('earlyHint').classList.toggle('hidden', !activeCourse.是否早鳥);
-      
-      const dates = generateDateArray(activeCourse.開始, activeCourse.結束);
-      document.getElementById('absenceBox').innerHTML = dates.map((d, i) => `
-        <label class="flex items-center justify-between p-4 bg-slate-50 border rounded-xl cursor-pointer mb-1" id="abs-item-${i}">
-          <span class="text-sm font-bold font-mono">${d}</span>
-          <div class="flex items-center space-x-2">
-            <span class="text-[9px] text-slate-300 font-bold">不出席</span>
-            <input type="checkbox" class="w-5 h-5 accent-red-500 abs-check" value="${d}" onchange="calculate()">
-          </div>
-        </label>`).join('');
+/* =====================================================
+ * 初始化
+ * ===================================================== */
+async function init() {
+  showLoading(true);
+  await liff.init({ liffId: "2008792551-CzPJtVB1" });
+  if (!liff.isLoggedIn()) return liff.login();
 
-      document.getElementById('selectMember').innerHTML = familyData.map(f => `<option value="${f.name}|${f.phone}">${f.name} (${f.relation})</option>`).join('');
-      calculate();
-      document.getElementById('enrollModal').classList.add('modal-active');
-    }
+  const profile = await liff.getProfile();
+  uid = profile.userId;
 
-    function calculate() {
-      const checks = document.querySelectorAll('.abs-check');
-      const absentCount = Array.from(checks).filter(c => c.checked).length;
-      const totalDays = generateDateArray(activeCourse.開始, activeCourse.結束).length;
-      const attDays = Math.max(0, totalDays - absentCount);
-      
-      checks.forEach((c, i) => {
-        const item = document.getElementById(`abs-item-${i}`);
-        if(item) item.classList.toggle('absent-row', c.checked);
-      });
+  await loadCourses();
+  showLoading(false);
+}
 
-      const baseFinal = Number(activeCourse.全梯次總價) - (absentCount * Number(activeCourse.每日扣除額 || 0));
-      document.getElementById('totalPrice').innerText = "$" + Math.max(0, baseFinal).toLocaleString();
-      document.getElementById('attCount').innerText = attDays;
-    }
+/* =====================================================
+ * 課程
+ * ===================================================== */
+async function loadCourses() {
+  const res = await post({ action: 'getCourses' });
+  courses = res.data || [];
+  document.getElementById('courseList').innerHTML =
+    courses.map((c,i)=>`
+      <div class="bg-white p-5 rounded-2xl shadow">
+        <div class="font-black">${c.名稱}</div>
+        <div class="text-sm text-slate-400">${c.開始} ~ ${c.結束}</div>
+        <button onclick="openEnroll(${i})"
+          class="mt-4 w-full py-3 bg-green-600 text-white rounded-xl font-bold">
+          報名
+        </button>
+      </div>
+    `).join('');
+}
 
-    async function submitRegistration() {
-      const btn = document.getElementById('enrollBtn');
-      const attDays = Number(document.getElementById('attCount').innerText);
-      if(attDays <= 0) return alert("出席天數不可為 0");
-      
-      btn.disabled = true; 
-      btn.innerText = "正在傳送...";
-      
-      const [name, phone] = document.getElementById('selectMember').value.split('|');
-      const absentDates = Array.from(document.querySelectorAll('.abs-check:checked')).map(c => c.value).join(',') || "無";
-      
-      // ✅ 修正：正確提取金額（移除所有 $ 和逗號）
-      const totalPriceText = document.getElementById('totalPrice').innerText;
-      const cleanPrice = totalPriceText.replace(/[$,]/g, '');
-      const finalPrice = Number(cleanPrice) || 0;
-      
-      // ✅ 修正：確保課程名稱和出席詳情正確
-      const fullCourseName = `${activeCourse.名稱}${activeCourse.梯次 ? ' (' + activeCourse.梯次 + ')' : ''}`;
-      const attendanceDetail = `出席 ${attDays} 天 (缺席: ${absentDates})`;
-      
-      // ✅ 除錯：顯示即將送出的資料
-      console.log('📤 準備送出的報名資料:', {
-        課程ID: activeCourse.id,
-        課程名稱: fullCourseName,
-        出席詳情: attendanceDetail,
-        金額: finalPrice
-      });
+/* =====================================================
+ * 報名（不算錢）
+ * ===================================================== */
+async function openEnroll(i) {
+  activeCourse = courses[i];
 
-      try {
-        const payload = { 
-          action: 'register', 
-          userId: currentUid, 
-          name, 
-          phone, 
-          sessionId: activeCourse.id,
-          courseName: fullCourseName,
-          attendance: attendanceDetail,
-          totalPrice: finalPrice,
-          selectedEquips: "無"
-        };
-        
-        console.log('📤 實際送出 payload:', payload);
-        
-        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        const res = await response.json();
-        
-        console.log('📥 後端回應:', res);
-        
-        if(res.success) { 
-          alert(`報名成功！\n課程：${fullCourseName}\n金額：$${finalPrice.toLocaleString()}`); 
-          closeModal('enrollModal'); 
-          switchView('query'); 
-        } else {
-          alert('報名失敗：' + res.msg);
-        }
-      } catch(e) { 
-        console.error('❌ 報名錯誤:', e);
-        alert("系統連線異常"); 
-      }
-      finally { 
-        btn.disabled = false; 
-        btn.innerText = "確認報名並送出"; 
-      }
-    }
+  const payload = {
+    action: 'register',
+    userId: uid,
+    name: '測試學員',
+    sessionId: activeCourse.id,
+    absence: [] // 之後再擴
+  };
 
-    async function loadFamily() {
-      const container = document.getElementById('familyList');
-      if(!currentUid) return;
-      container.innerHTML = '<div class="py-10 text-center"><div class="spinner"></div></div>';
-      try {
-        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getFamily', userId: currentUid }) });
-        const res = await response.json();
-        familyData = res.data || [];
-        container.innerHTML = familyData.length ? familyData.map(f => `
-          <div class="bg-slate-50 p-5 rounded-2xl flex justify-between items-center border border-white">
-            <div>
-              <div class="font-black text-slate-800 text-lg">${f.name}</div>
-              <div class="text-[10px] text-slate-400 font-bold uppercase">${f.phone} | ${f.relation}</div>
-            </div>
-            <span class="text-2xl">${f.gender === '女' ? '👧' : '👦'}</span>
-          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">目前無成員，請點擊上方按鈕建立。</p>';
-      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">載入成員失敗</p>'; }
-    }
+  const res = await post(payload);
 
-    async function loadHistory() {
-      const container = document.getElementById('historyContainer');
-      container.innerHTML = '<div class="py-20 text-center"><div class="spinner"></div></div>';
-      try {
-        const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getUserRegistrations', userId: currentUid }) });
-        const res = await response.json();
-        const data = res.data || [];
-        container.innerHTML = data.length ? data.map(r => `
-          <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-            <div class="text-[10px] text-green-600 font-black mb-1">${r.日期}</div>
-            <h4 class="font-black text-slate-800 leading-tight">${r.課程}</h4>
-            <p class="text-[10px] text-slate-400 font-bold mt-2">學員：${r.姓名}<br>${r.出席詳情}</p>
-            <div class="mt-4 flex justify-between items-center pt-4 border-t border-slate-50">
-              <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-bold">${r.狀態}</span>
-              <span class="text-lg font-black text-slate-800">$${(Number(r.金額) || 0).toLocaleString()}</span>
-            </div>
-          </div>`).join('') : '<p class="text-center py-20 text-slate-300 font-bold">尚無任何歷史紀錄</p>';
-      } catch(e) { container.innerHTML = '<p class="text-center py-20 text-red-400">讀取紀錄失敗</p>'; }
-    }
+  alert(
+    res.success
+      ? `報名成功\n金額：$${res.data.paidAmount}`
+      : res.msg
+  );
+}
 
-    function generateDateArray(s, e) {
-      let d = []; let curr = new Date(s); let stop = new Date(e);
-      while(curr <= stop) { d.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate()+1); }
-      return d;
-    }
-    
-    function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
-    function showMemberForm() { document.getElementById('memberForm').reset(); switchView('member-form'); }
-    function showLoading(s) { 
-      const mask = document.getElementById('loading-mask');
-      if (s) {
-        mask.style.display = 'flex';
-      } else {
-        mask.style.display = 'none';
-      }
-    }
-    
-    document.getElementById('memberForm').onsubmit = async (e) => {
-      e.preventDefault();
-      showLoading(true);
-      const payload = { 
-        action: 'saveFamily', 
-        userId: currentUid, 
-        name: document.getElementById('mName').value, 
-        gender: document.getElementById('mGender').value, 
-        phone: document.getElementById('mPhone').value, 
-        birthday: document.getElementById('mBirthday').value, 
-        relation: document.getElementById('mRelation').value 
-      };
-      try {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        showLoading(false); 
-        alert("學員資料儲存成功！"); 
-        switchView('member');
-      } catch(err) { 
-        showLoading(false); 
-        alert("系統忙碌中"); 
-      }
-    };
+/* =====================================================
+ * 工具
+ * ===================================================== */
+async function post(body) {
+  const r = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
 
-    window.onload = init;
-  </script>
+function showLoading(v){
+  document.getElementById('loading').style.display = v?'flex':'none';
+}
+
+window.onload = init;
+</script>
+
 </body>
 </html>
