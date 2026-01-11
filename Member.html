@@ -1,235 +1,153 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>運動島 Sports Island</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>運動島 2026</title>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-  <!-- LIFF -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
-  <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont; }
-    .nav-btn { color:#94a3b8 }
-    .nav-active { color:#16a34a; font-weight:900 }
-    .course-card { background:#fff; border-radius:16px; padding:16px; border:1px solid #e5e7eb }
-    .member-card { border:1px solid #e5e7eb; border-radius:14px; padding:14px; cursor:pointer }
-    .member-active { border-color:#16a34a; background:#f0fdf4 }
-  </style>
+<style>
+.member-card {
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:14px;
+  cursor:pointer;
+}
+.member-card:hover { background:#f8fafc }
+.modal {
+  position:fixed; inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+.modal.active { display:flex }
+</style>
 </head>
 
 <body class="bg-slate-100 min-h-screen flex justify-center">
 
-<div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-xl">
+<div class="w-full max-w-md bg-white min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="p-5 border-b flex justify-between items-center">
-    <h1 class="font-black text-xl">運動島 2026</h1>
-    <div class="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-      <img id="userAvatar" class="w-full h-full object-cover">
-    </div>
-  </header>
+<header class="p-5 border-b flex justify-between items-center">
+  <h1 class="font-black text-xl">運動島 2026</h1>
+  <img id="userAvatar" class="w-10 h-10 rounded-full bg-slate-200">
+</header>
 
-  <!-- ✅ BANNER -->
-  <div class="w-full">
-    <img
-      src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
-      class="w-full object-cover"
-      alt="運動島 Banner"
-    >
-  </div>
+<main class="flex-1 overflow-y-auto p-4 pb-24">
+  <h2 class="text-sm font-bold text-slate-400 mb-2">會員名單（點擊可編輯）</h2>
+  <div id="familyList" class="space-y-3 text-sm text-slate-400">載入中…</div>
+</main>
 
-  <!-- Main -->
-  <main class="flex-1 overflow-y-auto pb-28">
-
-    <!-- 活動 -->
-    <section id="view-index" class="p-4 space-y-4">
-      <div id="courseContainer" class="text-slate-400 text-sm">
-        載入課程中…
-      </div>
-    </section>
-
-    <!-- 紀錄 -->
-    <section id="view-query" class="hidden p-4 space-y-3">
-      <div id="historyContainer" class="text-slate-400 text-sm">
-        尚無紀錄
-      </div>
-    </section>
-
-    <!-- 會員 -->
-    <section id="view-member" class="hidden p-4 space-y-3">
-      <p class="text-xs text-slate-400 font-bold uppercase">選擇學員</p>
-      <div id="familyList" class="space-y-3">
-        載入會員資料中…
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Bottom Nav -->
-  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t flex justify-around py-3">
-    <button id="nav-index" class="nav-btn nav-active" onclick="switchView('index')">活動</button>
-    <button id="nav-query" class="nav-btn" onclick="switchView('query')">紀錄</button>
-    <button id="nav-member" class="nav-btn" onclick="switchView('member')">會員</button>
-  </nav>
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t h-16 flex justify-around items-center">
+  <button onclick="loadFamily()">會員</button>
+</nav>
 
 </div>
 
-<script>
-/* ===============================
- * API（鎖死 Worker）
- * =============================== */
-const API_URL = "https://sport.wetw-net3.workers.dev/";
+<!-- 編輯會員 Modal -->
+<div id="editModal" class="modal">
+  <div class="bg-white w-full max-w-sm rounded-2xl p-6 space-y-4">
+    <h3 class="font-black text-lg">編輯學員</h3>
 
-/* ===============================
- * 狀態
- * =============================== */
-let currentUid = "";
-let selectedMemberIndex = null;
+    <input id="editName" class="w-full p-3 border rounded-xl" placeholder="姓名">
+    <input id="editPhone" class="w-full p-3 border rounded-xl" placeholder="電話">
+    <select id="editRelation" class="w-full p-3 border rounded-xl">
+      <option>本人</option>
+      <option>子女</option>
+      <option>其他</option>
+    </select>
 
-/* ===============================
- * 初始化
- * =============================== */
-async function init() {
-  await liff.init({ liffId: "2008792551-CzPJtVB1" });
-
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
-
-  const profile = await liff.getProfile();
-  currentUid = profile.userId;
-  document.getElementById('userAvatar').src = profile.pictureUrl;
-
-  loadCourses();
-}
-
-/* ===============================
- * 切換頁面
- * =============================== */
-function switchView(v) {
-  ["index","query","member"].forEach(k=>{
-    document.getElementById("view-"+k).classList.add("hidden");
-    document.getElementById("nav-"+k).classList.remove("nav-active");
-  });
-  document.getElementById("view-"+v).classList.remove("hidden");
-  document.getElementById("nav-"+v).classList.add("nav-active");
-
-  if (v === "member") loadFamily();
-  if (v === "query") loadHistory();
-}
-
-/* ===============================
- * 課程
- * =============================== */
-async function loadCourses() {
-  const box = document.getElementById('courseContainer');
-  const res = await fetch(API_URL, {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ action:"getCourses" })
-  });
-  const json = await res.json();
-
-  if (!json.data || json.data.length === 0) {
-    box.innerHTML = "目前尚無課程";
-    return;
-  }
-
-  box.innerHTML = json.data.map(c => `
-    <div class="course-card">
-      <div class="font-black text-lg">${c.名稱}</div>
-      <div class="text-xs text-slate-400 mt-1">${c.開始} ～ ${c.結束}</div>
-      <div class="text-green-600 font-black text-xl mt-2">$${Number(c.價格 || 0)}</div>
-      <button class="mt-4 w-full py-3 bg-green-600 text-white rounded-xl font-bold">
-        報名
-      </button>
+    <div class="flex space-x-2 pt-2">
+      <button onclick="closeModal()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">取消</button>
+      <button onclick="saveMember()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold">儲存</button>
     </div>
-  `).join("");
+  </div>
+</div>
+
+<script>
+const API_URL = "https://sport.wetw-net3.workers.dev/";
+let currentUid = "";
+let familyData = [];
+let editingIndex = null;
+
+/* 初始化 */
+async function init(){
+  await liff.init({ liffId:"2008792551-CzPJtVB1" });
+  if(!liff.isLoggedIn()){ liff.login(); return; }
+  const p = await liff.getProfile();
+  currentUid = p.userId;
+  userAvatar.src = p.pictureUrl;
+  loadFamily();
 }
 
-/* ===============================
- * 會員（可點擊）
- * =============================== */
-async function loadFamily() {
-  const box = document.getElementById('familyList');
-  box.innerHTML = "讀取中…";
-
-  const res = await fetch(API_URL, {
+/* 讀會員 */
+async function loadFamily(){
+  const box = document.getElementById("familyList");
+  box.innerHTML = "載入中…";
+  const r = await fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      action:"getFamily",
-      userId: currentUid
-    })
+    body:JSON.stringify({ action:"getFamily", userId:currentUid })
   });
-  const json = await res.json();
+  const j = await r.json();
+  familyData = j.data || [];
 
-  if (!json.data || json.data.length === 0) {
-    box.innerHTML = "尚未建立學員資料";
-    return;
-  }
-
-  selectedMemberIndex = null;
-
-  box.innerHTML = json.data.map((f, i) => `
-    <div
-      class="member-card"
-      id="member-${i}"
-      onclick="selectMember(${i})"
-    >
+  box.innerHTML = familyData.map((f,i)=>`
+    <div class="member-card" onclick="openEdit(${i})">
       <div class="font-bold">${f.name}</div>
       <div class="text-xs text-slate-400">${f.phone}｜${f.relation}</div>
     </div>
-  `).join("");
+  `).join("") || "尚無學員";
 }
 
-function selectMember(idx) {
-  document.querySelectorAll('.member-card').forEach(el => {
-    el.classList.remove('member-active');
-  });
-  const target = document.getElementById('member-' + idx);
-  if (target) {
-    target.classList.add('member-active');
-    selectedMemberIndex = idx;
-  }
+/* 開啟編輯 */
+function openEdit(i){
+  editingIndex = i;
+  const f = familyData[i];
+  editName.value = f.name;
+  editPhone.value = f.phone;
+  editRelation.value = f.relation;
+  editModal.classList.add("active");
 }
 
-/* ===============================
- * 紀錄
- * =============================== */
-async function loadHistory() {
-  const box = document.getElementById('historyContainer');
-  const res = await fetch(API_URL, {
+/* 關閉 */
+function closeModal(){
+  editModal.classList.remove("active");
+}
+
+/* 儲存 */
+async function saveMember(){
+  const f = familyData[editingIndex];
+  const payload = {
+    action:"updateFamily",
+    userId:currentUid,
+    oldName:f.name,
+    oldPhone:f.phone,
+    name:editName.value,
+    phone:editPhone.value,
+    relation:editRelation.value
+  };
+
+  const r = await fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      action:"getUserRegistrations",
-      userId: currentUid
-    })
+    body:JSON.stringify(payload)
   });
-  const json = await res.json();
+  const j = await r.json();
 
-  if (!json.data || json.data.length === 0) {
-    box.innerHTML = "尚無報名紀錄";
-    return;
+  if(j.success){
+    closeModal();
+    loadFamily();
+  } else {
+    alert(j.msg || "更新失敗");
   }
-
-  box.innerHTML = json.data.map(r => `
-    <div class="border rounded-xl p-4">
-      <div class="font-bold">${r.課程}</div>
-      <div class="text-xs text-slate-400">${r.日期}</div>
-      <div class="text-right font-black">$${Number(r.金額 || 0)}</div>
-    </div>
-  `).join("");
 }
 
 window.onload = init;
 </script>
-
 </body>
 </html>
