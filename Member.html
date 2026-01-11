@@ -1,4 +1,4 @@
-<!-- 檔案名稱：Member.html (V6.8.0 - 導覽邏輯與詳情功能全修復) -->
+<!-- 檔案名稱：Member.html (V6.8.1 - 報名金額與資料結構完整修復) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -48,7 +48,6 @@
             <img src="https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg" class="w-6 h-6">
             <h1 class="text-xl font-black">2026 課程報名</h1>
           </div>
-          <!-- 修正：改用內嵌 SVG 避免載入失敗 -->
           <div class="w-10 h-10 rounded-full border bg-slate-100 flex items-center justify-center overflow-hidden">
             <img id="userAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ccc'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E" class="w-full h-full object-cover">
           </div>
@@ -153,7 +152,6 @@
         document.getElementById('userAvatar').src = profile.pictureUrl;
         document.getElementById('userNameDisplay').innerText = "您好, " + profile.displayName;
         
-        // --- 核心修正：判斷 URL 視圖參數，解決會員跳課程問題 ---
         const urlParams = new URLSearchParams(window.location.search);
         const view = urlParams.get('view') || 'index';
         switchView(view);
@@ -173,7 +171,6 @@
       const activeNav = document.getElementById('nav-' + navKey);
       if(activeNav) activeNav.classList.add('nav-active');
 
-      // 載入資料
       if(v === 'index') loadCourses();
       if(v === 'query') loadHistory();
       if(v === 'member') loadFamily();
@@ -186,7 +183,6 @@
         const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'getCourses' }) });
         const res = await response.json();
         courseList = res.data || [];
-        // --- 補回按鈕功能與詳情按鈕 ---
         container.innerHTML = courseList.map((c, i) => `
           <div class="course-card p-6 border border-white">
             <div class="flex justify-between items-start">
@@ -259,23 +255,64 @@
       const attDays = Number(document.getElementById('attCount').innerText);
       if(attDays <= 0) return alert("出席天數不可為 0");
       
-      btn.disabled = true; btn.innerText = "正在傳送...";
+      btn.disabled = true; 
+      btn.innerText = "正在傳送...";
+      
       const [name, phone] = document.getElementById('selectMember').value.split('|');
       const absentDates = Array.from(document.querySelectorAll('.abs-check:checked')).map(c => c.value).join(',') || "無";
+      
+      // ✅ 修正：正確提取金額（移除所有 $ 和逗號）
+      const totalPriceText = document.getElementById('totalPrice').innerText;
+      const cleanPrice = totalPriceText.replace(/[$,]/g, '');
+      const finalPrice = Number(cleanPrice) || 0;
+      
+      // ✅ 修正：確保課程名稱和出席詳情正確
+      const fullCourseName = `${activeCourse.名稱}${activeCourse.梯次 ? ' (' + activeCourse.梯次 + ')' : ''}`;
+      const attendanceDetail = `出席 ${attDays} 天 (缺席: ${absentDates})`;
+      
+      // ✅ 除錯：顯示即將送出的資料
+      console.log('📤 準備送出的報名資料:', {
+        課程ID: activeCourse.id,
+        課程名稱: fullCourseName,
+        出席詳情: attendanceDetail,
+        金額: finalPrice
+      });
 
       try {
         const payload = { 
-          action: 'register', userId: currentUid, name, phone, sessionId: activeCourse.id, 
-          courseName: `${activeCourse.名稱} (${activeCourse.梯次 || '-'})`, 
-          attendance: `出席 ${attDays} 天 (缺席: ${absentDates})`, 
-          totalPrice: document.getElementById('totalPrice').innerText.replace('$', '').replace(',', ''),
+          action: 'register', 
+          userId: currentUid, 
+          name, 
+          phone, 
+          sessionId: activeCourse.id,
+          courseName: fullCourseName,
+          attendance: attendanceDetail,
+          totalPrice: finalPrice,
           selectedEquips: "無"
         };
+        
+        console.log('📤 實際送出 payload:', payload);
+        
         const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
         const res = await response.json();
-        if(res.success) { alert("報名已成功送出！"); closeModal('enrollModal'); switchView('query'); }
-      } catch(e) { alert("系統連線異常"); }
-      finally { btn.disabled = false; btn.innerText = "確認報名並送出"; }
+        
+        console.log('📥 後端回應:', res);
+        
+        if(res.success) { 
+          alert(`報名成功！\n課程：${fullCourseName}\n金額：$${finalPrice.toLocaleString()}`); 
+          closeModal('enrollModal'); 
+          switchView('query'); 
+        } else {
+          alert('報名失敗：' + res.msg);
+        }
+      } catch(e) { 
+        console.error('❌ 報名錯誤:', e);
+        alert("系統連線異常"); 
+      }
+      finally { 
+        btn.disabled = false; 
+        btn.innerText = "確認報名並送出"; 
+      }
     }
 
     async function loadFamily() {
@@ -322,6 +359,7 @@
       while(curr <= stop) { d.push(curr.toISOString().split('T')[0]); curr.setDate(curr.getDate()+1); }
       return d;
     }
+    
     function closeModal(id) { document.getElementById(id).classList.remove('modal-active'); }
     function showMemberForm() { document.getElementById('memberForm').reset(); switchView('member-form'); }
     function showLoading(s) { document.getElementById('loading-mask').style.display = s ? 'flex' : 'none'; }
@@ -329,11 +367,24 @@
     document.getElementById('memberForm').onsubmit = async (e) => {
       e.preventDefault();
       showLoading(true);
-      const payload = { action: 'saveFamily', userId: currentUid, name: document.getElementById('mName').value, gender: document.getElementById('mGender').value, phone: document.getElementById('mPhone').value, birthday: document.getElementById('mBirthday').value, relation: document.getElementById('mRelation').value };
+      const payload = { 
+        action: 'saveFamily', 
+        userId: currentUid, 
+        name: document.getElementById('mName').value, 
+        gender: document.getElementById('mGender').value, 
+        phone: document.getElementById('mPhone').value, 
+        birthday: document.getElementById('mBirthday').value, 
+        relation: document.getElementById('mRelation').value 
+      };
       try {
         await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
-        showLoading(false); alert("學員資料儲存成功！"); switchView('member');
-      } catch(err) { showLoading(false); alert("系統忙碌中"); }
+        showLoading(false); 
+        alert("學員資料儲存成功！"); 
+        switchView('member');
+      } catch(err) { 
+        showLoading(false); 
+        alert("系統忙碌中"); 
+      }
     };
 
     window.onload = init;
