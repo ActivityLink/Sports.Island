@@ -1,4 +1,4 @@
-<!-- 檔案名稱：admin.html (LINE OA 專業版 V6.7.4 - 版面與費用修復) -->
+<!-- 檔案名稱：admin.html (LINE OA 專業版 V6.7.5 - 點擊與內容修復) -->
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -10,52 +10,65 @@
     :root { --line-green: #06C755; --bg-gray: #F4F5F7; --border-color: #E7E9ED; }
     body { background-color: var(--bg-gray); font-family: 'Noto Sans TC', sans-serif; color: #000; margin: 0; font-size: 15px; }
     
+    /* 側欄 (LINE OA 標準) */
     .sidebar { width: 220px; background: #FFF; border-right: 1px solid var(--border-color); height: 100vh; position: fixed; z-index: 50; }
-    .sidebar-item { padding: 16px 24px; display: block; width: 100%; text-align: left; font-weight: 500; }
+    .sidebar-header { padding: 32px 24px; border-bottom: 1px solid var(--border-color); font-weight: 900; color: var(--line-green); font-size: 20px; letter-spacing: -1px; }
+    .sidebar-item { padding: 18px 24px; display: block; width: 100%; text-align: left; font-weight: 500; transition: 0.2s; }
     .sidebar-item.active { background: #F0FBF5; color: var(--line-green); border-right: 4px solid var(--line-green); font-weight: 700; }
 
+    /* 全螢幕編輯器 */
     #full-editor { display: none; position: fixed; inset: 0; background: var(--bg-gray); z-index: 1000; overflow-y: auto; }
     #full-editor.active { display: block; }
     
     .spec-card { background: #FFF; border: 1px solid var(--border-color); border-radius: 12px; padding: 40px; margin: 20px auto; max-width: 1000px; }
     .section-title { font-size: 18px; font-weight: 900; margin-bottom: 24px; display: flex; align-items: center; }
-    .section-title::before { content: ''; width: 4px; height: 18px; background: var(--line-green); margin-right: 12px; }
+    .section-title::before { content: ''; width: 4px; height: 18px; background: var(--line-green); margin-right: 12px; border-radius: 2px; }
 
     .input-label { font-size: 13px; font-weight: 700; color: #666; margin-bottom: 8px; display: block; }
-    .form-input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 16px; outline: none; transition: border 0.2s; color: #000; }
-    .form-input:focus { border-color: var(--line-green); }
+    .form-input { width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 16px; outline: none; transition: border 0.2s; color: #000; font-weight: 500; }
+    .form-input:focus { border-color: var(--line-green); box-shadow: 0 0 0 3px rgba(6, 199, 85, 0.05); }
 
-    .btn-primary { background: var(--line-green); color: #FFF; padding: 12px 32px; border-radius: 6px; font-weight: 700; }
-    .btn-outline { border: 1px solid var(--line-green); color: var(--line-green); padding: 6px 14px; border-radius: 4px; font-weight: 700; font-size: 13px; }
+    /* 按鈕樣式 */
+    .btn-primary { background: var(--line-green); color: #FFF; padding: 12px 36px; border-radius: 6px; font-weight: 700; }
+    .btn-outline { border: 1px solid var(--line-green); color: var(--line-green); padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 13px; background: #FFF; }
+    .btn-outline:hover { background: #F0FBF5; }
     
     #loading-mask { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: none; flex-direction: column; items-center justify-center; z-index: 9999; }
     .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--line-green); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+    /* 表格樣式優化 */
     table { width: 100%; border-collapse: collapse; background: #FFF; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
-    table th { background-color: #FBFBFC; padding: 14px 20px; text-align: left; font-size: 13px; color: #666; border-bottom: 1px solid var(--border-color); }
-    table td { padding: 18px 20px; border-bottom: 1px solid var(--border-color); font-weight: 500; }
+    table th { background-color: #FBFBFC; padding: 16px 20px; text-align: left; font-size: 13px; color: #666; border-bottom: 1px solid var(--border-color); font-weight: 700; }
+    table td { padding: 20px; border-bottom: 1px solid #F9FAFB; vertical-align: middle; }
+    .tag-green { background: #F0FBF5; color: var(--line-green); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
   </style>
 </head>
 <body class="flex">
 
+  <!-- 讀取中遮罩 -->
   <div id="loading-mask" class="flex flex-col items-center justify-center">
     <div class="spinner"></div>
-    <p class="mt-4 font-bold text-slate-500">正在執行同步工作...</p>
+    <p class="mt-4 font-bold text-slate-500">正在處理雲端請求...</p>
   </div>
 
+  <!-- 側邊選單 -->
   <aside class="sidebar">
-    <div class="p-8 border-b font-black text-lg text-green-600 tracking-tighter">SI MANAGER</div>
+    <div class="sidebar-header">SI MANAGER</div>
     <nav class="mt-4">
       <button onclick="switchTab('courses')" id="btn-courses" class="sidebar-item active">課程規格管理</button>
       <button onclick="switchTab('settings')" id="btn-settings" class="sidebar-item">全局參數設定</button>
     </nav>
   </aside>
 
+  <!-- 主內容區 -->
   <main class="flex-grow ml-[220px] p-10">
-    <div class="flex justify-between items-end mb-8">
-      <div><h2 class="text-3xl font-black">課程規格清單</h2><p class="text-slate-400 font-medium">請確認各項課程之費用 (J 欄位) 與請假扣除額。</p></div>
-      <button onclick="openNewCourse()" class="btn-primary">+ 新增課程規格</button>
+    <div class="flex justify-between items-end mb-10">
+      <div>
+        <h2 class="text-3xl font-black">課程規格清單</h2>
+        <p class="text-slate-400 font-medium mt-1">管理各項營運參數與活動詳細說明 (Q 欄位)。</p>
+      </div>
+      <button onclick="openNewCourse()" class="btn-primary shadow-lg">+ 新增課程規格</button>
     </div>
 
     <div class="bg-white">
@@ -64,12 +77,16 @@
           <tr>
             <th class="w-24">編號</th>
             <th class="w-24">類別</th>
-            <th>名稱 / 梯次 / 教練</th>
-            <th class="w-64">財務與費用設定</th>
+            <th>課程名稱 / 教練 / 詳細活動</th>
+            <th class="w-64">財務設定 (J 欄)</th>
             <th class="text-right w-40">管理</th>
           </tr>
         </thead>
-        <tbody id="courseTableBody"></tbody>
+        <tbody id="courseTableBody">
+          <tr>
+            <td colspan="5" class="p-20 text-center text-slate-300 font-bold">載入資料庫中...</td>
+          </tr>
+        </tbody>
       </table>
     </div>
   </main>
@@ -77,58 +94,63 @@
   <!-- 全螢幕編輯器 -->
   <div id="full-editor">
     <div class="bg-white p-6 border-b flex justify-between items-center sticky top-0 z-10 shadow-sm">
-      <h2 class="text-xl font-black">編修課程核心規格</h2>
+      <div>
+        <h2 class="text-xl font-black">編修課程核心規格</h2>
+        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">3-Tier Logic V6.7.5</p>
+      </div>
       <div class="space-x-4">
-        <button onclick="closeEditor()" class="px-8 py-2 border rounded font-bold text-slate-400">取消返回</button>
-        <button onclick="submitCourseForm()" class="btn-primary">儲存並同步雲端</button>
+        <button onclick="closeEditor()" class="px-8 py-2 border rounded font-bold text-slate-400 hover:bg-slate-50">取消返回</button>
+        <button onclick="submitCourseForm()" class="btn-primary shadow-lg">儲存並同步發布</button>
       </div>
     </div>
 
-    <div class="max-w-5xl mx-auto py-10 px-6 pb-40">
+    <div class="max-w-5xl mx-auto py-12 px-6 pb-40">
       <!-- 01 基礎 -->
       <div class="spec-card">
-        <h3 class="section-title">01 基礎資料</h3>
+        <h3 class="section-title">01 基礎定義與教練</h3>
         <div class="grid grid-cols-4 gap-6">
           <input type="hidden" id="f-id">
           <div class="col-span-1"><label class="input-label">類別</label>
-            <select id="f-category" class="form-input">
+            <select id="f-category" class="form-input font-bold">
               <option value="梯次">梯次課程</option><option value="單日">單日課程</option><option value="營隊">營隊專區</option><option value="課後">課後班</option>
             </select>
           </div>
-          <div class="col-span-3"><label class="input-label">課程正式全名</label><input type="text" id="f-name" class="form-input font-bold text-lg"></div>
+          <div class="col-span-3"><label class="input-label">課程正式全名 (模板名稱)</label><input type="text" id="f-name" class="form-input font-bold text-lg"></div>
         </div>
         <div class="grid grid-cols-2 gap-6 mt-8">
-           <input type="text" id="f-coach" placeholder="負責教練" class="form-input">
-           <input type="text" id="f-batch" placeholder="梯次代號 (如：第一梯次)" class="form-input">
+           <div><label class="input-label">負責教練</label><input type="text" id="f-coach" placeholder="例如：王教練" class="form-input"></div>
+           <div><label class="input-label">梯次代號</label><input type="text" id="f-batch" placeholder="例如：第一梯次" class="form-input"></div>
         </div>
       </div>
 
-      <!-- 02 財務 (精確校對：J 欄位為課程費用) -->
+      <!-- 02 財務 -->
       <div class="spec-card">
-        <h3 class="section-title">02 財務與收費設定 (核心參數)</h3>
+        <h3 class="section-title">02 財務費用與日期 (精確模式)</h3>
         <div class="grid grid-cols-4 gap-6">
-          <div><label class="input-label">1. 課程費用 (J 欄)</label><input type="text" id="f-fullPrice" placeholder="5000" class="form-input font-black text-lg border-slate-400"></div>
-          <div><label class="input-label">2. 優惠價</label><input type="text" id="f-discountPrice" placeholder="4500" class="form-input font-bold text-blue-600"></div>
-          <div><label class="input-label">3. 早鳥價</label><input type="text" id="f-earlyPrice" placeholder="4000" class="form-input font-bold text-green-600"></div>
-          <div><label class="input-label text-red-500">4. 請假預扣除金 / 日</label><input type="text" id="f-baseUnit" placeholder="500" class="form-input font-bold text-red-500 border-red-200"></div>
+          <div><label class="input-label font-bold">1. 課程費用 (定價)</label><input type="number" id="f-fullPrice" placeholder="5000" class="form-input font-black text-lg border-slate-400"></div>
+          <div><label class="input-label">2. 優惠價</label><input type="number" id="f-discountPrice" placeholder="4500" class="form-input font-bold text-blue-600"></div>
+          <div><label class="input-label">3. 早鳥價</label><input type="number" id="f-earlyPrice" placeholder="4000" class="form-input font-bold text-green-600"></div>
+          <div><label class="input-label text-red-500 font-bold">4. 請假預扣金 / 日</label><input type="number" id="f-baseUnit" placeholder="500" class="form-input font-bold text-red-500 border-red-200"></div>
         </div>
         <div class="grid grid-cols-3 gap-6 mt-10 p-6 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl">
            <div><label class="input-label">早鳥截止日期</label><input type="date" id="f-earlyDeadline" class="form-input"></div>
-           <div><label class="input-label">開始日期</label><input type="date" id="f-start" class="form-input"></div>
-           <div><label class="input-label">結束日期</label><input type="date" id="f-end" class="form-input"></div>
+           <div><label class="input-label">課程開始日期</label><input type="date" id="f-start" class="form-input"></div>
+           <div><label class="input-label">課程結束日期</label><input type="date" id="f-end" class="form-input"></div>
         </div>
       </div>
 
-      <!-- 03 發布 -->
+      <!-- 03 詳細說明 -->
       <div class="spec-card">
-        <h3 class="section-title">03 營運發布詳情</h3>
-        <div class="grid grid-cols-2 gap-8">
-           <div><label class="input-label">活動封面圖 (HTTPS)</label><input type="text" id="f-img" class="form-input font-mono text-xs" placeholder="https://..."></div>
-           <div><label class="input-label">招生狀態</label><select id="f-status" class="form-input font-bold text-green-600"><option value="報名中">報名中</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option></select></div>
+        <h3 class="section-title">03 詳細活動與發布</h3>
+        <div class="grid grid-cols-1 gap-8">
+           <div><label class="input-label">課程詳細說明 (詳細活動 / 物品清單)</label><textarea id="f-desc" placeholder="請填寫詳細活動流程、應攜帶物品、注意事項..." rows="6" class="form-input text-sm leading-relaxed"></textarea></div>
         </div>
         <div class="grid grid-cols-2 gap-8 mt-8">
-           <textarea id="f-paymentInfo" placeholder="匯款資訊說明" rows="3" class="form-input text-sm"></textarea>
-           <textarea id="f-desc" placeholder="詳細說明與攜帶物品" rows="3" class="form-input text-sm"></textarea>
+           <div><label class="input-label">匯款帳號資訊</label><textarea id="f-paymentInfo" placeholder="例如：安泰銀行 (816) 帳號..." rows="3" class="form-input text-sm"></textarea></div>
+           <div class="space-y-6">
+             <div><label class="input-label">封面圖網址 (HTTPS)</label><input type="text" id="f-img" class="form-input font-mono text-xs" placeholder="https://..."></div>
+             <div><label class="input-label">發布狀態</label><select id="f-status" class="form-input font-bold text-green-600 border-green-200"><option value="報名中">報名中 (前端可見)</option><option value="已額滿">已額滿</option><option value="停辦">停辦</option></select></div>
+           </div>
         </div>
         <input type="hidden" id="f-equips" value="[]">
         <input type="hidden" id="f-limit" value="50">
@@ -150,32 +172,59 @@
         }).then(r => r.json());
         courseList = res.課程 || [];
         render();
-      } catch(e) { alert("與伺服器通訊失敗"); }
+      } catch(e) { console.error(e); alert("與伺服器通訊失敗"); }
       finally { showLoading(false); }
     }
 
+    /** * 渲染清單：新增「詳細說明」預覽 
+     * 解決「缺少詳細活動」問題
+     */
     function render() {
-      document.getElementById('courseTableBody').innerHTML = courseList.map((c, i) => `
-        <tr class="hover:bg-slate-50 transition-all font-medium border-b border-slate-50">
+      const container = document.getElementById('courseTableBody');
+      if (courseList.length === 0) {
+        container.innerHTML = '<tr><td colspan="5" class="p-20 text-center text-slate-300">尚未建立課程</td></tr>';
+        return;
+      }
+
+      container.innerHTML = courseList.map((c, i) => {
+        // 詳細說明字數縮減預覽
+        const shortDesc = c.desc ? (c.desc.substring(0, 40) + (c.desc.length > 40 ? '...' : '')) : '<span class="text-slate-200">無說明</span>';
+        
+        return `
+        <tr class="hover:bg-slate-50 transition-all border-b border-slate-50">
           <td class="p-4 font-mono text-[11px] text-slate-400">${c.id}</td>
-          <td class="p-4"><span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold">${c.category}</span></td>
+          <td class="p-4"><span class="tag-green">${c.category}</span></td>
           <td class="p-4">
             <div class="font-bold text-black text-base">${c.name}</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">${c.coach || '未指定教練'} | ${c.batch || '-'}</div>
+            <div class="text-[11px] text-slate-500 mt-1 font-medium">${c.coach || '未定教練'} | ${c.batch || '-'}</div>
+            <div class="text-[10px] text-slate-400 mt-2 bg-slate-50 p-2 rounded border border-slate-100 italic">活動：${shortDesc}</div>
           </td>
           <td class="p-4">
-            <div class="text-red-500 font-black text-lg">$${(Number(c.fullPrice)||0).toLocaleString()}</div>
-            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Deduction: $${c.baseUnit}/day</div>
+            <div class="text-red-600 font-black text-lg">$${(Number(c.fullPrice)||0).toLocaleString()}</div>
+            <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tight mt-1">Early: $${(Number(c.earlyPrice)||0).toLocaleString()} | Deduction: $${c.baseUnit}</div>
           </td>
           <td class="p-4 text-right space-x-2">
             <button onclick="editCourse(${i})" class="btn-outline">編輯</button>
-            <button onclick="cloneCourse(${i})" class="px-4 py-1.5 bg-slate-800 text-white rounded text-xs font-bold">複製</button>
+            <button onclick="cloneCourse(${i})" class="px-4 py-2 bg-slate-800 text-white rounded-md text-xs font-bold shadow-sm">複製</button>
           </td>
-        </tr>`).join('');
+        </tr>`;
+      }).join('');
     }
 
-    function editCourse(idx) { fillForm(courseList[idx]); document.getElementById('full-editor').classList.add('active'); }
-    function cloneCourse(idx) { const c = Object.assign({}, courseList[idx]); c.id = "C" + Date.now(); c.name += " (複製)"; fillForm(c); document.getElementById('full-editor').classList.add('active'); }
+    /** 已修復：確保點擊編輯有反應 */
+    function editCourse(idx) {
+      if (!courseList[idx]) return;
+      fillForm(courseList[idx]);
+      document.getElementById('full-editor').classList.add('active');
+    }
+
+    function cloneCourse(idx) {
+      const c = Object.assign({}, courseList[idx]);
+      c.id = "C" + Date.now();
+      c.name += " (複製)";
+      fillForm(c);
+      document.getElementById('full-editor').classList.add('active');
+    }
 
     function fillForm(c) {
       document.getElementById('f-id').value = c.id || "";
@@ -183,11 +232,13 @@
       document.getElementById('f-name').value = c.name || "";
       document.getElementById('f-coach').value = c.coach || "";
       document.getElementById('f-batch').value = c.batch || "";
-      // 確保顯示為純數字
-      document.getElementById('f-fullPrice').value = c.fullPrice || "";
-      document.getElementById('f-discountPrice').value = c.discountPrice || "";
-      document.getElementById('f-earlyPrice').value = c.earlyPrice || "";
-      document.getElementById('f-baseUnit').value = c.baseUnit || "";
+      
+      // 確保金額載入時為數字格式，避免 undefined
+      document.getElementById('f-fullPrice').value = Number(c.fullPrice) || 0;
+      document.getElementById('f-discountPrice').value = Number(c.discountPrice) || 0;
+      document.getElementById('f-earlyPrice').value = Number(c.earlyPrice) || 0;
+      document.getElementById('f-baseUnit').value = Number(c.baseUnit) || 0;
+      
       document.getElementById('f-earlyDeadline').value = c.earlyBirdEnd || "";
       document.getElementById('f-start').value = c.start || "";
       document.getElementById('f-end').value = c.end || "";
@@ -207,10 +258,11 @@
         name: document.getElementById('f-name').value,
         coach: document.getElementById('f-coach').value,
         batch: document.getElementById('f-batch').value,
-        fullPrice: document.getElementById('f-fullPrice').value,
-        discountPrice: document.getElementById('f-discountPrice').value,
-        earlyPrice: document.getElementById('f-earlyPrice').value,
-        baseUnit: document.getElementById('f-baseUnit').value,
+        // 關鍵：儲存前強制轉型為 Number
+        fullPrice: Number(document.getElementById('f-fullPrice').value) || 0,
+        discountPrice: Number(document.getElementById('f-discountPrice').value) || 0,
+        earlyPrice: Number(document.getElementById('f-earlyPrice').value) || 0,
+        baseUnit: Number(document.getElementById('f-baseUnit').value) || 0,
         earlyBirdEnd: document.getElementById('f-earlyDeadline').value,
         start: document.getElementById('f-start').value,
         end: document.getElementById('f-end').value,
@@ -230,7 +282,7 @@
         }).then(r => r.json());
         
         if(res.success) {
-          alert("儲存成功！費用已更新。");
+          alert("儲存成功！費用已正確寫入資料庫。");
           init();
           closeEditor();
         } else {
@@ -240,9 +292,22 @@
       finally { showLoading(false); }
     }
 
-    function openNewCourse() { document.getElementById('f-id').value = "C" + Date.now(); fillForm({}); document.getElementById('full-editor').classList.add('active'); }
+    function openNewCourse() { 
+      document.getElementById('f-id').value = "C" + Date.now(); 
+      fillForm({}); 
+      document.getElementById('full-editor').classList.add('active'); 
+    }
+    
     function closeEditor() { document.getElementById('full-editor').classList.remove('active'); }
     function showLoading(s) { document.getElementById('loading-mask').style.display = s ? 'flex' : 'none'; }
+    
+    function switchTab(tab) {
+      const isCourses = tab === 'courses';
+      document.getElementById('btn-courses').classList.toggle('active', isCourses);
+      document.getElementById('btn-settings').classList.toggle('active', !isCourses);
+      if(!isCourses) alert("參數設定功能維護中");
+    }
+
     window.onload = init;
   </script>
 </body>
