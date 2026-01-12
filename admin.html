@@ -1,8 +1,8 @@
 <!--
 =====================================================
 檔案名稱：admin.html
-版本：V6.8.0（完整覆蓋版）
-角色：課程「規格」管理（非課表）
+版本：V6.9.0（完整覆蓋版）
+角色：課程後台（讀取 CourseData_Master）
 =====================================================
 -->
 <!DOCTYPE html>
@@ -23,16 +23,23 @@
       --line: #06C755;
       --border: #E7E9ED;
     }
-    .sidebar { width: 220px; background: #fff; border-right: 1px solid var(--border); height: 100vh; position: fixed; }
-    .sidebar-item { padding: 16px 24px; font-weight: 600; cursor: pointer; }
+    .sidebar {
+      width: 220px;
+      background: #fff;
+      border-right: 1px solid var(--border);
+      height: 100vh;
+      position: fixed;
+    }
+    .sidebar-item {
+      padding: 16px 24px;
+      font-weight: 600;
+      cursor: pointer;
+    }
     .sidebar-item.active {
       background: #F0FBF5;
       color: var(--line);
       border-right: 4px solid var(--line);
     }
-    .btn { padding: 10px 20px; border-radius: 6px; font-weight: 700; }
-    .btn-primary { background: var(--line); color: #fff; }
-    .btn-outline { border: 1px solid var(--line); color: var(--line); }
   </style>
 </head>
 
@@ -45,157 +52,102 @@
 
 <!-- Sidebar -->
 <aside class="sidebar">
-  <div class="p-6 font-black text-xl text-green-600 border-b">SI MANAGER</div>
-  <button class="sidebar-item active">課程規格管理</button>
+  <div class="p-6 font-black text-xl text-green-600 border-b">
+    SI MANAGER
+  </div>
+  <div class="sidebar-item active">
+    課程管理
+  </div>
 </aside>
 
 <!-- Main -->
 <main class="ml-[220px] p-10 w-full">
 
-  <div class="flex justify-between mb-8">
-    <div>
-      <h1 class="text-3xl font-black">課程規格清單</h1>
-      <p class="text-slate-400 mt-1">僅定義「價格、說明、教練、分類」，不代表實際上課時間</p>
-    </div>
-    <button onclick="openNew()" class="btn btn-primary">＋ 新增規格</button>
+  <div class="mb-8">
+    <h1 class="text-3xl font-black">課程清單</h1>
+    <p class="text-slate-400 mt-1">
+      資料來源：CourseData_Master
+    </p>
   </div>
 
   <table class="w-full bg-white border rounded-xl overflow-hidden">
     <thead class="bg-slate-50 text-slate-500 text-sm">
       <tr>
-        <th class="p-4 text-left w-32">ID</th>
+        <th class="p-4 text-left w-32">課程編號</th>
         <th class="p-4 text-left w-24">類別</th>
-        <th class="p-4 text-left">規格說明</th>
-        <th class="p-4 text-left w-48">定價</th>
-        <th class="p-4 text-right w-32">操作</th>
+        <th class="p-4 text-left">課程名稱</th>
+        <th class="p-4 text-left w-32">價格</th>
+        <th class="p-4 text-left w-24">名額</th>
+        <th class="p-4 text-left w-24">狀態</th>
       </tr>
     </thead>
     <tbody id="list">
-      <tr><td colspan="5" class="p-10 text-center text-slate-300">讀取中…</td></tr>
+      <tr>
+        <td colspan="6" class="p-10 text-center text-slate-300">
+          讀取中…
+        </td>
+      </tr>
     </tbody>
   </table>
+
 </main>
 
-<!-- Editor -->
-<div id="editor" class="fixed inset-0 bg-white hidden z-40 overflow-y-auto">
-  <div class="sticky top-0 bg-white border-b p-4 flex justify-between">
-    <div>
-      <div class="font-black text-lg">編輯課程規格</div>
-      <div class="text-xs text-slate-400">此處不設定上課時間</div>
-    </div>
-    <div>
-      <button onclick="closeEditor()" class="btn btn-outline mr-2">取消</button>
-      <button onclick="save()" class="btn btn-primary">儲存</button>
-    </div>
-  </div>
-
-  <div class="max-w-4xl mx-auto p-10 space-y-8">
-    <input type="hidden" id="id">
-
-    <div>
-      <label class="font-bold">類別</label>
-      <select id="category" class="w-full p-3 border rounded mt-2">
-        <option value="單日">單日</option>
-        <option value="營隊">營隊</option>
-        <option value="課後">課後</option>
-      </select>
-    </div>
-
-    <div>
-      <label class="font-bold">規格名稱</label>
-      <input id="name" class="w-full p-3 border rounded mt-2">
-    </div>
-
-    <div class="grid grid-cols-4 gap-4">
-      <input id="fullPrice" type="number" placeholder="定價" class="p-3 border rounded">
-      <input id="discountPrice" type="number" placeholder="優惠價" class="p-3 border rounded">
-      <input id="earlyPrice" type="number" placeholder="早鳥價" class="p-3 border rounded">
-      <input id="baseUnit" type="number" placeholder="請假扣除 / 日" class="p-3 border rounded">
-    </div>
-
-    <div>
-      <label class="font-bold">詳細說明</label>
-      <textarea id="desc" rows="5" class="w-full p-3 border rounded mt-2"></textarea>
-    </div>
-  </div>
-</div>
-
 <script>
-  const API = location.href; // 🔥 同源 GAS WebApp
-  let list = [];
+const API = "https://sport.wetw-net3.workers.dev/";
+let list = [];
 
-  function showLoading(v){ document.getElementById('loading').style.display = v?'flex':'none'; }
+function showLoading(v){
+  document.getElementById('loading').style.display = v ? 'flex' : 'none';
+}
 
-  async function init(){
-    showLoading(true);
+async function init(){
+  showLoading(true);
+  try{
     const res = await fetch(API,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({action:'adminGetData'})
-    }).then(r=>r.json());
-    list = res.課程 || [];
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ action:'getCourses' })
+    });
+
+    const r = await res.json();
+    list = Array.isArray(r) ? r : (r.success ? r.data : []);
     render();
-    showLoading(false);
+  }catch(err){
+    console.error(err);
+    document.getElementById('list').innerHTML =
+      '<tr><td colspan="6" class="p-10 text-center text-red-400">載入失敗</td></tr>';
+  }
+  showLoading(false);
+}
+
+function render(){
+  const el = document.getElementById('list');
+
+  if(!list.length){
+    el.innerHTML =
+      '<tr><td colspan="6" class="p-10 text-center text-slate-300">尚無課程</td></tr>';
+    return;
   }
 
-  function render(){
-    const el = document.getElementById('list');
-    if(list.length===0){
-      el.innerHTML='<tr><td colspan="5" class="p-10 text-center text-slate-300">尚無資料</td></tr>';
-      return;
-    }
-    el.innerHTML = list.map((c,i)=>`
-      <tr class="border-t">
-        <td class="p-4 text-xs text-slate-400">${c.id}</td>
-        <td class="p-4">${c.category}</td>
-        <td class="p-4 font-bold">${c.name}</td>
-        <td class="p-4">$${(c.fullPrice||0).toLocaleString()}</td>
-        <td class="p-4 text-right">
-          <button onclick="edit(${i})" class="btn btn-outline text-sm">編輯</button>
-        </td>
-      </tr>`).join('');
-  }
+  el.innerHTML = list.map(c => `
+    <tr class="border-t">
+      <td class="p-4 text-xs text-slate-400">${c.id || ''}</td>
+      <td class="p-4">${c.類別 || ''}</td>
+      <td class="p-4 font-bold">${c.名稱 || ''}</td>
+      <td class="p-4">
+        $${Number(c.價格 || 0).toLocaleString()}
+      </td>
+      <td class="p-4">
+        ${c.上限 ?? '-'}
+      </td>
+      <td class="p-4 text-green-600 font-bold">
+        ${c.狀態 || ''}
+      </td>
+    </tr>
+  `).join('');
+}
 
-  function edit(i){
-    const c=list[i];
-    id.value=c.id;
-    category.value=c.category;
-    name.value=c.name;
-    fullPrice.value=c.fullPrice||0;
-    discountPrice.value=c.discountPrice||0;
-    earlyPrice.value=c.earlyPrice||0;
-    baseUnit.value=c.baseUnit||0;
-    desc.value=c.desc||'';
-    editor.style.display='block';
-  }
-
-  function openNew(){
-    id.value='C'+Date.now();
-    editor.style.display='block';
-  }
-
-  function closeEditor(){ editor.style.display='none'; }
-
-  async function save(){
-    showLoading(true);
-    const payload={
-      action:'adminSaveCourse',
-      id:id.value,
-      category:category.value,
-      name:name.value,
-      fullPrice:Number(fullPrice.value)||0,
-      discountPrice:Number(discountPrice.value)||0,
-      earlyPrice:Number(earlyPrice.value)||0,
-      baseUnit:Number(baseUnit.value)||0,
-      desc:desc.value,
-      status:'報名中'
-    };
-    await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    closeEditor();
-    init();
-  }
-
-  window.onload=init;
+window.onload = init;
 </script>
 
 </body>
