@@ -1,172 +1,139 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>運動島 2026</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>運動島 2026</title>
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-  <!-- LIFF -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-
-  <style>
-    .hidden { display: none; }
-  </style>
+<style>
+.hidden { display:none; }
+</style>
 </head>
 
 <body class="bg-slate-100 min-h-screen">
 
 <!-- Header -->
-<header class="bg-white border-b sticky top-0 z-50">
-  <div class="flex items-center justify-between px-4 py-3">
+<header class="bg-white border-b sticky top-0 z-40">
+  <div class="flex justify-between items-center px-4 py-3">
     <h1 class="font-black text-lg">運動島 2026</h1>
     <img id="userAvatar" class="w-9 h-9 rounded-full bg-slate-200"/>
   </div>
 
-  <!-- Banner -->
+  <!-- Banner（⚠️ 關鍵修正：不吃點擊） -->
   <img
     src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
-    class="w-full"
+    class="w-full pointer-events-none select-none"
   />
 </header>
 
-<!-- Main -->
-<main class="pb-24">
+<main class="pb-28">
 
-  <!-- 課程區 -->
-  <section id="view-course" class="p-4 space-y-4">
-    <h2 class="font-black text-lg">目前課程</h2>
-    <div id="courseList" class="space-y-3 text-sm text-slate-500">
-      載入課程中…
-    </div>
-  </section>
+<!-- 課程 -->
+<section id="view-course" class="p-4 space-y-4">
+  <h2 class="font-black text-lg">目前課程</h2>
+  <div id="courseList" class="text-sm text-slate-500">載入中…</div>
+</section>
 
-  <!-- 紀錄區 -->
-  <section id="view-history" class="p-4 hidden">
-    <h2 class="font-black text-lg mb-4">報名紀錄</h2>
-    <div id="historyList" class="text-sm text-slate-500">
-      尚無資料
-    </div>
-  </section>
+<!-- 紀錄 -->
+<section id="view-history" class="p-4 hidden">
+  <h2 class="font-black text-lg">報名紀錄</h2>
+  <div class="text-slate-400">尚無資料</div>
+</section>
 
-  <!-- 會員區 -->
-  <section id="view-member" class="p-4 hidden space-y-4">
-    <div class="flex justify-between items-center">
-      <h2 class="font-black text-lg">會員名冊</h2>
-      <button
-        onclick="openMemberForm()"
-        class="px-4 py-2 rounded-xl text-white font-bold"
-        style="background:#06C755"
-      >＋ 新增家人</button>
-    </div>
+<!-- 會員 -->
+<section id="view-member" class="p-4 hidden space-y-4">
+  <div class="flex justify-between items-center">
+    <h2 class="font-black text-lg">會員名冊</h2>
+    <button
+      onclick="openMemberForm()"
+      class="px-4 py-2 rounded-xl text-white font-bold"
+      style="background:#06C755"
+    >＋ 新增家人</button>
+  </div>
 
-    <div id="memberList" class="space-y-3"></div>
-  </section>
+  <div id="memberList" class="space-y-3"></div>
+</section>
 
-  <!-- 會員編輯 -->
-  <section id="view-member-form" class="p-4 hidden space-y-4">
-    <h2 class="font-black text-lg">編輯會員</h2>
+<!-- 編輯會員 -->
+<section id="view-member-form" class="p-4 hidden space-y-4">
+  <h2 class="font-black text-lg">編輯會員</h2>
 
-    <input id="f-name" class="w-full p-3 rounded-xl border" placeholder="姓名"/>
-    <input id="f-phone" class="w-full p-3 rounded-xl border" placeholder="電話"/>
+  <input id="f-name" class="w-full p-3 rounded-xl border" placeholder="姓名">
+  <input id="f-phone" class="w-full p-3 rounded-xl border" placeholder="電話">
 
-    <div class="flex gap-3">
-      <button
-        onclick="saveMember()"
-        class="flex-1 py-3 rounded-xl text-white font-bold"
-        style="background:#06C755"
-      >儲存</button>
+  <div class="flex gap-3">
+    <button
+      onclick="saveMember()"
+      class="flex-1 py-3 rounded-xl text-white font-bold"
+      style="background:#06C755"
+    >儲存</button>
 
-      <button
-        onclick="switchView('member')"
-        class="flex-1 py-3 rounded-xl border font-bold"
-      >取消返回</button>
-    </div>
-  </section>
+    <button
+      onclick="switchView('member')"
+      class="flex-1 py-3 rounded-xl border font-bold"
+    >取消返回</button>
+  </div>
+</section>
 
 </main>
 
-<!-- Bottom Nav -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 text-xs">
-  <button onclick="switchView('course')" class="flex flex-col items-center">
+<!-- Bottom Nav（⚠️ 層級保證可點） -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 text-xs z-50">
+  <button type="button" onclick="switchView('course')" class="flex flex-col items-center">
     🏠<span>課程</span>
   </button>
-  <button onclick="switchView('history')" class="flex flex-col items-center">
+  <button type="button" onclick="switchView('history')" class="flex flex-col items-center">
     📄<span>紀錄</span>
   </button>
-  <button onclick="switchView('member')" class="flex flex-col items-center">
+  <button type="button" onclick="switchView('member')" class="flex flex-col items-center">
     👤<span>會員</span>
   </button>
 </nav>
 
 <script>
-/* =============================
-   全域設定
-============================= */
 const API_URL = "https://sport.wetw-net3.workers.dev/";
 let currentUserId = "";
 let members = [];
 
-/* =============================
-   View 控制（唯一入口）
-============================= */
-function switchView(view) {
-  document.querySelectorAll("section[id^='view-']").forEach(s => {
-    s.classList.add("hidden");
-  });
-  const target = document.getElementById("view-" + view);
-  if (target) target.classList.remove("hidden");
+/* 視圖切換（唯一入口） */
+function switchView(v){
+  document.querySelectorAll("section[id^='view-']").forEach(s=>s.classList.add("hidden"));
+  const el = document.getElementById("view-"+v);
+  if(el) el.classList.remove("hidden");
 }
 
-/* =============================
-   LIFF Init
-============================= */
-async function init() {
-  await liff.init({ liffId: "2008792551-CzPJtVB1" });
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
+/* LIFF */
+async function init(){
+  await liff.init({ liffId:"2008792551-CzPJtVB1" });
+  if(!liff.isLoggedIn()){ liff.login(); return; }
 
-  const profile = await liff.getProfile();
-  currentUserId = profile.userId;
-  document.getElementById("userAvatar").src = profile.pictureUrl;
+  const p = await liff.getProfile();
+  currentUserId = p.userId;
+  document.getElementById("userAvatar").src = p.pictureUrl;
 
   loadCourses();
   loadMembers();
 }
 
-/* =============================
-   課程
-============================= */
-async function loadCourses() {
-  const res = await fetch(API_URL, {
-    method:"POST",
-    body: JSON.stringify({ action:"getCourses" })
-  }).then(r=>r.json());
-
+/* 課程 */
+async function loadCourses(){
+  const r = await fetch(API_URL,{method:"POST",body:JSON.stringify({action:"getCourses"})}).then(r=>r.json());
   document.getElementById("courseList").innerHTML =
-    res.data?.map(c=>`
+    (r.data||[]).map(c=>`
       <div class="bg-white p-4 rounded-xl border">
         <div class="font-bold">${c.名稱}</div>
         <div class="text-xs text-slate-400">${c.開始} ~ ${c.結束}</div>
         <div class="font-black text-green-600">$${c.價格}</div>
-      </div>
-    `).join("") || "尚無課程";
+      </div>`).join("") || "尚無課程";
 }
 
-/* =============================
-   會員
-============================= */
-async function loadMembers() {
-  const res = await fetch(API_URL,{
-    method:"POST",
-    body: JSON.stringify({ action:"getFamily", userId: currentUserId })
-  }).then(r=>r.json());
-
-  members = res.data || [];
+/* 會員 */
+async function loadMembers(){
+  const r = await fetch(API_URL,{method:"POST",body:JSON.stringify({action:"getFamily",userId:currentUserId})}).then(r=>r.json());
+  members = r.data||[];
   document.getElementById("memberList").innerHTML =
     members.map((m,i)=>`
       <div class="bg-white p-4 rounded-xl border flex justify-between items-center">
@@ -174,28 +141,24 @@ async function loadMembers() {
           <div class="font-bold">${m.name}</div>
           <div class="text-xs text-slate-400">${m.phone}｜${m.relation}</div>
         </div>
-        <button onclick="editMember(${i})" class="text-sm text-green-600 font-bold">
-          ✏ 編輯
-        </button>
-      </div>
-    `).join("");
+        <button onclick="editMember(${i})" class="text-green-600 font-bold">✏ 編輯</button>
+      </div>`).join("");
 }
 
 function editMember(i){
-  const m = members[i];
-  document.getElementById("f-name").value = m.name;
-  document.getElementById("f-phone").value = m.phone;
+  document.getElementById("f-name").value = members[i].name;
+  document.getElementById("f-phone").value = members[i].phone;
   switchView("member-form");
 }
 
 function openMemberForm(){
-  document.getElementById("f-name").value = "";
-  document.getElementById("f-phone").value = "";
+  document.getElementById("f-name").value="";
+  document.getElementById("f-phone").value="";
   switchView("member-form");
 }
 
 function saveMember(){
-  alert("Step 2 才接寫入 API");
+  alert("Step 2 才正式寫回 Users_Master");
   switchView("member");
 }
 
