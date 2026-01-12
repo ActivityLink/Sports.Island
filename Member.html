@@ -9,14 +9,9 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
-.member-card {
-  border:1px solid #e5e7eb;
-  border-radius:16px;
-  padding:16px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+.view { display:none; }
+.view.active { display:block; }
+
 .modal {
   position:fixed;
   inset:0;
@@ -26,7 +21,7 @@
   justify-content:center;
   z-index:999;
 }
-.modal.active { display:flex }
+.modal.active{ display:flex; }
 </style>
 </head>
 
@@ -34,148 +29,132 @@
 
 <div class="w-full max-w-md bg-white min-h-screen flex flex-col">
 
-<header class="p-5 border-b flex justify-between items-center">
-  <h1 class="font-black text-xl">運動島 2026</h1>
-  <img id="userAvatar" class="w-10 h-10 rounded-full bg-slate-200">
+<!-- ===== Header + Banner ===== -->
+<header class="border-b">
+  <div class="p-4 flex justify-between items-center">
+    <h1 class="font-black text-xl">運動島 2026</h1>
+    <img id="userAvatar" class="w-10 h-10 rounded-full bg-slate-200">
+  </div>
+  <img
+    src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
+    class="w-full object-cover"
+  >
 </header>
 
-<main class="flex-1 overflow-y-auto p-4 pb-24">
-  <h2 class="text-sm font-bold text-slate-400 mb-3">
-    會員名單（點擊【編輯】修改）
-  </h2>
+<!-- ===== Main Views ===== -->
+<main class="flex-1 overflow-y-auto pb-24">
 
-  <div id="familyList" class="space-y-3 text-sm text-slate-400">
-    載入中…
-  </div>
+<!-- 活動 -->
+<section id="view-activity" class="view active p-4 space-y-4">
+  <div id="courseList" class="text-slate-400 text-sm">載入活動中…</div>
+</section>
+
+<!-- 紀錄 -->
+<section id="view-record" class="view p-4 space-y-4">
+  <div id="recordList" class="text-slate-400 text-sm">載入紀錄中…</div>
+</section>
+
+<!-- 會員 -->
+<section id="view-member" class="view p-4 space-y-3">
+  <h2 class="text-sm font-bold text-slate-400">會員名單</h2>
+  <div id="familyList" class="space-y-3 text-sm text-slate-400">載入中…</div>
+</section>
+
 </main>
 
-<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t h-16 flex justify-center items-center font-bold">
-  會員
+<!-- ===== Bottom Nav ===== -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t h-16 flex justify-around items-center text-xs font-bold">
+  <button onclick="switchView('activity')" class="flex flex-col items-center">
+    🏠<span>活動</span>
+  </button>
+  <button onclick="switchView('record')" class="flex flex-col items-center">
+    📄<span>紀錄</span>
+  </button>
+  <button onclick="switchView('member')" class="flex flex-col items-center">
+    👤<span>會員</span>
+  </button>
 </nav>
 
 </div>
 
-<!-- 編輯會員 Modal -->
+<!-- ===== Edit Modal ===== -->
 <div id="editModal" class="modal">
   <div class="bg-white w-full max-w-sm rounded-2xl p-6 space-y-4">
-    <h3 class="font-black text-lg">編輯學員資料</h3>
-
-    <input id="editName" class="w-full p-3 border rounded-xl" placeholder="姓名">
-    <input id="editPhone" class="w-full p-3 border rounded-xl" placeholder="電話">
+    <h3 class="font-black text-lg">編輯學員</h3>
+    <input id="editName" class="w-full p-3 border rounded-xl">
+    <input id="editPhone" class="w-full p-3 border rounded-xl">
     <select id="editRelation" class="w-full p-3 border rounded-xl">
-      <option>本人</option>
-      <option>子女</option>
-      <option>其他</option>
+      <option>本人</option><option>子女</option><option>其他</option>
     </select>
-
-    <div class="flex space-x-2 pt-2">
-      <button onclick="closeModal()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">
-        取消
-      </button>
-      <button onclick="saveMember()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold">
-        儲存
-      </button>
+    <div class="flex space-x-2">
+      <button onclick="closeModal()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">取消</button>
+      <button onclick="saveMember()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold">儲存</button>
     </div>
   </div>
 </div>
 
 <script>
 const API_URL = "https://sport.wetw-net3.workers.dev/";
-let currentUid = "";
-let familyData = [];
-let editingIndex = null;
+let uid="", family=[], editIdx=null;
 
-/* 初始化 */
+/* View */
+function switchView(v){
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+}
+
+/* Init */
 async function init(){
   await liff.init({ liffId:"2008792551-CzPJtVB1" });
   if(!liff.isLoggedIn()){ liff.login(); return; }
   const p = await liff.getProfile();
-  currentUid = p.userId;
-  userAvatar.src = p.pictureUrl;
+  uid=p.userId; userAvatar.src=p.pictureUrl;
   loadFamily();
 }
 
-/* 讀會員 */
+/* Family */
 async function loadFamily(){
-  const box = document.getElementById("familyList");
-  box.innerHTML = "載入中…";
-
-  const r = await fetch(API_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({ action:"getFamily", userId:currentUid })
-  });
-
-  const j = await r.json();
-  familyData = j.data || [];
-
-  if(!familyData.length){
-    box.innerHTML = "<div class='text-center text-slate-300 py-10'>尚無學員</div>";
-    return;
-  }
-
-  box.innerHTML = familyData.map((f,i)=>`
-    <div class="member-card">
+  const box=familyList;
+  const r=await fetch(API_URL,{method:"POST",headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"getFamily",userId:uid})});
+  const j=await r.json(); family=j.data||[];
+  if(!family.length){ box.innerHTML="尚無會員"; return; }
+  box.innerHTML=family.map((f,i)=>`
+    <div class="border rounded-2xl p-4 flex justify-between items-center">
       <div>
         <div class="font-bold text-slate-800">${f.name}</div>
-        <div class="text-xs text-slate-400">
-          ${f.phone} ｜ ${f.relation}
-        </div>
+        <div class="text-xs text-slate-400">${f.phone}｜${f.relation}</div>
       </div>
-      <button
-        onclick="openEdit(${i})"
-        class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 text-slate-600">
-        ✏️ 編輯
-      </button>
-    </div>
-  `).join("");
+      <button onclick="openEdit(${i})" class="px-3 py-1.5 border rounded-lg text-xs">✏️ 編輯</button>
+    </div>`).join("");
 }
 
-/* 開啟編輯 */
 function openEdit(i){
-  editingIndex = i;
-  const f = familyData[i];
-  editName.value = f.name;
-  editPhone.value = f.phone;
-  editRelation.value = f.relation;
+  editIdx=i;
+  const f=family[i];
+  editName.value=f.name;
+  editPhone.value=f.phone;
+  editRelation.value=f.relation;
   editModal.classList.add("active");
 }
+function closeModal(){ editModal.classList.remove("active"); }
 
-/* 關閉 */
-function closeModal(){
-  editModal.classList.remove("active");
-}
-
-/* 儲存 */
 async function saveMember(){
-  const f = familyData[editingIndex];
-
-  const payload = {
-    action:"updateFamily",
-    userId:currentUid,
-    oldName:f.name,
-    oldPhone:f.phone,
-    name:editName.value,
-    phone:editPhone.value,
-    relation:editRelation.value
-  };
-
-  const r = await fetch(API_URL,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(payload)
-  });
-
-  const j = await r.json();
-  if(j.success){
-    closeModal();
-    loadFamily();
-  }else{
-    alert(j.msg || "更新失敗");
-  }
+  const f=family[editIdx];
+  await fetch(API_URL,{method:"POST",headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      action:"updateFamily",
+      userId:uid,
+      oldName:f.name,
+      oldPhone:f.phone,
+      name:editName.value,
+      phone:editPhone.value,
+      relation:editRelation.value
+    })});
+  closeModal(); loadFamily();
 }
 
-window.onload = init;
+window.onload=init;
 </script>
 </body>
 </html>
