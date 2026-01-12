@@ -5,155 +5,231 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>運動島 Sports Island</title>
 
-  <!-- Tailwind（維持現況） -->
+  <!-- Tailwind（目前維持 CDN，之後可換正式編譯） -->
   <script src="https://cdn.tailwindcss.com"></script>
+
   <!-- LIFF -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    body { background:#f4f5f7; }
+    .view { display:none; }
+    .view.active { display:block; }
+  </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen font-sans">
+<body class="min-h-screen flex justify-center">
 
-<!-- ===================== BANNER ===================== -->
-<div class="w-full">
-  <img
-    src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
-    class="w-full object-cover"
-    alt="banner"
-  />
-</div>
+<div class="w-full max-w-md bg-white min-h-screen flex flex-col shadow-xl relative">
 
-<!-- ===================== 主容器 ===================== -->
-<div class="max-w-md mx-auto bg-white min-h-screen shadow-lg">
+  <!-- 🔰 BANNER（已恢復） -->
+  <div class="relative">
+    <img
+      src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
+      class="w-full h-44 object-cover"
+    />
+    <div class="absolute bottom-4 left-4 text-white">
+      <h1 class="text-2xl font-black drop-shadow">運動島 Sports Island</h1>
+      <p class="text-sm opacity-90">2026 課程報名入口</p>
+    </div>
+  </div>
 
-  <!-- ====== 頁面切換 ====== -->
-  <div id="view-member" class="p-6">
+  <!-- ===================== -->
+  <!-- 主內容區 -->
+  <!-- ===================== -->
+  <main class="flex-grow pb-28">
 
-    <h2 class="text-xl font-black mb-4">會員資料</h2>
+    <!-- ✅ 課程入口（預設顯示） -->
+    <section id="view-course" class="view active p-5 space-y-4">
+      <div id="courseList" class="space-y-4 text-center text-slate-400">
+        課程載入中…
+      </div>
+    </section>
 
-    <!-- 新增會員 -->
-    <form id="memberForm" class="space-y-4">
+    <!-- ✅ 報名紀錄 -->
+    <section id="view-record" class="view p-5 space-y-4">
+      <div id="recordList" class="text-center text-slate-400">
+        尚無紀錄
+      </div>
+    </section>
 
-      <!-- 姓名 -->
-      <div>
-        <label class="text-xs font-bold">成員姓名</label>
-        <input id="mName" required
-          class="w-full p-3 bg-slate-100 rounded-lg"/>
+    <!-- ✅ 會員中心 -->
+    <section id="view-member" class="view p-5 space-y-4">
+      <div class="flex justify-between items-center">
+        <h2 class="text-xl font-black">我的學員</h2>
+        <button
+          onclick="openMemberForm()"
+          class="px-4 py-2 bg-green-600 text-white rounded-xl font-bold"
+        >
+          + 新增家人
+        </button>
       </div>
 
-      <!-- 電話 -->
-      <div>
-        <label class="text-xs font-bold">聯絡電話</label>
-        <input id="mPhone" required
-          class="w-full p-3 bg-slate-100 rounded-lg"/>
+      <div id="memberList" class="space-y-3 text-slate-400 text-center">
+        載入中…
       </div>
+    </section>
 
-      <!-- 性別 -->
-      <div>
-        <label class="text-xs font-bold">性別</label>
-        <select id="mGender"
-          class="w-full p-3 bg-slate-100 rounded-lg">
+    <!-- ✅ 會員表單（僅需要時顯示） -->
+    <section id="view-member-form" class="view p-5">
+      <h2 class="text-xl font-black mb-4">學員資料</h2>
+
+      <form id="memberForm" class="space-y-4">
+        <input id="mName" placeholder="姓名" class="w-full p-3 rounded-xl bg-slate-100" required />
+
+        <select id="mIdentity" class="w-full p-3 rounded-xl bg-slate-100">
+          <option value="一般身分">一般身分</option>
+          <option value="學生">學生</option>
+        </select>
+
+        <select id="mGender" class="w-full p-3 rounded-xl bg-slate-100">
           <option value="男">男</option>
           <option value="女">女</option>
         </select>
-      </div>
 
-      <!-- 生日 -->
-      <div>
-        <label class="text-xs font-bold">生日</label>
-        <input type="date" id="mBirthday"
-          class="w-full p-3 bg-slate-100 rounded-lg"/>
-      </div>
+        <input id="mBirthday" type="date" class="w-full p-3 rounded-xl bg-slate-100" />
 
-      <!-- ✅ 居住地區（完整縣市） -->
-      <div>
-        <label class="text-xs font-bold">居住地區</label>
-        <select id="mAddress"
-          class="w-full p-3 bg-slate-100 rounded-lg" required>
-          <option value="">請選擇縣市</option>
-          <option>台北市</option>
-          <option>新北市</option>
-          <option>桃園市</option>
-          <option>台中市</option>
-          <option>台南市</option>
-          <option>高雄市</option>
-          <option>基隆市</option>
-          <option>新竹市</option>
-          <option>新竹縣</option>
-          <option>苗栗縣</option>
-          <option>彰化縣</option>
-          <option>南投縣</option>
-          <option>雲林縣</option>
-          <option>嘉義市</option>
-          <option>嘉義縣</option>
-          <option>屏東縣</option>
-          <option>宜蘭縣</option>
-          <option>花蓮縣</option>
-          <option>台東縣</option>
-          <option>澎湖縣</option>
-          <option>金門縣</option>
-          <option>連江縣</option>
+        <input id="mPhone" placeholder="聯絡電話" class="w-full p-3 rounded-xl bg-slate-100" />
+
+        <!-- ✅ 完整縣市 -->
+        <select id="mArea" class="w-full p-3 rounded-xl bg-slate-100">
+          <option value="">居住地區</option>
+          <option>台北市</option><option>新北市</option><option>桃園市</option>
+          <option>台中市</option><option>台南市</option><option>高雄市</option>
+          <option>新竹縣</option><option>新竹市</option><option>苗栗縣</option>
+          <option>彰化縣</option><option>南投縣</option><option>雲林縣</option>
+          <option>嘉義縣</option><option>嘉義市</option><option>屏東縣</option>
+          <option>宜蘭縣</option><option>花蓮縣</option><option>台東縣</option>
+          <option>澎湖縣</option><option>金門縣</option><option>連江縣</option>
         </select>
-      </div>
 
-      <!-- 關係 -->
-      <div>
-        <label class="text-xs font-bold">關係</label>
-        <select id="mRelation"
-          class="w-full p-3 bg-slate-100 rounded-lg">
+        <select id="mRelation" class="w-full p-3 rounded-xl bg-slate-100">
           <option value="本人">本人</option>
           <option value="子女">子女</option>
-          <option value="家人">家人</option>
+          <option value="其他">其他</option>
         </select>
-      </div>
 
-      <!-- 儲存 -->
-      <button
-        type="submit"
-        class="w-full py-4 bg-green-600 text-white font-black rounded-xl">
-        儲存會員資料
-      </button>
+        <button
+          type="submit"
+          class="w-full py-4 bg-green-600 text-white rounded-xl font-black"
+        >
+          儲存學員
+        </button>
+      </form>
+    </section>
 
-    </form>
-  </div>
+  </main>
+
+  <!-- ===================== -->
+  <!-- 下方導覽列（永遠存在） -->
+  <!-- ===================== -->
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t flex justify-around py-3">
+    <button onclick="switchView('course')" class="font-bold">📘 課程</button>
+    <button onclick="switchView('record')" class="font-bold">🧾 紀錄</button>
+    <button onclick="switchView('member')" class="font-bold">👤 會員</button>
+  </nav>
 
 </div>
 
-<!-- ===================== Script ===================== -->
 <script>
+/* ===============================
+ * 全域設定
+ * =============================== */
 const API_URL = "https://sport.wetw-net3.workers.dev/";
-let currentUid = "";
+let currentUserId = "";
+let familyData = [];
 
+/* ===============================
+ * LIFF 初始化
+ * =============================== */
 async function init() {
   await liff.init({ liffId: "2008792551-CzPJtVB1" });
-  if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
-  }
-  const p = await liff.getProfile();
-  currentUid = p.userId;
+  if (!liff.isLoggedIn()) liff.login();
+
+  const profile = await liff.getProfile();
+  currentUserId = profile.userId;
+
+  loadCourses();
 }
 
-document.getElementById("memberForm").onsubmit = async (e) => {
+/* ===============================
+ * View 切換
+ * =============================== */
+function switchView(name) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+
+  if (name === 'member') loadMembers();
+}
+
+/* ===============================
+ * 課程
+ * =============================== */
+async function loadCourses() {
+  const res = await fetch(API_URL, {
+    method:'POST',
+    body: JSON.stringify({ action:'getCourses' })
+  }).then(r=>r.json());
+
+  const list = document.getElementById('courseList');
+  list.innerHTML = res.data.map(c => `
+    <div class="p-4 bg-slate-50 rounded-xl text-left">
+      <div class="font-black">${c.名稱}</div>
+      <div class="text-sm text-slate-500">${c.開始} ~ ${c.結束}</div>
+    </div>
+  `).join('');
+}
+
+/* ===============================
+ * 會員
+ * =============================== */
+async function loadMembers() {
+  const res = await fetch(API_URL,{
+    method:'POST',
+    body:JSON.stringify({ action:'getFamily', userId:currentUserId })
+  }).then(r=>r.json());
+
+  familyData = res.data || [];
+  const box = document.getElementById('memberList');
+
+  if (!familyData.length) {
+    box.innerHTML = '尚未建立學員';
+    return;
+  }
+
+  box.innerHTML = familyData.map(f=>`
+    <div class="p-4 bg-slate-50 rounded-xl text-left">
+      <div class="font-black">${f.name}</div>
+      <div class="text-xs text-slate-500">${f.relation}｜${f.phone}</div>
+    </div>
+  `).join('');
+}
+
+function openMemberForm(){
+  switchView('member-form');
+}
+
+/* ===============================
+ * 表單送出
+ * =============================== */
+document.getElementById('memberForm').onsubmit = async e => {
   e.preventDefault();
 
-  const payload = {
-    action: "saveFamily",
-    userId: currentUid,
-    name: mName.value,
-    phone: mPhone.value,
-    gender: mGender.value,
-    birthday: mBirthday.value,
-    address: mAddress.value,
-    relation: mRelation.value
-  };
+  await fetch(API_URL,{
+    method:'POST',
+    body:JSON.stringify({
+      action:'saveFamily',
+      userId:currentUserId,
+      name:mName.value,
+      gender:mGender.value,
+      birthday:mBirthday.value,
+      phone:mPhone.value,
+      address:mArea.value,
+      relation:mRelation.value
+    })
+  });
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  }).then(r => r.json());
-
-  alert(res.success ? "儲存成功" : res.msg);
+  switchView('member');
 };
 
 window.onload = init;
