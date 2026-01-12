@@ -1,18 +1,15 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>運動島 2026</title>
 
-  <!-- Tailwind CDN（先用，之後可換編譯版） -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- LIFF -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
   <style>
-    body { font-family: system-ui, -apple-system, BlinkMacSystemFont; }
+    body { font-family: system-ui; }
     .modal { display:none; }
     .modal.active { display:flex; }
   </style>
@@ -25,25 +22,22 @@
   <!-- Header -->
   <div class="flex justify-between items-center p-4 border-b">
     <h1 class="text-xl font-black">運動島 2026</h1>
-    <img id="userAvatar" class="w-10 h-10 rounded-full object-cover"/>
+    <img id="userAvatar" class="w-10 h-10 rounded-full"/>
   </div>
 
   <!-- Banner -->
-  <img
-    src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
-    class="w-full object-cover"
-  />
+  <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
+       class="w-full"/>
 
   <!-- 會員列表 -->
   <section class="p-4">
     <div class="flex justify-between items-center mb-2">
-      <h2 class="font-bold text-slate-700">會員名單</h2>
+      <h2 class="font-bold">會員名單</h2>
       <button onclick="openAddModal()"
-        class="px-3 py-1 text-sm bg-green-600 text-white rounded-lg">
+        class="px-3 py-1 bg-green-600 text-white rounded-lg text-sm">
         ➕ 新增家人
       </button>
     </div>
-
     <div id="memberList" class="space-y-3"></div>
   </section>
 
@@ -57,17 +51,16 @@
 
 </div>
 
-<!-- ===== Modal：新增 / 編輯學員 ===== -->
+<!-- Modal -->
 <div id="studentModal"
   class="modal fixed inset-0 bg-black/60 items-center justify-center z-50">
   <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4">
 
     <h3 id="modalTitle" class="font-black text-lg">新增學員</h3>
-
     <input type="hidden" id="studentId"/>
 
     <div>
-      <label class="text-xs font-bold">學員姓名</label>
+      <label class="text-xs font-bold">成員姓名</label>
       <input id="name" class="w-full p-3 bg-slate-100 rounded-lg"/>
     </div>
 
@@ -85,7 +78,19 @@
       <input type="date" id="birthday"
         class="w-full p-3 bg-slate-100 rounded-lg"
         onchange="calcAge()"/>
-      <p id="ageHint" class="text-xs text-slate-400 mt-1"></p>
+      <p id="ageHint" class="text-xs text-slate-400"></p>
+    </div>
+
+    <div>
+      <label class="text-xs font-bold">居住地區</label>
+      <select id="address" class="w-full p-3 bg-slate-100 rounded-lg">
+        <option value="">請選擇</option>
+        <option>竹北</option>
+        <option>新竹市</option>
+        <option>湖口</option>
+        <option>新豐</option>
+        <option>其他</option>
+      </select>
     </div>
 
     <div>
@@ -98,7 +103,7 @@
     </div>
 
     <div>
-      <label class="text-xs font-bold">聯絡電話（選填）</label>
+      <label class="text-xs font-bold">聯絡電話</label>
       <input id="phone" class="w-full p-3 bg-slate-100 rounded-lg"/>
     </div>
 
@@ -108,28 +113,17 @@
     </div>
 
     <div class="flex justify-end space-x-2 pt-4">
-      <button onclick="closeModal()"
-        class="px-4 py-2 rounded-lg border">取消</button>
-      <button onclick="saveStudent()"
-        class="px-4 py-2 rounded-lg bg-green-600 text-white">
-        儲存
-      </button>
+      <button onclick="closeModal()" class="border px-4 py-2 rounded-lg">取消</button>
+      <button onclick="saveStudent()" class="bg-green-600 text-white px-4 py-2 rounded-lg">儲存</button>
     </div>
-
   </div>
 </div>
 
 <script>
-/* =============================
- * 基本設定
- * ============================= */
 const API_URL = "https://sport.wetw-net3.workers.dev/";
 let currentUid = "";
 let students = [];
 
-/* =============================
- * LIFF 初始化
- * ============================= */
 async function init() {
   await liff.init({ liffId: "2008792551-CzPJtVB1" });
   if (!liff.isLoggedIn()) return liff.login();
@@ -137,19 +131,14 @@ async function init() {
   const p = await liff.getProfile();
   currentUid = p.userId;
   document.getElementById("userAvatar").src = p.pictureUrl;
-
   loadStudents();
 }
 
-/* =============================
- * 載入會員
- * ============================= */
 async function loadStudents() {
   const res = await fetch(API_URL, {
     method: "POST",
     body: JSON.stringify({ action:"getFamily", userId:currentUid })
   }).then(r=>r.json());
-
   students = res.data || [];
   renderList();
 }
@@ -157,92 +146,65 @@ async function loadStudents() {
 function renderList() {
   const box = document.getElementById("memberList");
   box.innerHTML = students.map(s => `
-    <div class="border rounded-xl p-4 flex justify-between items-center">
+    <div class="border rounded-xl p-4 flex justify-between">
       <div>
         <div class="font-bold">${s.name}</div>
         <div class="text-xs text-slate-400">
-          ${s.identityType === 'student' ? '學生' : '一般身分'}
-          ｜${s.relation}
+          ${s.identityType}｜${s.relation}｜${s.address || '-'}
         </div>
       </div>
       <button onclick='editStudent(${JSON.stringify(s)})'
-        class="px-3 py-1 text-sm border rounded-lg">✏️ 編輯</button>
+        class="border px-3 py-1 rounded-lg text-sm">編輯</button>
     </div>
   `).join("");
 }
 
-/* =============================
- * Modal 行為
- * ============================= */
 function openAddModal() {
-  document.getElementById("modalTitle").innerText = "新增學員";
-  document.getElementById("studentId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("identityType").value = "general";
-  document.getElementById("birthday").value = "";
-  document.getElementById("relation").value = "本人";
-  document.getElementById("phone").value = "";
-  document.getElementById("isDefault").checked = false;
-  document.getElementById("ageHint").innerText = "";
   document.getElementById("studentModal").classList.add("active");
 }
-
-function editStudent(s) {
-  document.getElementById("modalTitle").innerText = "編輯學員";
-  document.getElementById("studentId").value = s.studentId || "";
-  document.getElementById("name").value = s.name || "";
-  document.getElementById("identityType").value = s.identityType || "general";
-  document.getElementById("birthday").value = s.birthday || "";
-  document.getElementById("relation").value = s.relation || "本人";
-  document.getElementById("phone").value = s.phone || "";
-  document.getElementById("isDefault").checked = s.isDefault || false;
-  calcAge();
-  document.getElementById("studentModal").classList.add("active");
-}
-
 function closeModal() {
   document.getElementById("studentModal").classList.remove("active");
 }
 
-/* =============================
- * 表單邏輯
- * ============================= */
+function editStudent(s) {
+  document.getElementById("name").value = s.name || "";
+  document.getElementById("identityType").value = s.identityType || "general";
+  document.getElementById("birthday").value = s.birthday || "";
+  document.getElementById("address").value = s.address || "";
+  document.getElementById("relation").value = s.relation || "本人";
+  document.getElementById("phone").value = s.phone || "";
+  document.getElementById("isDefault").checked = s.isDefault || false;
+  calcAge();
+  openAddModal();
+}
+
 function onIdentityChange() {
-  if (document.getElementById("identityType").value === "student") {
-    document.getElementById("birthday").required = true;
-  } else {
-    document.getElementById("birthday").required = false;
-  }
+  document.getElementById("birthday").required =
+    document.getElementById("identityType").value === "student";
 }
 
 function calcAge() {
   const b = document.getElementById("birthday").value;
-  if (!b) return document.getElementById("ageHint").innerText = "";
+  if (!b) return;
   const age = Math.floor((Date.now() - new Date(b)) / 31557600000);
-  document.getElementById("ageHint").innerText = `年齡：約 ${age} 歲`;
+  document.getElementById("ageHint").innerText = `約 ${age} 歲`;
 }
 
-/* =============================
- * 儲存
- * ============================= */
 async function saveStudent() {
-  const payload = {
-    action: "saveFamily",
-    userId: currentUid,
-    studentId: document.getElementById("studentId").value,
-    name: document.getElementById("name").value,
-    identityType: document.getElementById("identityType").value,
-    birthday: document.getElementById("birthday").value,
-    relation: document.getElementById("relation").value,
-    phone: document.getElementById("phone").value,
-    isDefault: document.getElementById("isDefault").checked
-  };
-
   await fetch(API_URL, {
     method: "POST",
-    body: JSON.stringify(payload)
+    body: JSON.stringify({
+      action:"saveFamily",
+      userId: currentUid,
+      name: document.getElementById("name").value,
+      identityType: document.getElementById("identityType").value,
+      birthday: document.getElementById("birthday").value,
+      address: document.getElementById("address").value,
+      relation: document.getElementById("relation").value,
+      phone: document.getElementById("phone").value,
+      isDefault: document.getElementById("isDefault").checked
+    })
   });
-
   closeModal();
   loadStudents();
 }
