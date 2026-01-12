@@ -11,13 +11,15 @@
 <style>
 .member-card {
   border:1px solid #e5e7eb;
-  border-radius:14px;
-  padding:14px;
-  cursor:pointer;
+  border-radius:16px;
+  padding:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
-.member-card:hover { background:#f8fafc }
 .modal {
-  position:fixed; inset:0;
+  position:fixed;
+  inset:0;
   background:rgba(0,0,0,.6);
   display:none;
   align-items:center;
@@ -38,12 +40,17 @@
 </header>
 
 <main class="flex-1 overflow-y-auto p-4 pb-24">
-  <h2 class="text-sm font-bold text-slate-400 mb-2">會員名單（點擊可編輯）</h2>
-  <div id="familyList" class="space-y-3 text-sm text-slate-400">載入中…</div>
+  <h2 class="text-sm font-bold text-slate-400 mb-3">
+    會員名單（點擊【編輯】修改）
+  </h2>
+
+  <div id="familyList" class="space-y-3 text-sm text-slate-400">
+    載入中…
+  </div>
 </main>
 
-<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t h-16 flex justify-around items-center">
-  <button onclick="loadFamily()">會員</button>
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t h-16 flex justify-center items-center font-bold">
+  會員
 </nav>
 
 </div>
@@ -51,7 +58,7 @@
 <!-- 編輯會員 Modal -->
 <div id="editModal" class="modal">
   <div class="bg-white w-full max-w-sm rounded-2xl p-6 space-y-4">
-    <h3 class="font-black text-lg">編輯學員</h3>
+    <h3 class="font-black text-lg">編輯學員資料</h3>
 
     <input id="editName" class="w-full p-3 border rounded-xl" placeholder="姓名">
     <input id="editPhone" class="w-full p-3 border rounded-xl" placeholder="電話">
@@ -62,8 +69,12 @@
     </select>
 
     <div class="flex space-x-2 pt-2">
-      <button onclick="closeModal()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">取消</button>
-      <button onclick="saveMember()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold">儲存</button>
+      <button onclick="closeModal()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">
+        取消
+      </button>
+      <button onclick="saveMember()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold">
+        儲存
+      </button>
     </div>
   </div>
 </div>
@@ -88,20 +99,36 @@ async function init(){
 async function loadFamily(){
   const box = document.getElementById("familyList");
   box.innerHTML = "載入中…";
+
   const r = await fetch(API_URL,{
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({ action:"getFamily", userId:currentUid })
   });
+
   const j = await r.json();
   familyData = j.data || [];
 
+  if(!familyData.length){
+    box.innerHTML = "<div class='text-center text-slate-300 py-10'>尚無學員</div>";
+    return;
+  }
+
   box.innerHTML = familyData.map((f,i)=>`
-    <div class="member-card" onclick="openEdit(${i})">
-      <div class="font-bold">${f.name}</div>
-      <div class="text-xs text-slate-400">${f.phone}｜${f.relation}</div>
+    <div class="member-card">
+      <div>
+        <div class="font-bold text-slate-800">${f.name}</div>
+        <div class="text-xs text-slate-400">
+          ${f.phone} ｜ ${f.relation}
+        </div>
+      </div>
+      <button
+        onclick="openEdit(${i})"
+        class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 text-slate-600">
+        ✏️ 編輯
+      </button>
     </div>
-  `).join("") || "尚無學員";
+  `).join("");
 }
 
 /* 開啟編輯 */
@@ -122,6 +149,7 @@ function closeModal(){
 /* 儲存 */
 async function saveMember(){
   const f = familyData[editingIndex];
+
   const payload = {
     action:"updateFamily",
     userId:currentUid,
@@ -137,12 +165,12 @@ async function saveMember(){
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify(payload)
   });
-  const j = await r.json();
 
+  const j = await r.json();
   if(j.success){
     closeModal();
     loadFamily();
-  } else {
+  }else{
     alert(j.msg || "更新失敗");
   }
 }
