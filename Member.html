@@ -154,14 +154,26 @@ async function init(){
 /* 課程 */
 async function loadCourses(){
   try {
-    const r = await fetch(API_URL, {
+    const response = await fetch(API_URL, {
       method:"POST",
       headers: {'Content-Type': 'application/json'},
       body:JSON.stringify({action:"getCourses"})
-    }).then(r=>r.json());
+    });
+    
+    const responseText = await response.text();
+    console.log('課程 API 原始回應:', responseText);
+    
+    let r;
+    try {
+      r = JSON.parse(responseText);
+    } catch(parseErr) {
+      document.getElementById("courseList").innerHTML = "JSON 解析失敗：" + responseText.substring(0, 200);
+      return;
+    }
     
     if(!r.success) {
       document.getElementById("courseList").innerHTML = "載入失敗：" + (r.error || '未知錯誤');
+      console.error('課程載入失敗:', r);
       return;
     }
 
@@ -188,21 +200,33 @@ async function loadCourses(){
         </div>`).join("") || '<div class="text-slate-400">尚無課程</div>';
   } catch(err) {
     console.error('Load courses error:', err);
-    document.getElementById("courseList").innerHTML = "載入失敗";
+    document.getElementById("courseList").innerHTML = "載入失敗：" + err.message;
   }
 }
 
 /* 會員 */
 async function loadMembers(){
   try {
-    const r = await fetch(API_URL, {
+    const response = await fetch(API_URL, {
       method:"POST",
       headers: {'Content-Type': 'application/json'},
       body:JSON.stringify({action:"getMembers", userId:currentUserId})
-    }).then(r=>r.json());
+    });
+    
+    const responseText = await response.text();
+    console.log('會員 API 原始回應:', responseText);
+    
+    let r;
+    try {
+      r = JSON.parse(responseText);
+    } catch(parseErr) {
+      document.getElementById("memberList").innerHTML = '<div class="text-red-500">JSON 解析失敗：' + responseText.substring(0, 200) + '</div>';
+      return;
+    }
     
     if(!r.success) {
       document.getElementById("memberList").innerHTML = '<div class="text-red-500">載入失敗：' + (r.error || '未知錯誤') + '</div>';
+      console.error('會員載入失敗:', r);
       return;
     }
 
@@ -225,7 +249,7 @@ async function loadMembers(){
         </div>`).join("");
   } catch(err) {
     console.error('Load members error:', err);
-    document.getElementById("memberList").innerHTML = '<div class="text-red-500">載入失敗</div>';
+    document.getElementById("memberList").innerHTML = '<div class="text-red-500">載入失敗：' + err.message + '</div>';
   }
 }
 
