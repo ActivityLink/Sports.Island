@@ -1,160 +1,254 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>運動島 2026</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>運動島 2026</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- Tailwind CDN（先用，之後可換編譯版） -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-<style>
-.view { display:none; }
-.view.active { display:block; }
+  <!-- LIFF -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-.modal {
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-}
-.modal.active{ display:flex; }
-</style>
+  <style>
+    body { font-family: system-ui, -apple-system, BlinkMacSystemFont; }
+    .modal { display:none; }
+    .modal.active { display:flex; }
+  </style>
 </head>
 
-<body class="bg-slate-100 min-h-screen flex justify-center">
+<body class="bg-slate-50 min-h-screen flex justify-center">
 
-<div class="w-full max-w-md bg-white min-h-screen flex flex-col">
+<div class="w-full max-w-md bg-white min-h-screen relative">
 
-<!-- ===== Header + Banner ===== -->
-<header class="border-b">
-  <div class="p-4 flex justify-between items-center">
-    <h1 class="font-black text-xl">運動島 2026</h1>
-    <img id="userAvatar" class="w-10 h-10 rounded-full bg-slate-200">
+  <!-- Header -->
+  <div class="flex justify-between items-center p-4 border-b">
+    <h1 class="text-xl font-black">運動島 2026</h1>
+    <img id="userAvatar" class="w-10 h-10 rounded-full object-cover"/>
   </div>
+
+  <!-- Banner -->
   <img
     src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
     class="w-full object-cover"
-  >
-</header>
+  />
 
-<!-- ===== Main Views ===== -->
-<main class="flex-1 overflow-y-auto pb-24">
+  <!-- 會員列表 -->
+  <section class="p-4">
+    <div class="flex justify-between items-center mb-2">
+      <h2 class="font-bold text-slate-700">會員名單</h2>
+      <button onclick="openAddModal()"
+        class="px-3 py-1 text-sm bg-green-600 text-white rounded-lg">
+        ➕ 新增家人
+      </button>
+    </div>
 
-<!-- 活動 -->
-<section id="view-activity" class="view active p-4 space-y-4">
-  <div id="courseList" class="text-slate-400 text-sm">載入活動中…</div>
-</section>
+    <div id="memberList" class="space-y-3"></div>
+  </section>
 
-<!-- 紀錄 -->
-<section id="view-record" class="view p-4 space-y-4">
-  <div id="recordList" class="text-slate-400 text-sm">載入紀錄中…</div>
-</section>
-
-<!-- 會員 -->
-<section id="view-member" class="view p-4 space-y-3">
-  <h2 class="text-sm font-bold text-slate-400">會員名單</h2>
-  <div id="familyList" class="space-y-3 text-sm text-slate-400">載入中…</div>
-</section>
-
-</main>
-
-<!-- ===== Bottom Nav ===== -->
-<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t h-16 flex justify-around items-center text-xs font-bold">
-  <button onclick="switchView('activity')" class="flex flex-col items-center">
-    🏠<span>活動</span>
-  </button>
-  <button onclick="switchView('record')" class="flex flex-col items-center">
-    📄<span>紀錄</span>
-  </button>
-  <button onclick="switchView('member')" class="flex flex-col items-center">
-    👤<span>會員</span>
-  </button>
-</nav>
+  <!-- 底部導覽 -->
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md
+              bg-white border-t flex justify-around py-2 text-xs">
+    <div class="flex flex-col items-center text-slate-400">🏠<span>活動</span></div>
+    <div class="flex flex-col items-center text-slate-400">📄<span>紀錄</span></div>
+    <div class="flex flex-col items-center text-green-600 font-bold">👤<span>會員</span></div>
+  </nav>
 
 </div>
 
-<!-- ===== Edit Modal ===== -->
-<div id="editModal" class="modal">
-  <div class="bg-white w-full max-w-sm rounded-2xl p-6 space-y-4">
-    <h3 class="font-black text-lg">編輯學員</h3>
-    <input id="editName" class="w-full p-3 border rounded-xl">
-    <input id="editPhone" class="w-full p-3 border rounded-xl">
-    <select id="editRelation" class="w-full p-3 border rounded-xl">
-      <option>本人</option><option>子女</option><option>其他</option>
-    </select>
-    <div class="flex space-x-2">
-      <button onclick="closeModal()" class="flex-1 py-3 bg-slate-200 rounded-xl font-bold">取消</button>
-      <button onclick="saveMember()" class="flex-1 py-3 bg-green-600 text-white rounded-xl font-bold">儲存</button>
+<!-- ===== Modal：新增 / 編輯學員 ===== -->
+<div id="studentModal"
+  class="modal fixed inset-0 bg-black/60 items-center justify-center z-50">
+  <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4">
+
+    <h3 id="modalTitle" class="font-black text-lg">新增學員</h3>
+
+    <input type="hidden" id="studentId"/>
+
+    <div>
+      <label class="text-xs font-bold">學員姓名</label>
+      <input id="name" class="w-full p-3 bg-slate-100 rounded-lg"/>
     </div>
+
+    <div>
+      <label class="text-xs font-bold">身分別</label>
+      <select id="identityType" class="w-full p-3 bg-slate-100 rounded-lg"
+        onchange="onIdentityChange()">
+        <option value="general">一般身分</option>
+        <option value="student">學生</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="text-xs font-bold">生日</label>
+      <input type="date" id="birthday"
+        class="w-full p-3 bg-slate-100 rounded-lg"
+        onchange="calcAge()"/>
+      <p id="ageHint" class="text-xs text-slate-400 mt-1"></p>
+    </div>
+
+    <div>
+      <label class="text-xs font-bold">關係</label>
+      <select id="relation" class="w-full p-3 bg-slate-100 rounded-lg">
+        <option>本人</option>
+        <option>子女</option>
+        <option>其他</option>
+      </select>
+    </div>
+
+    <div>
+      <label class="text-xs font-bold">聯絡電話（選填）</label>
+      <input id="phone" class="w-full p-3 bg-slate-100 rounded-lg"/>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <input type="checkbox" id="isDefault"/>
+      <label class="text-sm">設為預設報名者</label>
+    </div>
+
+    <div class="flex justify-end space-x-2 pt-4">
+      <button onclick="closeModal()"
+        class="px-4 py-2 rounded-lg border">取消</button>
+      <button onclick="saveStudent()"
+        class="px-4 py-2 rounded-lg bg-green-600 text-white">
+        儲存
+      </button>
+    </div>
+
   </div>
 </div>
 
 <script>
+/* =============================
+ * 基本設定
+ * ============================= */
 const API_URL = "https://sport.wetw-net3.workers.dev/";
-let uid="", family=[], editIdx=null;
+let currentUid = "";
+let students = [];
 
-/* View */
-function switchView(v){
-  document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  document.getElementById('view-'+v).classList.add('active');
-}
+/* =============================
+ * LIFF 初始化
+ * ============================= */
+async function init() {
+  await liff.init({ liffId: "2008792551-CzPJtVB1" });
+  if (!liff.isLoggedIn()) return liff.login();
 
-/* Init */
-async function init(){
-  await liff.init({ liffId:"2008792551-CzPJtVB1" });
-  if(!liff.isLoggedIn()){ liff.login(); return; }
   const p = await liff.getProfile();
-  uid=p.userId; userAvatar.src=p.pictureUrl;
-  loadFamily();
+  currentUid = p.userId;
+  document.getElementById("userAvatar").src = p.pictureUrl;
+
+  loadStudents();
 }
 
-/* Family */
-async function loadFamily(){
-  const box=familyList;
-  const r=await fetch(API_URL,{method:"POST",headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({action:"getFamily",userId:uid})});
-  const j=await r.json(); family=j.data||[];
-  if(!family.length){ box.innerHTML="尚無會員"; return; }
-  box.innerHTML=family.map((f,i)=>`
-    <div class="border rounded-2xl p-4 flex justify-between items-center">
+/* =============================
+ * 載入會員
+ * ============================= */
+async function loadStudents() {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ action:"getFamily", userId:currentUid })
+  }).then(r=>r.json());
+
+  students = res.data || [];
+  renderList();
+}
+
+function renderList() {
+  const box = document.getElementById("memberList");
+  box.innerHTML = students.map(s => `
+    <div class="border rounded-xl p-4 flex justify-between items-center">
       <div>
-        <div class="font-bold text-slate-800">${f.name}</div>
-        <div class="text-xs text-slate-400">${f.phone}｜${f.relation}</div>
+        <div class="font-bold">${s.name}</div>
+        <div class="text-xs text-slate-400">
+          ${s.identityType === 'student' ? '學生' : '一般身分'}
+          ｜${s.relation}
+        </div>
       </div>
-      <button onclick="openEdit(${i})" class="px-3 py-1.5 border rounded-lg text-xs">✏️ 編輯</button>
-    </div>`).join("");
+      <button onclick='editStudent(${JSON.stringify(s)})'
+        class="px-3 py-1 text-sm border rounded-lg">✏️ 編輯</button>
+    </div>
+  `).join("");
 }
 
-function openEdit(i){
-  editIdx=i;
-  const f=family[i];
-  editName.value=f.name;
-  editPhone.value=f.phone;
-  editRelation.value=f.relation;
-  editModal.classList.add("active");
-}
-function closeModal(){ editModal.classList.remove("active"); }
-
-async function saveMember(){
-  const f=family[editIdx];
-  await fetch(API_URL,{method:"POST",headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      action:"updateFamily",
-      userId:uid,
-      oldName:f.name,
-      oldPhone:f.phone,
-      name:editName.value,
-      phone:editPhone.value,
-      relation:editRelation.value
-    })});
-  closeModal(); loadFamily();
+/* =============================
+ * Modal 行為
+ * ============================= */
+function openAddModal() {
+  document.getElementById("modalTitle").innerText = "新增學員";
+  document.getElementById("studentId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("identityType").value = "general";
+  document.getElementById("birthday").value = "";
+  document.getElementById("relation").value = "本人";
+  document.getElementById("phone").value = "";
+  document.getElementById("isDefault").checked = false;
+  document.getElementById("ageHint").innerText = "";
+  document.getElementById("studentModal").classList.add("active");
 }
 
-window.onload=init;
+function editStudent(s) {
+  document.getElementById("modalTitle").innerText = "編輯學員";
+  document.getElementById("studentId").value = s.studentId || "";
+  document.getElementById("name").value = s.name || "";
+  document.getElementById("identityType").value = s.identityType || "general";
+  document.getElementById("birthday").value = s.birthday || "";
+  document.getElementById("relation").value = s.relation || "本人";
+  document.getElementById("phone").value = s.phone || "";
+  document.getElementById("isDefault").checked = s.isDefault || false;
+  calcAge();
+  document.getElementById("studentModal").classList.add("active");
+}
+
+function closeModal() {
+  document.getElementById("studentModal").classList.remove("active");
+}
+
+/* =============================
+ * 表單邏輯
+ * ============================= */
+function onIdentityChange() {
+  if (document.getElementById("identityType").value === "student") {
+    document.getElementById("birthday").required = true;
+  } else {
+    document.getElementById("birthday").required = false;
+  }
+}
+
+function calcAge() {
+  const b = document.getElementById("birthday").value;
+  if (!b) return document.getElementById("ageHint").innerText = "";
+  const age = Math.floor((Date.now() - new Date(b)) / 31557600000);
+  document.getElementById("ageHint").innerText = `年齡：約 ${age} 歲`;
+}
+
+/* =============================
+ * 儲存
+ * ============================= */
+async function saveStudent() {
+  const payload = {
+    action: "saveFamily",
+    userId: currentUid,
+    studentId: document.getElementById("studentId").value,
+    name: document.getElementById("name").value,
+    identityType: document.getElementById("identityType").value,
+    birthday: document.getElementById("birthday").value,
+    relation: document.getElementById("relation").value,
+    phone: document.getElementById("phone").value,
+    isDefault: document.getElementById("isDefault").checked
+  };
+
+  await fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+
+  closeModal();
+  loadStudents();
+}
+
+window.onload = init;
 </script>
+
 </body>
 </html>
