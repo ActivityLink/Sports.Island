@@ -1,203 +1,206 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>運動島 2026</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>運動島 2026</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 
-<style>
-  :root{
-    --line-green:#06C755;
-  }
-</style>
+  <!-- LIFF -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    .hidden { display: none; }
+  </style>
 </head>
 
-<body class="bg-slate-100">
-<div class="max-w-md mx-auto bg-white min-h-screen flex flex-col">
+<body class="bg-slate-100 min-h-screen">
 
-<!-- ===== BANNER ===== -->
-<img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full">
+<!-- Header -->
+<header class="bg-white border-b sticky top-0 z-50">
+  <div class="flex items-center justify-between px-4 py-3">
+    <h1 class="font-black text-lg">運動島 2026</h1>
+    <img id="userAvatar" class="w-9 h-9 rounded-full bg-slate-200"/>
+  </div>
 
-<!-- ===== 主內容 ===== -->
-<main id="view-course" class="flex-grow p-4"></main>
-<main id="view-member" class="flex-grow p-4 hidden"></main>
-<main id="view-member-form" class="flex-grow p-4 hidden"></main>
+  <!-- Banner -->
+  <img
+    src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
+    class="w-full"
+  />
+</header>
 
-<!-- ===== 底部導覽 ===== -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-3 text-sm font-bold">
-  <button onclick="showCourse()">課程</button>
-  <button onclick="showMember()">會員</button>
+<!-- Main -->
+<main class="pb-24">
+
+  <!-- 課程區 -->
+  <section id="view-course" class="p-4 space-y-4">
+    <h2 class="font-black text-lg">目前課程</h2>
+    <div id="courseList" class="space-y-3 text-sm text-slate-500">
+      載入課程中…
+    </div>
+  </section>
+
+  <!-- 紀錄區 -->
+  <section id="view-history" class="p-4 hidden">
+    <h2 class="font-black text-lg mb-4">報名紀錄</h2>
+    <div id="historyList" class="text-sm text-slate-500">
+      尚無資料
+    </div>
+  </section>
+
+  <!-- 會員區 -->
+  <section id="view-member" class="p-4 hidden space-y-4">
+    <div class="flex justify-between items-center">
+      <h2 class="font-black text-lg">會員名冊</h2>
+      <button
+        onclick="openMemberForm()"
+        class="px-4 py-2 rounded-xl text-white font-bold"
+        style="background:#06C755"
+      >＋ 新增家人</button>
+    </div>
+
+    <div id="memberList" class="space-y-3"></div>
+  </section>
+
+  <!-- 會員編輯 -->
+  <section id="view-member-form" class="p-4 hidden space-y-4">
+    <h2 class="font-black text-lg">編輯會員</h2>
+
+    <input id="f-name" class="w-full p-3 rounded-xl border" placeholder="姓名"/>
+    <input id="f-phone" class="w-full p-3 rounded-xl border" placeholder="電話"/>
+
+    <div class="flex gap-3">
+      <button
+        onclick="saveMember()"
+        class="flex-1 py-3 rounded-xl text-white font-bold"
+        style="background:#06C755"
+      >儲存</button>
+
+      <button
+        onclick="switchView('member')"
+        class="flex-1 py-3 rounded-xl border font-bold"
+      >取消返回</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Bottom Nav -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 text-xs">
+  <button onclick="switchView('course')" class="flex flex-col items-center">
+    🏠<span>課程</span>
+  </button>
+  <button onclick="switchView('history')" class="flex flex-col items-center">
+    📄<span>紀錄</span>
+  </button>
+  <button onclick="switchView('member')" class="flex flex-col items-center">
+    👤<span>會員</span>
+  </button>
 </nav>
 
-</div>
-
 <script>
-/* ===============================
- * 基本設定
- * =============================== */
-const API_URL = 'https://sport.wetw-net3.workers.dev/';
-let currentUid = '';
-let memberCache = [];
+/* =============================
+   全域設定
+============================= */
+const API_URL = "https://sport.wetw-net3.workers.dev/";
+let currentUserId = "";
+let members = [];
 
-/* ===============================
- * LIFF 初始化
- * =============================== */
-async function init(){
-  await liff.init({ liffId:'2008792551-CzPJtVB1' });
-  if(!liff.isLoggedIn()) liff.login();
-  const p = await liff.getProfile();
-  currentUid = p.userId;
+/* =============================
+   View 控制（唯一入口）
+============================= */
+function switchView(view) {
+  document.querySelectorAll("section[id^='view-']").forEach(s => {
+    s.classList.add("hidden");
+  });
+  const target = document.getElementById("view-" + view);
+  if (target) target.classList.remove("hidden");
+}
+
+/* =============================
+   LIFF Init
+============================= */
+async function init() {
+  await liff.init({ liffId: "2008792551-CzPJtVB1" });
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;
+  }
+
+  const profile = await liff.getProfile();
+  currentUserId = profile.userId;
+  document.getElementById("userAvatar").src = profile.pictureUrl;
+
   loadCourses();
+  loadMembers();
 }
 
-/* ===============================
- * 課程（入口）
- * =============================== */
-async function loadCourses(){
-  showOnly('view-course');
-
-  const res = await fetch(API_URL,{
-    method:'POST',
-    body:JSON.stringify({ action:'getCourses' })
+/* =============================
+   課程
+============================= */
+async function loadCourses() {
+  const res = await fetch(API_URL, {
+    method:"POST",
+    body: JSON.stringify({ action:"getCourses" })
   }).then(r=>r.json());
 
-  document.getElementById('view-course').innerHTML =
-    res.data?.length
-    ? res.data.map(c=>`
-      <div class="bg-white border rounded-xl p-4 mb-3 shadow-sm">
-        <div class="font-black">${c.名稱}</div>
-        <div class="text-sm text-slate-500 mt-1">$${c.價格}</div>
+  document.getElementById("courseList").innerHTML =
+    res.data?.map(c=>`
+      <div class="bg-white p-4 rounded-xl border">
+        <div class="font-bold">${c.名稱}</div>
+        <div class="text-xs text-slate-400">${c.開始} ~ ${c.結束}</div>
+        <div class="font-black text-green-600">$${c.價格}</div>
       </div>
-    `).join('')
-    : '<p class="text-center text-slate-400 mt-20">目前沒有可報名課程</p>';
+    `).join("") || "尚無課程";
 }
 
-/* ===============================
- * 會員列表
- * =============================== */
-async function showMember(){
-  showOnly('view-member');
-
+/* =============================
+   會員
+============================= */
+async function loadMembers() {
   const res = await fetch(API_URL,{
-    method:'POST',
-    body:JSON.stringify({ action:'getMembers', userId:currentUid })
+    method:"POST",
+    body: JSON.stringify({ action:"getFamily", userId: currentUserId })
   }).then(r=>r.json());
 
-  memberCache = res.data || [];
-
-  document.getElementById('view-member').innerHTML = `
-    <button onclick="openMemberForm()"
-      class="w-full mb-4 py-4 rounded-xl font-bold text-white"
-      style="background:var(--line-green)">
-      ＋ 新增家人
-    </button>
-
-    ${memberCache.length
-      ? memberCache.map((m,i)=>`
-        <div class="bg-slate-50 border rounded-xl p-4 mb-3 flex justify-between items-center">
-          <div>
-            <div class="font-bold">${m.name}</div>
-            <div class="text-xs text-slate-500 mt-1">
-              ${m.relation}｜${m.identity || '-'}｜${m.region || '-'}
-            </div>
-          </div>
-          <button onclick="editMember(${i})"
-            class="px-4 py-2 rounded-lg text-sm font-bold"
-            style="border:1px solid var(--line-green); color:var(--line-green)">
-            編輯
-          </button>
+  members = res.data || [];
+  document.getElementById("memberList").innerHTML =
+    members.map((m,i)=>`
+      <div class="bg-white p-4 rounded-xl border flex justify-between items-center">
+        <div>
+          <div class="font-bold">${m.name}</div>
+          <div class="text-xs text-slate-400">${m.phone}｜${m.relation}</div>
         </div>
-      `).join('')
-      : '<p class="text-center text-slate-400 mt-20">尚未建立任何成員</p>'
-    }
-  `;
+        <button onclick="editMember(${i})" class="text-sm text-green-600 font-bold">
+          ✏ 編輯
+        </button>
+      </div>
+    `).join("");
 }
 
-/* ===============================
- * 會員表單（新增 / 編輯）
- * =============================== */
-function openMemberForm(m=null){
-  showOnly('view-member-form');
-
-  document.getElementById('view-member-form').innerHTML = `
-    <h2 class="text-xl font-black mb-4">${m?'編輯成員':'新增家人'}</h2>
-
-    <input type="hidden" id="rowIndex" value="${m?.rowIndex||''}">
-
-    ${input('name','姓名',m?.name)}
-    ${input('phone','聯絡電話',m?.phone)}
-
-    ${select('gender','性別',['男','女'],m?.gender)}
-    ${input('birthday','生日',m?.birthday,'date')}
-    ${select('region','居住地區',regions,m?.region)}
-    ${select('identity','身分別',['一般身分','學生'],m?.identity)}
-    ${select('relation','關係',['本人','子女','其他'],m?.relation)}
-
-    <button onclick="saveMember()"
-      class="w-full mt-4 py-4 rounded-xl font-bold text-white"
-      style="background:var(--line-green)">
-      儲存
-    </button>
-
-    <button onclick="showMember()"
-      class="w-full mt-2 py-3 rounded-xl text-slate-500 border">
-      取消返回
-    </button>
-  `;
+function editMember(i){
+  const m = members[i];
+  document.getElementById("f-name").value = m.name;
+  document.getElementById("f-phone").value = m.phone;
+  switchView("member-form");
 }
 
-function editMember(i){ openMemberForm(memberCache[i]); }
-
-/* ===============================
- * 儲存
- * =============================== */
-async function saveMember(){
-  const payload={
-    action: rowIndex.value?'updateMember':'createMember',
-    userId: currentUid,
-    rowIndex: rowIndex.value,
-    name:name.value,
-    phone:phone.value,
-    gender:gender.value,
-    birthday:birthday.value,
-    region:region.value,
-    identity:identity.value,
-    relation:relation.value
-  };
-
-  await fetch(API_URL,{ method:'POST', body:JSON.stringify(payload) });
-  showMember();
+function openMemberForm(){
+  document.getElementById("f-name").value = "";
+  document.getElementById("f-phone").value = "";
+  switchView("member-form");
 }
 
-/* ===============================
- * 工具
- * =============================== */
-function showOnly(id){
-  ['view-course','view-member','view-member-form']
-    .forEach(v=>document.getElementById(v).classList.add('hidden'));
-  document.getElementById(id).classList.remove('hidden');
-}
-function input(id,label,val='',type='text'){
-  return `<input id="${id}" type="${type}" placeholder="${label}"
-    value="${val||''}"
-    class="w-full mb-3 p-3 border rounded-lg">`;
-}
-function select(id,label,opts,val){
-  return `<select id="${id}" class="w-full mb-3 p-3 border rounded-lg">
-    ${opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}
-  </select>`;
+function saveMember(){
+  alert("Step 2 才接寫入 API");
+  switchView("member");
 }
 
-const regions=[
- '台北市','新北市','桃園市','新竹市','新竹縣','台中市','彰化縣','南投縣',
- '雲林縣','嘉義市','嘉義縣','台南市','高雄市','屏東縣','宜蘭縣',
- '花蓮縣','台東縣','基隆市','苗栗縣','澎湖縣','金門縣','連江縣'
-];
-
-window.onload=init;
+window.onload = init;
 </script>
+
 </body>
 </html>
