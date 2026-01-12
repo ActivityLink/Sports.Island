@@ -70,8 +70,7 @@
     <option value="女">女</option>
   </select>
 
-  <input id="f-birthday" type="date" class="w-full p-3 rounded-xl border" placeholder="生日">
-  
+  <input id="f-birthday" type="date" class="w-full p-3 rounded-xl border">
   <input id="f-region" class="w-full p-3 rounded-xl border" placeholder="居住地區">
   
   <select id="f-relation" class="w-full p-3 rounded-xl border">
@@ -86,16 +85,8 @@
   <input id="f-identity" class="w-full p-3 rounded-xl border" placeholder="身分別（選填）">
 
   <div class="flex gap-3">
-    <button
-      onclick="saveMember()"
-      class="flex-1 py-3 rounded-xl text-white font-bold"
-      style="background:#06C755"
-    >儲存</button>
-
-    <button
-      onclick="cancelMemberForm()"
-      class="flex-1 py-3 rounded-xl border font-bold"
-    >取消返回</button>
+    <button onclick="saveMember()" class="flex-1 py-3 rounded-xl text-white font-bold" style="background:#06C755">儲存</button>
+    <button onclick="cancelMemberForm()" class="flex-1 py-3 rounded-xl border font-bold">取消返回</button>
   </div>
 </section>
 
@@ -104,16 +95,13 @@
 <!-- Bottom Nav -->
 <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 text-xs z-50">
   <button type="button" onclick="switchView('course')" class="flex flex-col items-center gap-1">
-    <span class="text-lg">🏠</span>
-    <span>課程</span>
+    <span class="text-lg">🏠</span><span>課程</span>
   </button>
   <button type="button" onclick="switchView('history')" class="flex flex-col items-center gap-1">
-    <span class="text-lg">📄</span>
-    <span>紀錄</span>
+    <span class="text-lg">📄</span><span>紀錄</span>
   </button>
   <button type="button" onclick="switchView('member')" class="flex flex-col items-center gap-1">
-    <span class="text-lg">👤</span>
-    <span>會員</span>
+    <span class="text-lg">👤</span><span>會員</span>
   </button>
 </nav>
 
@@ -132,206 +120,94 @@ function switchView(v){
 
 /* LIFF 初始化 */
 async function init(){
-  try {
-    await liff.init({ liffId:"2008792551-CzPJtVB1" });
-    if(!liff.isLoggedIn()){ 
-      liff.login(); 
-      return; 
-    }
-
-    const p = await liff.getProfile();
-    currentUserId = p.userId;
-    document.getElementById("userAvatar").src = p.pictureUrl || '';
-
-    loadCourses();
-    loadMembers();
-  } catch(err) {
-    console.error('LIFF init error:', err);
-    alert('初始化失敗：' + err.message);
-  }
+  await liff.init({ liffId:"2008792551-CzPJtVB1" });
+  if(!liff.isLoggedIn()){ liff.login(); return; }
+  const p = await liff.getProfile();
+  currentUserId = p.userId;
+  document.getElementById("userAvatar").src = p.pictureUrl || '';
+  loadCourses();
+  loadMembers();
 }
 
-/* 課程 */
+/* =========================
+   課程（方案 A：完整相容）
+   ========================= */
 async function loadCourses(){
   try {
-    const response = await fetch(API_URL, {
+    const res = await fetch(API_URL, {
       method:"POST",
-      headers: {'Content-Type': 'application/json'},
+      headers:{'Content-Type':'application/json'},
       body:JSON.stringify({action:"getCourses"})
     });
-    
-    const responseText = await response.text();
-    console.log('課程 API 原始回應:', responseText);
-    
-    let r;
-    try {
-      r = JSON.parse(responseText);
-    } catch(parseErr) {
-      document.getElementById("courseList").innerHTML = "JSON 解析失敗：" + responseText.substring(0, 200);
-      return;
-    }
-    
-    if(!r.success) {
-      document.getElementById("courseList").innerHTML = "載入失敗：" + (r.error || '未知錯誤');
-      console.error('課程載入失敗:', r);
-      return;
-    }
+    const text = await res.text();
+    console.log('課程 API 原始回應:', text);
+
+    const r = JSON.parse(text);
+
+    const list = Array.isArray(r) ? r : (r.success ? r.data : null);
+    if(!list) throw new Error(r.msg || '課程資料錯誤');
 
     document.getElementById("courseList").innerHTML =
-      (r.data||[]).map(c=>`
+      list.map(c=>`
         <div class="bg-white p-4 rounded-xl border space-y-2">
-          ${c.封面 ? `<img src="${c.封面}" class="w-full h-32 object-cover rounded-lg"/>` : ''}
-          <div class="flex justify-between items-start">
-            <div>
-              <div class="text-xs text-slate-400">${c.類別 || ''}</div>
-              <div class="font-bold">${c.名稱}</div>
-              ${c.梯次 ? `<div class="text-xs text-slate-500">梯次：${c.梯次}</div>` : ''}
-            </div>
-            <div class="text-right">
-              <div class="font-black text-green-600">$${Number(c.價格).toLocaleString()}</div>
-              ${c.價格 !== c.原價 ? `<div class="text-xs text-slate-400 line-through">$${Number(c.原價).toLocaleString()}</div>` : ''}
-            </div>
-          </div>
-          <div class="flex justify-between text-xs text-slate-500">
-            <span>📅 ${c.開始} ~ ${c.結束}</span>
-            <span>👥 ${c.上限}人</span>
-          </div>
-          ${c.教練 ? `<div class="text-xs text-slate-600">🏃 ${c.教練}</div>` : ''}
-        </div>`).join("") || '<div class="text-slate-400">尚無課程</div>';
-  } catch(err) {
-    console.error('Load courses error:', err);
+          <div class="font-bold">${c.名稱}</div>
+          <div class="text-xs text-slate-500">${c.類別}｜${c.教練}</div>
+          <div class="font-black text-green-600">$${Number(c.價格).toLocaleString()}</div>
+          <div class="text-xs text-slate-500">名額：${c.上限} 人</div>
+        </div>
+      `).join("") || '<div class="text-slate-400">尚無課程</div>';
+
+  } catch(err){
+    console.error(err);
     document.getElementById("courseList").innerHTML = "載入失敗：" + err.message;
   }
 }
 
 /* 會員 */
 async function loadMembers(){
-  try {
-    const response = await fetch(API_URL, {
-      method:"POST",
-      headers: {'Content-Type': 'application/json'},
-      body:JSON.stringify({action:"getMembers", userId:currentUserId})
-    });
-    
-    const responseText = await response.text();
-    console.log('會員 API 原始回應:', responseText);
-    
-    let r;
-    try {
-      r = JSON.parse(responseText);
-    } catch(parseErr) {
-      document.getElementById("memberList").innerHTML = '<div class="text-red-500">JSON 解析失敗：' + responseText.substring(0, 200) + '</div>';
-      return;
-    }
-    
-    if(!r.success) {
-      document.getElementById("memberList").innerHTML = '<div class="text-red-500">載入失敗：' + (r.error || '未知錯誤') + '</div>';
-      console.error('會員載入失敗:', r);
-      return;
-    }
-
-    members = r.data||[];
-    
-    if(members.length === 0) {
-      document.getElementById("memberList").innerHTML = '<div class="text-slate-400">尚無會員資料，請新增</div>';
-      return;
-    }
-
-    document.getElementById("memberList").innerHTML =
-      members.map((m,i)=>`
-        <div class="bg-white p-4 rounded-xl border flex justify-between items-center">
+  const res = await fetch(API_URL,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:"getMembers", userId:currentUserId})
+  });
+  const r = await res.json();
+  members = r.data || [];
+  document.getElementById("memberList").innerHTML =
+    members.length
+      ? members.map((m,i)=>`
+        <div class="bg-white p-4 rounded-xl border flex justify-between">
           <div>
             <div class="font-bold">${m.name}</div>
-            <div class="text-xs text-slate-400">${m.phone || '無'}｜${m.relation || '無'}</div>
-            ${m.birthday ? `<div class="text-xs text-slate-500">🎂 ${m.birthday}</div>` : ''}
+            <div class="text-xs text-slate-400">${m.phone||''}｜${m.relation||''}</div>
           </div>
-          <button onclick="editMember(${i})" class="text-green-600 font-bold">✏ 編輯</button>
-        </div>`).join("");
-  } catch(err) {
-    console.error('Load members error:', err);
-    document.getElementById("memberList").innerHTML = '<div class="text-red-500">載入失敗：' + err.message + '</div>';
-  }
+          <button onclick="editMember(${i})" class="text-green-600">✏ 編輯</button>
+        </div>`).join("")
+      : '<div class="text-slate-400">尚無會員資料</div>';
 }
 
-function editMember(i){
-  editingMemberIndex = i;
-  const m = members[i];
-  
-  document.getElementById("f-name").value = m.name || '';
-  document.getElementById("f-phone").value = m.phone || '';
-  document.getElementById("f-gender").value = m.gender || '';
-  document.getElementById("f-birthday").value = m.birthday || '';
-  document.getElementById("f-region").value = m.region || '';
-  document.getElementById("f-relation").value = m.relation || '';
-  document.getElementById("f-identity").value = m.identity || '';
-  
-  switchView("member-form");
-}
-
-function openMemberForm(){
-  editingMemberIndex = -1;
-  document.getElementById("f-name").value = "";
-  document.getElementById("f-phone").value = "";
-  document.getElementById("f-gender").value = "";
-  document.getElementById("f-birthday").value = "";
-  document.getElementById("f-region").value = "";
-  document.getElementById("f-relation").value = "";
-  document.getElementById("f-identity").value = "";
+function openMemberForm(){ editingMemberIndex=-1; switchView("member-form"); }
+function cancelMemberForm(){ switchView("member"); }
+function editMember(i){ editingMemberIndex=i; const m=members[i];
+  ["name","phone","gender","birthday","region","relation","identity"]
+    .forEach(k=>document.getElementById("f-"+k).value=m[k]||'');
   switchView("member-form");
 }
 
 async function saveMember(){
-  const name = document.getElementById("f-name").value.trim();
-  const phone = document.getElementById("f-phone").value.trim();
-  
-  if(!name) {
-    alert("請輸入姓名");
-    return;
-  }
-
-  const data = {
-    userId: currentUserId,
-    name: name,
-    phone: phone,
-    gender: document.getElementById("f-gender").value,
-    birthday: document.getElementById("f-birthday").value,
-    region: document.getElementById("f-region").value,
-    relation: document.getElementById("f-relation").value,
-    identity: document.getElementById("f-identity").value
+  const name=document.getElementById("f-name").value.trim();
+  if(!name) return alert("請輸入姓名");
+  const data={
+    action: editingMemberIndex>=0?"updateMember":"createMember",
+    userId:currentUserId,
+    name,
+    phone:f("phone"), gender:f("gender"), birthday:f("birthday"),
+    region:f("region"), relation:f("relation"), identity:f("identity")
   };
-
-  try {
-    // 如果是編輯模式，加上 rowIndex
-    if(editingMemberIndex >= 0) {
-      data.rowIndex = members[editingMemberIndex].rowIndex;
-    }
-
-    const action = editingMemberIndex >= 0 ? "updateMember" : "createMember";
-    
-    const r = await fetch(API_URL, {
-      method:"POST",
-      headers: {'Content-Type': 'application/json'},
-      body:JSON.stringify({action, ...data})
-    }).then(r=>r.json());
-
-    if(!r.success) {
-      alert("儲存失敗：" + (r.error || '未知錯誤'));
-      return;
-    }
-
-    alert(editingMemberIndex >= 0 ? "更新成功" : "新增成功");
-    await loadMembers();
-    switchView("member");
-  } catch(err) {
-    console.error('Save member error:', err);
-    alert("儲存失敗：" + err.message);
-  }
+  if(editingMemberIndex>=0) data.rowIndex=members[editingMemberIndex].rowIndex;
+  await fetch(API_URL,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  loadMembers(); switchView("member");
 }
-
-function cancelMemberForm(){
-  editingMemberIndex = -1;
-  switchView("member");
-}
+function f(id){return document.getElementById("f-"+id).value;}
 
 window.onload = init;
 </script>
