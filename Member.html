@@ -82,7 +82,12 @@
     <option value="其他">其他</option>
   </select>
 
-  <input id="f-identity" class="w-full p-3 rounded-xl border" placeholder="身分別（選填）">
+  <select id="f-identity" class="w-full p-3 rounded-xl border">
+  <option value="">身分別（請選擇）</option>
+  <option value="一般">一般</option>
+  <option value="學生">學生</option>
+</select>
+
 
   <div class="flex gap-3">
     <button onclick="saveMember()" class="flex-1 py-3 rounded-xl text-white font-bold" style="background:#06C755">儲存</button>
