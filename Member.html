@@ -11,15 +11,16 @@
 <body class="bg-slate-100">
 <div class="max-w-md mx-auto bg-white min-h-screen flex flex-col">
 
-<!-- BANNER -->
+<!-- ===== BANNER ===== -->
 <img src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg" class="w-full">
 
-<!-- 主內容 -->
-<main class="flex-grow p-4" id="view-course"></main>
-<main class="flex-grow p-4 hidden" id="view-member"></main>
+<!-- ===== 主內容 ===== -->
+<main id="view-course" class="flex-grow p-4"></main>
+<main id="view-member" class="flex-grow p-4 hidden"></main>
+<main id="view-member-form" class="flex-grow p-4 hidden"></main>
 
-<!-- 底部導覽 -->
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2">
+<!-- ===== 底部導覽 ===== -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-3 text-sm font-bold">
   <button onclick="showCourse()">課程</button>
   <button onclick="showMember()">會員</button>
 </nav>
@@ -27,58 +28,178 @@
 </div>
 
 <script>
+/* ===============================
+ * 基本設定
+ * =============================== */
 const API_URL = 'https://sport.wetw-net3.workers.dev/';
 let currentUid = '';
+let memberCache = [];
 
+/* ===============================
+ * 初始化 LIFF
+ * =============================== */
 async function init() {
   await liff.init({ liffId: '2008792551-CzPJtVB1' });
   if (!liff.isLoggedIn()) liff.login();
+
   const profile = await liff.getProfile();
   currentUid = profile.userId;
+
   loadCourses();
 }
 
+/* ===============================
+ * 課程（入口）
+ * =============================== */
 async function loadCourses() {
+  showOnly('view-course');
+
   const res = await fetch(API_URL, {
     method:'POST',
     body: JSON.stringify({ action:'getCourses' })
   }).then(r=>r.json());
 
   document.getElementById('view-course').innerHTML =
-    res.data.map(c=>`
-      <div class="border p-4 rounded mb-3">
-        <div class="font-bold">${c.名稱}</div>
-        <div class="text-sm">$${c.價格}</div>
-      </div>
-    `).join('');
+    res.data.length
+      ? res.data.map(c=>`
+        <div class="bg-white border rounded-xl p-4 mb-3 shadow-sm">
+          <div class="font-black text-lg">${c.名稱}</div>
+          <div class="text-sm text-slate-500 mt-1">$${c.價格}</div>
+        </div>
+      `).join('')
+      : '<p class="text-center text-slate-400 mt-20">目前沒有可報名課程</p>';
 }
 
+/* ===============================
+ * 會員列表
+ * =============================== */
 async function showMember() {
-  document.getElementById('view-course').classList.add('hidden');
-  document.getElementById('view-member').classList.remove('hidden');
+  showOnly('view-member');
 
-  const res = await fetch(API_URL,{
+  const res = await fetch(API_URL, {
     method:'POST',
-    body: JSON.stringify({ action:'getMembers', userId: currentUid })
+    body: JSON.stringify({
+      action:'getMembers',
+      userId: currentUid
+    })
   }).then(r=>r.json());
 
-  document.getElementById('view-member').innerHTML =
-    `<button onclick="addMember()" class="mb-4">＋ 新增家人</button>` +
-    res.data.map(m=>`
-      <div class="border p-3 mb-2">
-        ${m.name}（${m.relation}）
-      </div>
-    `).join('');
+  memberCache = res.data || [];
+
+  document.getElementById('view-member').innerHTML = `
+    <button onclick="openMemberForm()" class="w-full mb-4 py-3 bg-black text-white rounded-xl">
+      ＋ 新增家人
+    </button>
+
+    ${memberCache.length
+      ? memberCache.map((m,i)=>`
+        <div onclick="editMember(${i})"
+             class="bg-slate-50 border rounded-xl p-4 mb-2 cursor-pointer hover:bg-slate-100">
+          <div class="font-bold">${m.name}</div>
+          <div class="text-xs text-slate-500 mt-1">
+            ${m.identity}｜${m.relation}｜${m.region}
+          </div>
+        </div>
+      `).join('')
+      : '<p class="text-center text-slate-400 mt-20">尚未建立任何成員</p>'
+    }
+  `;
 }
 
-function showCourse() {
-  document.getElementById('view-member').classList.add('hidden');
-  document.getElementById('view-course').classList.remove('hidden');
+/* ===============================
+ * 會員表單（新增 / 編輯）
+ * =============================== */
+function openMemberForm(member = null) {
+  showOnly('view-member-form');
+
+  document.getElementById('view-member-form').innerHTML = `
+    <form class="space-y-4">
+      <h2 class="text-xl font-black mb-4">
+        ${member ? '編輯成員' : '新增家人'}
+      </h2>
+
+      <input type="hidden" id="rowIndex" value="${member?.rowIndex || ''}">
+
+      <input id="name" class="w-full p-3 border rounded" placeholder="姓名" value="${member?.name||''}">
+      <input id="phone" class="w-full p-3 border rounded" placeholder="聯絡電話" value="${member?.phone||''}">
+
+      <select id="gender" class="w-full p-3 border rounded">
+        <option value="男" ${member?.gender==='男'?'selected':''}>男</option>
+        <option value="女" ${member?.gender==='女'?'selected':''}>女</option>
+      </select>
+
+      <input id="birthday" type="date" class="w-full p-3 border rounded" value="${member?.birthday||''}">
+
+      <select id="region" class="w-full p-3 border rounded">
+        ${regions.map(r=>`<option ${member?.region===r?'selected':''}>${r}</option>`).join('')}
+      </select>
+
+      <select id="identity" class="w-full p-3 border rounded">
+        <option value="一般身分" ${member?.identity==='一般身分'?'selected':''}>一般身分</option>
+        <option value="學生" ${member?.identity==='學生'?'selected':''}>學生</option>
+      </select>
+
+      <select id="relation" class="w-full p-3 border rounded">
+        <option value="本人" ${member?.relation==='本人'?'selected':''}>本人</option>
+        <option value="子女" ${member?.relation==='子女'?'selected':''}>子女</option>
+        <option value="其他" ${member?.relation==='其他'?'selected':''}>其他</option>
+      </select>
+
+      <button type="button" onclick="saveMember()" class="w-full py-4 bg-green-600 text-white rounded-xl font-black">
+        儲存
+      </button>
+
+      <button type="button" onclick="showMember()" class="w-full py-3 text-slate-400">
+        取消返回
+      </button>
+    </form>
+  `;
 }
 
-function addMember() {
-  alert('下一步可加編輯表單');
+function editMember(idx) {
+  openMemberForm(memberCache[idx]);
 }
+
+/* ===============================
+ * 儲存會員
+ * =============================== */
+async function saveMember() {
+  const payload = {
+    action: document.getElementById('rowIndex').value ? 'updateMember' : 'createMember',
+    userId: currentUid,
+    rowIndex: document.getElementById('rowIndex').value,
+    name: name.value,
+    phone: phone.value,
+    gender: gender.value,
+    birthday: birthday.value,
+    region: region.value,
+    identity: identity.value,
+    relation: relation.value
+  };
+
+  await fetch(API_URL,{
+    method:'POST',
+    body: JSON.stringify(payload)
+  });
+
+  showMember();
+}
+
+/* ===============================
+ * 工具
+ * =============================== */
+function showOnly(id) {
+  ['view-course','view-member','view-member-form']
+    .forEach(v=>document.getElementById(v).classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+}
+
+const regions = [
+  '台北市','新北市','桃園市','新竹市','新竹縣','台中市',
+  '彰化縣','南投縣','雲林縣','嘉義市','嘉義縣',
+  '台南市','高雄市','屏東縣','宜蘭縣','花蓮縣',
+  '台東縣','基隆市','苗栗縣','澎湖縣','金門縣','連江縣'
+];
 
 window.onload = init;
 </script>
