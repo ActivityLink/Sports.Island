@@ -3,9 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>運動島 Sports Island</title>
+<title>運動島 2026</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+<style>
+  :root{
+    --line-green:#06C755;
+  }
+</style>
 </head>
 
 <body class="bg-slate-100">
@@ -36,69 +43,72 @@ let currentUid = '';
 let memberCache = [];
 
 /* ===============================
- * 初始化 LIFF
+ * LIFF 初始化
  * =============================== */
-async function init() {
-  await liff.init({ liffId: '2008792551-CzPJtVB1' });
-  if (!liff.isLoggedIn()) liff.login();
-
-  const profile = await liff.getProfile();
-  currentUid = profile.userId;
-
+async function init(){
+  await liff.init({ liffId:'2008792551-CzPJtVB1' });
+  if(!liff.isLoggedIn()) liff.login();
+  const p = await liff.getProfile();
+  currentUid = p.userId;
   loadCourses();
 }
 
 /* ===============================
  * 課程（入口）
  * =============================== */
-async function loadCourses() {
+async function loadCourses(){
   showOnly('view-course');
 
-  const res = await fetch(API_URL, {
+  const res = await fetch(API_URL,{
     method:'POST',
-    body: JSON.stringify({ action:'getCourses' })
+    body:JSON.stringify({ action:'getCourses' })
   }).then(r=>r.json());
 
   document.getElementById('view-course').innerHTML =
-    res.data.length
-      ? res.data.map(c=>`
-        <div class="bg-white border rounded-xl p-4 mb-3 shadow-sm">
-          <div class="font-black text-lg">${c.名稱}</div>
-          <div class="text-sm text-slate-500 mt-1">$${c.價格}</div>
-        </div>
-      `).join('')
-      : '<p class="text-center text-slate-400 mt-20">目前沒有可報名課程</p>';
+    res.data?.length
+    ? res.data.map(c=>`
+      <div class="bg-white border rounded-xl p-4 mb-3 shadow-sm">
+        <div class="font-black">${c.名稱}</div>
+        <div class="text-sm text-slate-500 mt-1">$${c.價格}</div>
+      </div>
+    `).join('')
+    : '<p class="text-center text-slate-400 mt-20">目前沒有可報名課程</p>';
 }
 
 /* ===============================
  * 會員列表
  * =============================== */
-async function showMember() {
+async function showMember(){
   showOnly('view-member');
 
-  const res = await fetch(API_URL, {
+  const res = await fetch(API_URL,{
     method:'POST',
-    body: JSON.stringify({
-      action:'getMembers',
-      userId: currentUid
-    })
+    body:JSON.stringify({ action:'getMembers', userId:currentUid })
   }).then(r=>r.json());
 
   memberCache = res.data || [];
 
   document.getElementById('view-member').innerHTML = `
-    <button onclick="openMemberForm()" class="w-full mb-4 py-3 bg-black text-white rounded-xl">
+    <button onclick="openMemberForm()"
+      class="w-full mb-4 py-4 rounded-xl font-bold text-white"
+      style="background:var(--line-green)">
       ＋ 新增家人
     </button>
 
     ${memberCache.length
       ? memberCache.map((m,i)=>`
-        <div onclick="editMember(${i})"
-             class="bg-slate-50 border rounded-xl p-4 mb-2 cursor-pointer hover:bg-slate-100">
-          <div class="font-bold">${m.name}</div>
-          <div class="text-xs text-slate-500 mt-1">
-            ${m.identity}｜${m.relation}｜${m.region}
+        <div class="bg-slate-50 border rounded-xl p-4 mb-3 flex justify-between items-center">
+          <div>
+            <div class="font-bold">${m.name}</div>
+            <div class="text-xs text-slate-500 mt-1">
+              ${m.relation}｜${m.identity || '-'}｜${m.region || '-'}
+            </div>
           </div>
+          <button onclick="editMember(${i})"
+            class="px-4 py-2 rounded-lg text-sm font-bold"
+            style="border:1px solid var(--line-green); color:var(--line-green)">
+            編輯
+          </button>
         </div>
       `).join('')
       : '<p class="text-center text-slate-400 mt-20">尚未建立任何成員</p>'
@@ -109,99 +119,85 @@ async function showMember() {
 /* ===============================
  * 會員表單（新增 / 編輯）
  * =============================== */
-function openMemberForm(member = null) {
+function openMemberForm(m=null){
   showOnly('view-member-form');
 
   document.getElementById('view-member-form').innerHTML = `
-    <form class="space-y-4">
-      <h2 class="text-xl font-black mb-4">
-        ${member ? '編輯成員' : '新增家人'}
-      </h2>
+    <h2 class="text-xl font-black mb-4">${m?'編輯成員':'新增家人'}</h2>
 
-      <input type="hidden" id="rowIndex" value="${member?.rowIndex || ''}">
+    <input type="hidden" id="rowIndex" value="${m?.rowIndex||''}">
 
-      <input id="name" class="w-full p-3 border rounded" placeholder="姓名" value="${member?.name||''}">
-      <input id="phone" class="w-full p-3 border rounded" placeholder="聯絡電話" value="${member?.phone||''}">
+    ${input('name','姓名',m?.name)}
+    ${input('phone','聯絡電話',m?.phone)}
 
-      <select id="gender" class="w-full p-3 border rounded">
-        <option value="男" ${member?.gender==='男'?'selected':''}>男</option>
-        <option value="女" ${member?.gender==='女'?'selected':''}>女</option>
-      </select>
+    ${select('gender','性別',['男','女'],m?.gender)}
+    ${input('birthday','生日',m?.birthday,'date')}
+    ${select('region','居住地區',regions,m?.region)}
+    ${select('identity','身分別',['一般身分','學生'],m?.identity)}
+    ${select('relation','關係',['本人','子女','其他'],m?.relation)}
 
-      <input id="birthday" type="date" class="w-full p-3 border rounded" value="${member?.birthday||''}">
+    <button onclick="saveMember()"
+      class="w-full mt-4 py-4 rounded-xl font-bold text-white"
+      style="background:var(--line-green)">
+      儲存
+    </button>
 
-      <select id="region" class="w-full p-3 border rounded">
-        ${regions.map(r=>`<option ${member?.region===r?'selected':''}>${r}</option>`).join('')}
-      </select>
-
-      <select id="identity" class="w-full p-3 border rounded">
-        <option value="一般身分" ${member?.identity==='一般身分'?'selected':''}>一般身分</option>
-        <option value="學生" ${member?.identity==='學生'?'selected':''}>學生</option>
-      </select>
-
-      <select id="relation" class="w-full p-3 border rounded">
-        <option value="本人" ${member?.relation==='本人'?'selected':''}>本人</option>
-        <option value="子女" ${member?.relation==='子女'?'selected':''}>子女</option>
-        <option value="其他" ${member?.relation==='其他'?'selected':''}>其他</option>
-      </select>
-
-      <button type="button" onclick="saveMember()" class="w-full py-4 bg-green-600 text-white rounded-xl font-black">
-        儲存
-      </button>
-
-      <button type="button" onclick="showMember()" class="w-full py-3 text-slate-400">
-        取消返回
-      </button>
-    </form>
+    <button onclick="showMember()"
+      class="w-full mt-2 py-3 rounded-xl text-slate-500 border">
+      取消返回
+    </button>
   `;
 }
 
-function editMember(idx) {
-  openMemberForm(memberCache[idx]);
-}
+function editMember(i){ openMemberForm(memberCache[i]); }
 
 /* ===============================
- * 儲存會員
+ * 儲存
  * =============================== */
-async function saveMember() {
-  const payload = {
-    action: document.getElementById('rowIndex').value ? 'updateMember' : 'createMember',
+async function saveMember(){
+  const payload={
+    action: rowIndex.value?'updateMember':'createMember',
     userId: currentUid,
-    rowIndex: document.getElementById('rowIndex').value,
-    name: name.value,
-    phone: phone.value,
-    gender: gender.value,
-    birthday: birthday.value,
-    region: region.value,
-    identity: identity.value,
-    relation: relation.value
+    rowIndex: rowIndex.value,
+    name:name.value,
+    phone:phone.value,
+    gender:gender.value,
+    birthday:birthday.value,
+    region:region.value,
+    identity:identity.value,
+    relation:relation.value
   };
 
-  await fetch(API_URL,{
-    method:'POST',
-    body: JSON.stringify(payload)
-  });
-
+  await fetch(API_URL,{ method:'POST', body:JSON.stringify(payload) });
   showMember();
 }
 
 /* ===============================
  * 工具
  * =============================== */
-function showOnly(id) {
+function showOnly(id){
   ['view-course','view-member','view-member-form']
     .forEach(v=>document.getElementById(v).classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 }
+function input(id,label,val='',type='text'){
+  return `<input id="${id}" type="${type}" placeholder="${label}"
+    value="${val||''}"
+    class="w-full mb-3 p-3 border rounded-lg">`;
+}
+function select(id,label,opts,val){
+  return `<select id="${id}" class="w-full mb-3 p-3 border rounded-lg">
+    ${opts.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('')}
+  </select>`;
+}
 
-const regions = [
-  '台北市','新北市','桃園市','新竹市','新竹縣','台中市',
-  '彰化縣','南投縣','雲林縣','嘉義市','嘉義縣',
-  '台南市','高雄市','屏東縣','宜蘭縣','花蓮縣',
-  '台東縣','基隆市','苗栗縣','澎湖縣','金門縣','連江縣'
+const regions=[
+ '台北市','新北市','桃園市','新竹市','新竹縣','台中市','彰化縣','南投縣',
+ '雲林縣','嘉義市','嘉義縣','台南市','高雄市','屏東縣','宜蘭縣',
+ '花蓮縣','台東縣','基隆市','苗栗縣','澎湖縣','金門縣','連江縣'
 ];
 
-window.onload = init;
+window.onload=init;
 </script>
 </body>
 </html>
