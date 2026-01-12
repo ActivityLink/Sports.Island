@@ -22,7 +22,7 @@
     <img id="userAvatar" class="w-9 h-9 rounded-full bg-slate-200"/>
   </div>
 
-  <!-- Banner（⚠️ 關鍵修正：不吃點擊） -->
+  <!-- Banner -->
   <img
     src="https://aiwe.cc/wp-content/uploads/2025/12/3486bc19dc6317e16bf4f1449ec52ae4.jpg"
     class="w-full pointer-events-none select-none"
@@ -34,7 +34,7 @@
 <!-- 課程 -->
 <section id="view-course" class="p-4 space-y-4">
   <h2 class="font-black text-lg">目前課程</h2>
-  <div id="courseList" class="text-sm text-slate-500">載入中…</div>
+  <div id="courseList" class="space-y-3 text-sm text-slate-500">載入中…</div>
 </section>
 
 <!-- 紀錄 -->
@@ -63,6 +63,27 @@
 
   <input id="f-name" class="w-full p-3 rounded-xl border" placeholder="姓名">
   <input id="f-phone" class="w-full p-3 rounded-xl border" placeholder="電話">
+  
+  <select id="f-gender" class="w-full p-3 rounded-xl border">
+    <option value="">性別</option>
+    <option value="男">男</option>
+    <option value="女">女</option>
+  </select>
+
+  <input id="f-birthday" type="date" class="w-full p-3 rounded-xl border" placeholder="生日">
+  
+  <input id="f-region" class="w-full p-3 rounded-xl border" placeholder="居住地區">
+  
+  <select id="f-relation" class="w-full p-3 rounded-xl border">
+    <option value="">關係</option>
+    <option value="本人">本人</option>
+    <option value="配偶">配偶</option>
+    <option value="子女">子女</option>
+    <option value="父母">父母</option>
+    <option value="其他">其他</option>
+  </select>
+
+  <input id="f-identity" class="w-full p-3 rounded-xl border" placeholder="身分別（選填）">
 
   <div class="flex gap-3">
     <button
@@ -72,7 +93,7 @@
     >儲存</button>
 
     <button
-      onclick="switchView('member')"
+      onclick="cancelMemberForm()"
       class="flex-1 py-3 rounded-xl border font-bold"
     >取消返回</button>
   </div>
@@ -80,16 +101,19 @@
 
 </main>
 
-<!-- Bottom Nav（⚠️ 層級保證可點） -->
+<!-- Bottom Nav -->
 <nav class="fixed bottom-0 left-0 right-0 bg-white border-t flex justify-around py-2 text-xs z-50">
-  <button type="button" onclick="switchView('course')" class="flex flex-col items-center">
-    🏠<span>課程</span>
+  <button type="button" onclick="switchView('course')" class="flex flex-col items-center gap-1">
+    <span class="text-lg">🏠</span>
+    <span>課程</span>
   </button>
-  <button type="button" onclick="switchView('history')" class="flex flex-col items-center">
-    📄<span>紀錄</span>
+  <button type="button" onclick="switchView('history')" class="flex flex-col items-center gap-1">
+    <span class="text-lg">📄</span>
+    <span>紀錄</span>
   </button>
-  <button type="button" onclick="switchView('member')" class="flex flex-col items-center">
-    👤<span>會員</span>
+  <button type="button" onclick="switchView('member')" class="flex flex-col items-center gap-1">
+    <span class="text-lg">👤</span>
+    <span>會員</span>
   </button>
 </nav>
 
@@ -97,68 +121,191 @@
 const API_URL = "https://sport.wetw-net3.workers.dev/";
 let currentUserId = "";
 let members = [];
+let editingMemberIndex = -1;
 
-/* 視圖切換（唯一入口） */
+/* 視圖切換 */
 function switchView(v){
   document.querySelectorAll("section[id^='view-']").forEach(s=>s.classList.add("hidden"));
   const el = document.getElementById("view-"+v);
   if(el) el.classList.remove("hidden");
 }
 
-/* LIFF */
+/* LIFF 初始化 */
 async function init(){
-  await liff.init({ liffId:"2008792551-CzPJtVB1" });
-  if(!liff.isLoggedIn()){ liff.login(); return; }
+  try {
+    await liff.init({ liffId:"2008792551-CzPJtVB1" });
+    if(!liff.isLoggedIn()){ 
+      liff.login(); 
+      return; 
+    }
 
-  const p = await liff.getProfile();
-  currentUserId = p.userId;
-  document.getElementById("userAvatar").src = p.pictureUrl;
+    const p = await liff.getProfile();
+    currentUserId = p.userId;
+    document.getElementById("userAvatar").src = p.pictureUrl || '';
 
-  loadCourses();
-  loadMembers();
+    loadCourses();
+    loadMembers();
+  } catch(err) {
+    console.error('LIFF init error:', err);
+    alert('初始化失敗：' + err.message);
+  }
 }
 
 /* 課程 */
 async function loadCourses(){
-  const r = await fetch(API_URL,{method:"POST",body:JSON.stringify({action:"getCourses"})}).then(r=>r.json());
-  document.getElementById("courseList").innerHTML =
-    (r.data||[]).map(c=>`
-      <div class="bg-white p-4 rounded-xl border">
-        <div class="font-bold">${c.名稱}</div>
-        <div class="text-xs text-slate-400">${c.開始} ~ ${c.結束}</div>
-        <div class="font-black text-green-600">$${c.價格}</div>
-      </div>`).join("") || "尚無課程";
+  try {
+    const r = await fetch(API_URL, {
+      method:"POST",
+      headers: {'Content-Type': 'application/json'},
+      body:JSON.stringify({action:"getCourses"})
+    }).then(r=>r.json());
+    
+    if(!r.success) {
+      document.getElementById("courseList").innerHTML = "載入失敗：" + (r.error || '未知錯誤');
+      return;
+    }
+
+    document.getElementById("courseList").innerHTML =
+      (r.data||[]).map(c=>`
+        <div class="bg-white p-4 rounded-xl border space-y-2">
+          ${c.封面 ? `<img src="${c.封面}" class="w-full h-32 object-cover rounded-lg"/>` : ''}
+          <div class="flex justify-between items-start">
+            <div>
+              <div class="text-xs text-slate-400">${c.類別 || ''}</div>
+              <div class="font-bold">${c.名稱}</div>
+              ${c.梯次 ? `<div class="text-xs text-slate-500">梯次：${c.梯次}</div>` : ''}
+            </div>
+            <div class="text-right">
+              <div class="font-black text-green-600">$${Number(c.價格).toLocaleString()}</div>
+              ${c.價格 !== c.原價 ? `<div class="text-xs text-slate-400 line-through">$${Number(c.原價).toLocaleString()}</div>` : ''}
+            </div>
+          </div>
+          <div class="flex justify-between text-xs text-slate-500">
+            <span>📅 ${c.開始} ~ ${c.結束}</span>
+            <span>👥 ${c.上限}人</span>
+          </div>
+          ${c.教練 ? `<div class="text-xs text-slate-600">🏃 ${c.教練}</div>` : ''}
+        </div>`).join("") || '<div class="text-slate-400">尚無課程</div>';
+  } catch(err) {
+    console.error('Load courses error:', err);
+    document.getElementById("courseList").innerHTML = "載入失敗";
+  }
 }
 
 /* 會員 */
 async function loadMembers(){
-  const r = await fetch(API_URL,{method:"POST",body:JSON.stringify({action:"getFamily",userId:currentUserId})}).then(r=>r.json());
-  members = r.data||[];
-  document.getElementById("memberList").innerHTML =
-    members.map((m,i)=>`
-      <div class="bg-white p-4 rounded-xl border flex justify-between items-center">
-        <div>
-          <div class="font-bold">${m.name}</div>
-          <div class="text-xs text-slate-400">${m.phone}｜${m.relation}</div>
-        </div>
-        <button onclick="editMember(${i})" class="text-green-600 font-bold">✏ 編輯</button>
-      </div>`).join("");
+  try {
+    const r = await fetch(API_URL, {
+      method:"POST",
+      headers: {'Content-Type': 'application/json'},
+      body:JSON.stringify({action:"getMembers", userId:currentUserId})
+    }).then(r=>r.json());
+    
+    if(!r.success) {
+      document.getElementById("memberList").innerHTML = '<div class="text-red-500">載入失敗：' + (r.error || '未知錯誤') + '</div>';
+      return;
+    }
+
+    members = r.data||[];
+    
+    if(members.length === 0) {
+      document.getElementById("memberList").innerHTML = '<div class="text-slate-400">尚無會員資料，請新增</div>';
+      return;
+    }
+
+    document.getElementById("memberList").innerHTML =
+      members.map((m,i)=>`
+        <div class="bg-white p-4 rounded-xl border flex justify-between items-center">
+          <div>
+            <div class="font-bold">${m.name}</div>
+            <div class="text-xs text-slate-400">${m.phone || '無'}｜${m.relation || '無'}</div>
+            ${m.birthday ? `<div class="text-xs text-slate-500">🎂 ${m.birthday}</div>` : ''}
+          </div>
+          <button onclick="editMember(${i})" class="text-green-600 font-bold">✏ 編輯</button>
+        </div>`).join("");
+  } catch(err) {
+    console.error('Load members error:', err);
+    document.getElementById("memberList").innerHTML = '<div class="text-red-500">載入失敗</div>';
+  }
 }
 
 function editMember(i){
-  document.getElementById("f-name").value = members[i].name;
-  document.getElementById("f-phone").value = members[i].phone;
+  editingMemberIndex = i;
+  const m = members[i];
+  
+  document.getElementById("f-name").value = m.name || '';
+  document.getElementById("f-phone").value = m.phone || '';
+  document.getElementById("f-gender").value = m.gender || '';
+  document.getElementById("f-birthday").value = m.birthday || '';
+  document.getElementById("f-region").value = m.region || '';
+  document.getElementById("f-relation").value = m.relation || '';
+  document.getElementById("f-identity").value = m.identity || '';
+  
   switchView("member-form");
 }
 
 function openMemberForm(){
-  document.getElementById("f-name").value="";
-  document.getElementById("f-phone").value="";
+  editingMemberIndex = -1;
+  document.getElementById("f-name").value = "";
+  document.getElementById("f-phone").value = "";
+  document.getElementById("f-gender").value = "";
+  document.getElementById("f-birthday").value = "";
+  document.getElementById("f-region").value = "";
+  document.getElementById("f-relation").value = "";
+  document.getElementById("f-identity").value = "";
   switchView("member-form");
 }
 
-function saveMember(){
-  alert("Step 2 才正式寫回 Users_Master");
+async function saveMember(){
+  const name = document.getElementById("f-name").value.trim();
+  const phone = document.getElementById("f-phone").value.trim();
+  
+  if(!name) {
+    alert("請輸入姓名");
+    return;
+  }
+
+  const data = {
+    userId: currentUserId,
+    name: name,
+    phone: phone,
+    gender: document.getElementById("f-gender").value,
+    birthday: document.getElementById("f-birthday").value,
+    region: document.getElementById("f-region").value,
+    relation: document.getElementById("f-relation").value,
+    identity: document.getElementById("f-identity").value
+  };
+
+  try {
+    // 如果是編輯模式，加上 rowIndex
+    if(editingMemberIndex >= 0) {
+      data.rowIndex = members[editingMemberIndex].rowIndex;
+    }
+
+    const action = editingMemberIndex >= 0 ? "updateMember" : "createMember";
+    
+    const r = await fetch(API_URL, {
+      method:"POST",
+      headers: {'Content-Type': 'application/json'},
+      body:JSON.stringify({action, ...data})
+    }).then(r=>r.json());
+
+    if(!r.success) {
+      alert("儲存失敗：" + (r.error || '未知錯誤'));
+      return;
+    }
+
+    alert(editingMemberIndex >= 0 ? "更新成功" : "新增成功");
+    await loadMembers();
+    switchView("member");
+  } catch(err) {
+    console.error('Save member error:', err);
+    alert("儲存失敗：" + err.message);
+  }
+}
+
+function cancelMemberForm(){
+  editingMemberIndex = -1;
   switchView("member");
 }
 
